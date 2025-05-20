@@ -1,0 +1,17 @@
+{
+  "name": "growi-mcp-server",
+  "version": "1.0.0",
+  "description": "A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses.",
+  "license": "MIT",
+  "author": "Yuki Takei <yuki@weseek.co.jp>",
+  "keywords": [],
+  "main": "index.js",
+  "scripts": {
+    "lint": "biome check",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4"
+  }
+}
