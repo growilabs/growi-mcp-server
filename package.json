@@ -5,13 +5,26 @@
   "license": "MIT",
   "author": "Yuki Takei <yuki@weseek.co.jp>",
   "keywords": [],
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "dev": "fastmcp dev src/index.ts",
     "lint": "biome check",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
-    "@biomejs/biome": "1.9.4"
+    "@biomejs/biome": "1.9.4",
+    "@tsconfig/node22": "^1.0.3",
+    "@types/config": "^3.3.3",
+    "@types/node": "^20.11.30",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "config": "^4.0.0",
+    "dotenv": "^16.5.0",
+    "fastmcp": "^1.27.7"
   }
 }
