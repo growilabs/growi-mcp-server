@@ -1,26 +1,48 @@
 import 'dotenv/config';
 import config from 'config';
+import { FastMCP } from 'fastmcp';
+import { z } from 'zod';
 import type { Config } from './config/types';
+import { GrowiService } from './services/growi-service';
 
-// CommonJSスタイルのimportを使用（fastmcpの型定義の問題のため）
-const fastmcp = require('fastmcp');
-const healthRoutes = require('./routes/health').default;
+const server = new FastMCP({
+  name: 'growi-mcp-server',
+  version: '1.0.0',
+});
 
+const growiService = new GrowiService();
+
+// パラメーターのスキーマを定義
+const getPageSchema = z.object({
+  pagePath: z.string().describe('Path of the page to retrieve'),
+});
+
+// GROWIページ取得ツールを追加
+server.addTool({
+  name: 'getPage',
+  description: 'Get page information from GROWI',
+  parameters: getPageSchema,
+  execute: async (args) => {
+    const { pagePath } = getPageSchema.parse(args);
+    try {
+      const page = await growiService.getPage(pagePath);
+      return JSON.stringify(page);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to get page: ${error.message}`);
+      }
+      throw error;
+    }
+  },
+});
+
+// サーバー起動
 async function main(): Promise<void> {
   try {
-    // Create MCP server instance
-    const server = new fastmcp.Server({
-      name: 'growi-mcp-server',
-      description: 'GROWI MCP Server for AI model integration',
-      port: config.get('server.port') as Config['server']['port'],
+    await server.start({
+      transportType: 'stdio',
     });
-
-    // Register routes
-    server.use(healthRoutes);
-
-    // Start server
-    await server.start();
-    console.log(`Server is running on port ${config.get('server.port') as Config['server']['port']}`);
+    console.log('MCP Server is running');
   } catch (error) {
     console.error('Failed to start server:', error instanceof Error ? error.message : String(error));
     process.exit(1);

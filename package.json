@@ -16,15 +16,17 @@
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@tsconfig/node22": "^1.0.3",
+    "@tsconfig/node22": "22.0.2",
     "@types/config": "^3.3.3",
     "@types/node": "^20.11.30",
     "tsx": "^4.7.1",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.3",
+    "zod": "^3.25.7"
   },
   "dependencies": {
     "config": "^4.0.0",
     "dotenv": "^16.5.0",
-    "fastmcp": "^1.27.7"
+    "fastmcp": "^1.27.7",
+    "ky": "^1.8.1"
   }
 }
