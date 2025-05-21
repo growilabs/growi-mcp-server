@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 
-import 'dotenv/config';
+import 'dotenv-flow/config';
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
 import config from './config/default';
 import { GrowiService } from './services/growi-service';
+
+console.log('[index.ts] Initializing FastMCP instance');
 
 const server = new FastMCP({
   name: 'growi-mcp-server',
   version: '1.0.0',
 });
 
+console.log('[index.ts] Initializing GrowiService...');
 const growiService = new GrowiService();
+console.log('[index.ts] GrowiService initialized.');
 
 // Define parameter schema
 const getPageSchema = z.object({

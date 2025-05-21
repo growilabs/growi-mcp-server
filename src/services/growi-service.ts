@@ -19,10 +19,16 @@ export class GrowiService {
   private readonly apiV3: typeof ky;
 
   constructor() {
+    console.log('[GrowiService] Initializing...');
+    console.log(`[GrowiService] GROWI_BASE_URL: ${config.growi.baseUrl}`);
+    console.log(`[GrowiService] GROWI_API_TOKEN: ${config.growi.apiToken ? '********' : undefined}`);
+
     if (!config.growi.baseUrl) {
+      console.error('[GrowiService] Error: GROWI base URL is not configured');
       throw new Error('GROWI base URL is not configured');
     }
     if (!config.growi.apiToken) {
+      console.error('[GrowiService] Error: GROWI API token is not configured');
       throw new Error('GROWI API token is not configured');
     }
 

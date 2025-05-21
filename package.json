@@ -16,7 +16,7 @@
     "prebuild": "pnpm run clean",
     "clean": "rimraf dist",
     "start": "node dist/index.js",
-    "dev": "fastmcp dev src/index.ts",
+    "dev": "tsx scripts/dev.ts src/index.ts",
     "lint": "biome check",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -27,12 +27,15 @@
     "@tsconfig/node22": "^22.0.2",
     "@types/config": "^3.3.3",
     "@types/node": "^20.11.30",
+    "cross-env": "^7.0.3",
+    "execa": "^9.5.3",
     "rimraf": "^5.0.5",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.3",
+    "yargs": "^17.7.2"
   },
   "dependencies": {
     "config": "^4.0.0",
-    "dotenv": "^16.5.0",
+    "dotenv-flow": "^4.1.0",
     "fastmcp": "^2.0.0",
     "ky": "^1.8.1",
     "tsx": "^4.19.4",
