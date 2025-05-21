@@ -43,7 +43,6 @@ async function main(): Promise<void> {
     await server.start({
       transportType: 'httpStream',
       httpStream: {
-        endpoint: '/stream',
         port: config.server.port,
       },
     });
