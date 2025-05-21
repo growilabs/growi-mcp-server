@@ -2,11 +2,16 @@
 A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses.
 
 
-## Dev
+## 開発スタートアップ
 
-# 共有ネットワークを作成
-docker network create dev-network
+1. `.env.local`
+    GROWI_BASE_URL=http://localhost:3000
+    GROWI_API_TOKEN=your_growi_api_token
 
-# 既存のdevcontainerを新しいネットワークに接続
-docker network connect dev-network devcontainer1
-docker network connect dev-network devcontainer2
+
+1. 共有ネットワークを作成
+    docker network create dev-network
+
+1. 既存のdevcontainerを新しいネットワークに接続
+    docker network connect dev-network devcontainer1
+    docker network connect dev-network devcontainer2
