@@ -82,7 +82,7 @@ export class GrowiService {
       }
 
       if (error instanceof Error) {
-        // kyのエラーハンドリング
+        // Handle ky library errors
         if ('response' in error) {
           const response = (error as { response: Response }).response;
           throw new GrowiApiError('Failed to fetch page from GROWI', response.status, await response.json().catch(() => undefined));

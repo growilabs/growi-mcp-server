@@ -13,12 +13,12 @@ const server = new FastMCP({
 
 const growiService = new GrowiService();
 
-// パラメーターのスキーマを定義
+// Define parameter schema
 const getPageSchema = z.object({
   pagePath: z.string().describe('Path of the page to retrieve'),
 });
 
-// GROWIページ取得ツールを追加
+// Add tool to retrieve GROWI page
 server.addTool({
   name: 'getPage',
   description: 'Get page information from GROWI',
@@ -37,7 +37,7 @@ server.addTool({
   },
 });
 
-// サーバー起動
+// Start server
 async function main(): Promise<void> {
   try {
     await server.start({
