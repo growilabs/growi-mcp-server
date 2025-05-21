@@ -1,14 +1,21 @@
 {
-  "name": "growi-mcp-server",
+  "name": "@growilabs/growi-mcp-server",
   "version": "1.0.0",
   "description": "A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses.",
   "license": "MIT",
   "author": "Yuki Takei <yuki@weseek.co.jp>",
-  "keywords": [],
-  "main": "src/index.js",
+  "keywords": ["mcp", "growi", "llm", "ai"],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "@growilabs/growi-mcp-server": "./dist/index.js"
+  },
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "tsc",
-    "start": "tsx src/index.ts",
+    "prebuild": "pnpm run clean",
+    "clean": "rimraf dist",
+    "start": "node dist/index.js",
     "dev": "fastmcp dev src/index.ts",
     "lint": "biome check",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,14 +26,15 @@
     "@tsconfig/node22": "22.0.2",
     "@types/config": "^3.3.3",
     "@types/node": "^20.11.30",
-    "tsx": "^4.7.1",
-    "typescript": "^5.4.3",
-    "zod": "^3.25.7"
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.3"
   },
   "dependencies": {
     "config": "^4.0.0",
     "dotenv": "^16.5.0",
     "fastmcp": "^1.27.7",
-    "ky": "^1.8.1"
+    "ky": "^1.8.1",
+    "tsx": "^4.19.4",
+    "zod": "^3.25.7"
   }
 }
