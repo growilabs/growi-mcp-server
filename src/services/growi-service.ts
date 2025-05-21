@@ -1,25 +1,7 @@
 import ky from 'ky';
 import config from '../config/default';
 
-export interface GrowiPage {
-  _id: string;
-  path: string;
-  revision: {
-    _id: string;
-    body: string;
-    createdAt: string;
-    author: {
-      _id: string;
-      username: string;
-    };
-  };
-  creator: {
-    _id: string;
-    username: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+import type { IPage } from '@growi/core/dist/interfaces';
 
 export class GrowiApiError extends Error {
   constructor(
@@ -61,7 +43,7 @@ export class GrowiService {
     });
   }
 
-  async getPage(pagePath: string): Promise<GrowiPage> {
+  async getPage(pagePath: string): Promise<IPage> {
     try {
       const response = await this.apiV3
         .get('page', {
@@ -69,7 +51,7 @@ export class GrowiService {
             path: pagePath,
           },
         })
-        .json<{ page: GrowiPage }>();
+        .json<{ page: IPage }>();
 
       if (!response.page) {
         throw new GrowiApiError('Page not found', 404);

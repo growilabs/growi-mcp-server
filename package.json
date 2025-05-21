@@ -22,8 +22,9 @@
   },
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@tsconfig/node22": "22.0.2",
+    "@biomejs/biome": "^1.9.4",
+    "@growi/core": "^1.5.0",
+    "@tsconfig/node22": "^22.0.2",
     "@types/config": "^3.3.3",
     "@types/node": "^20.11.30",
     "rimraf": "^5.0.5",

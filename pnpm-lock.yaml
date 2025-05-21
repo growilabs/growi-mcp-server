@@ -28,10 +28,13 @@ importers:
         version: 3.25.7
     devDependencies:
       '@biomejs/biome':
-        specifier: 1.9.4
+        specifier: ^1.9.4
         version: 1.9.4
+      '@growi/core':
+        specifier: ^1.5.0
+        version: 1.5.0
       '@tsconfig/node22':
-        specifier: 22.0.2
+        specifier: ^22.0.2
         version: 22.0.2
       '@types/config':
         specifier: ^3.3.3
@@ -251,6 +254,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@growi/core@1.5.0':
+    resolution: {integrity: sha512-c1Rrui9efxX/7f1r0brb8IVjsY45tGUnuJNbXHWCR5hVkDkXuz63MJ3CgLco8x0A744Vn7W67a/FKgAEvPts1A==}
+
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
@@ -321,6 +327,9 @@ packages:
 
   brace-expansion@2.0.1:
     resolution: {integrity: sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==}
+
+  bson-objectid@2.0.4:
+    resolution: {integrity: sha512-vgnKAUzcDoa+AeyYwXCoHyF2q6u/8H46dxu5JN+4/TZeq/Dlinn0K6GvxsCLb3LHUJl0m/TLiEK31kUwtgocMQ==}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -433,6 +442,10 @@ packages:
 
   escape-html@1.0.3:
     resolution: {integrity: sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow==}
+
+  escape-string-regexp@4.0.0:
+    resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
+    engines: {node: '>=10'}
 
   etag@1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
@@ -1038,6 +1051,11 @@ snapshots:
   '@esbuild/win32-x64@0.25.4':
     optional: true
 
+  '@growi/core@1.5.0':
+    dependencies:
+      bson-objectid: 2.0.4
+      escape-string-regexp: 4.0.0
+
   '@isaacs/cliui@8.0.2':
     dependencies:
       string-width: 5.1.2
@@ -1131,6 +1149,8 @@ snapshots:
   brace-expansion@2.0.1:
     dependencies:
       balanced-match: 1.0.2
+
+  bson-objectid@2.0.4: {}
 
   bytes@3.1.2: {}
 
@@ -1245,6 +1265,8 @@ snapshots:
 
   escape-html@1.0.3: {}
 
+  escape-string-regexp@4.0.0: {}
+
   etag@1.8.1: {}
 
   eventsource-parser@3.0.2: {}
@@ -1323,7 +1345,7 @@ snapshots:
       strict-event-emitter-types: 2.0.0
       undici: 7.10.0
       uri-templates: 0.2.0
-      xsschema: 0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.13))
+      xsschema: 0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.7))
       yargs: 17.7.2
       zod: 3.25.13
       zod-to-json-schema: 3.24.5(zod@3.25.13)
@@ -1729,7 +1751,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  xsschema@0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.13)):
+  xsschema@0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.7)):
     optionalDependencies:
       zod-to-json-schema: 3.24.5(zod@3.25.13)
 
