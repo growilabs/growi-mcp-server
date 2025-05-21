@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
 import 'dotenv/config';
-import config from 'config';
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
-import type { Config } from './config/types';
+import config from './config/default';
 import { GrowiService } from './services/growi-service';
 
 const server = new FastMCP({
@@ -42,7 +41,11 @@ server.addTool({
 async function main(): Promise<void> {
   try {
     await server.start({
-      transportType: 'stdio',
+      transportType: 'httpStream',
+      httpStream: {
+        endpoint: '/stream',
+        port: config.server.port,
+      },
     });
     console.log('MCP Server is running');
   } catch (error) {

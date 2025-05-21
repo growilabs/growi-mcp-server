@@ -15,8 +15,8 @@ importers:
         specifier: ^16.5.0
         version: 16.5.0
       fastmcp:
-        specifier: ^1.27.7
-        version: 1.27.7
+        specifier: ^2.0.0
+        version: 2.0.0
       ky:
         specifier: ^1.8.1
         version: 1.8.1
@@ -446,6 +446,10 @@ packages:
     resolution: {integrity: sha512-CRT1WTyuQoD771GW56XEZFQ/ZoSfWid1alKGDYMmkt2yl8UXrVR4pspqWNEcqKvVIzg6PAltWjxcSSPrboA4iA==}
     engines: {node: '>=18.0.0'}
 
+  eventsource@4.0.0:
+    resolution: {integrity: sha512-fvIkb9qZzdMxgZrEQDyll+9oJsyaVvY92I2Re+qK0qEJ+w5s0X3dtz+M0VAPOjP1gtU3iqWyjQ0G3nvd5CLZ2g==}
+    engines: {node: '>=20.0.0'}
+
   execa@9.5.3:
     resolution: {integrity: sha512-QFNnTvU3UjgWFy8Ef9iDHvIdcgZ344ebkwYx4/KLbR+CKQA4xBaHzv+iRpp86QfMHP8faFQLh8iOc57215y4Rg==}
     engines: {node: ^18.19.0 || >=20.5.0}
@@ -466,8 +470,8 @@ packages:
   fast-uri@3.0.6:
     resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
 
-  fastmcp@1.27.7:
-    resolution: {integrity: sha512-ozMJl5mTIWd2WMR6/hxBNEeSnFLUS9+PzzfLxQmejHOVg3A6IfRdCPVLGeNnXBhGjsK80JB2GPd4HDqd/szqLA==}
+  fastmcp@2.0.0:
+    resolution: {integrity: sha512-Vyoa409FB6z+TI9q1yWJtzjvjtsy5k6xkVFPeNPARQPuXdphK/2hWfLzOHisYdhryf77GfaC2I0jKY2op1mnkg==}
     hasBin: true
 
   fflate@0.8.2:
@@ -610,8 +614,8 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
-  mcp-proxy@2.14.2:
-    resolution: {integrity: sha512-uLG3fVGF/yf2895Bj0Lf1FOmz8RW6NzNOIWIBUJbIR5C3IkX3Q/md+Dm8WnDkMWo2T4BOlqzZmtfGF6muR0oyw==}
+  mcp-proxy@3.0.3:
+    resolution: {integrity: sha512-awolv2Jkq9fl6QkLFHApTdy6veSuhzN0KA8AF2Ea6H58yBRAJyLf2Eavm08XU1bTn0ydfmTSGfyL2VMzxAHPFQ==}
     hasBin: true
 
   media-typer@1.1.0:
@@ -916,6 +920,9 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
+  zod@3.25.13:
+    resolution: {integrity: sha512-Q8mvk2iWi7rTDfpQBsu4ziE7A6AxgzJ5hzRyRYQkoV3A3niYsXVwDaP1Kbz3nWav6S+VZ6k2OznFn8ZyDHvIrg==}
+
   zod@3.25.7:
     resolution: {integrity: sha512-YGdT1cVRmKkOg6Sq7vY7IkxdphySKnXhaUmFI4r4FcuFVNgpCb9tZfNwXbT6BPjD5oz0nubFsoo9pIqKrDcCvg==}
 
@@ -1051,8 +1058,8 @@ snapshots:
       express-rate-limit: 7.5.0(express@5.1.0)
       pkce-challenge: 5.0.0
       raw-body: 3.0.0
-      zod: 3.25.7
-      zod-to-json-schema: 3.24.5(zod@3.25.7)
+      zod: 3.25.13
+      zod-to-json-schema: 3.24.5(zod@3.25.13)
     transitivePeerDependencies:
       - supports-color
 
@@ -1246,6 +1253,10 @@ snapshots:
     dependencies:
       eventsource-parser: 3.0.2
 
+  eventsource@4.0.0:
+    dependencies:
+      eventsource-parser: 3.0.2
+
   execa@9.5.3:
     dependencies:
       '@sindresorhus/merge-streams': 4.0.0
@@ -1301,21 +1312,21 @@ snapshots:
 
   fast-uri@3.0.6: {}
 
-  fastmcp@1.27.7:
+  fastmcp@2.0.0:
     dependencies:
       '@modelcontextprotocol/sdk': 1.11.4
       '@standard-schema/spec': 1.0.0
       execa: 9.5.3
       file-type: 20.5.0
       fuse.js: 7.1.0
-      mcp-proxy: 2.14.2
+      mcp-proxy: 3.0.3
       strict-event-emitter-types: 2.0.0
       undici: 7.10.0
       uri-templates: 0.2.0
-      xsschema: 0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.7))
+      xsschema: 0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.13))
       yargs: 17.7.2
-      zod: 3.25.7
-      zod-to-json-schema: 3.24.5(zod@3.25.7)
+      zod: 3.25.13
+      zod-to-json-schema: 3.24.5(zod@3.25.13)
     transitivePeerDependencies:
       - '@valibot/to-json-schema'
       - arktype
@@ -1458,10 +1469,10 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mcp-proxy@2.14.2:
+  mcp-proxy@3.0.3:
     dependencies:
       '@modelcontextprotocol/sdk': 1.11.4
-      eventsource: 3.0.7
+      eventsource: 4.0.0
       yargs: 17.7.2
     transitivePeerDependencies:
       - supports-color
@@ -1718,9 +1729,9 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  xsschema@0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.7)):
+  xsschema@0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.13)):
     optionalDependencies:
-      zod-to-json-schema: 3.24.5(zod@3.25.7)
+      zod-to-json-schema: 3.24.5(zod@3.25.13)
 
   y18n@5.0.8: {}
 
@@ -1738,8 +1749,10 @@ snapshots:
 
   yoctocolors@2.1.1: {}
 
-  zod-to-json-schema@3.24.5(zod@3.25.7):
+  zod-to-json-schema@3.24.5(zod@3.25.13):
     dependencies:
-      zod: 3.25.7
+      zod: 3.25.13
+
+  zod@3.25.13: {}
 
   zod@3.25.7: {}
