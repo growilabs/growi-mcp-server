@@ -16,7 +16,8 @@
     "prebuild": "pnpm run clean",
     "clean": "rimraf dist",
     "start": "node dist/index.js",
-    "dev": "tsx scripts/dev.ts src/index.ts",
+    "dev": "cross-env NODE_ENV=development fastmcp dev src/index.ts",
+    "inspect": "cross-env NODE_ENV=development fastmcp inspect src/index.ts",
     "lint": "biome check",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
