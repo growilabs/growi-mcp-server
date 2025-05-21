@@ -1,5 +1,5 @@
 import ky from 'ky';
-import config from '../config/default';
+import config from '../config/default.js';
 
 import type { IPage } from '@growi/core/dist/interfaces';
 

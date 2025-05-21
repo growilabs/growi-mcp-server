@@ -2,8 +2,8 @@
 
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
-import config from './config/default';
-import { GrowiService } from './services/growi-service';
+import config from './config/default.js';
+import { GrowiService } from './services/growi-service.js';
 
 const server = new FastMCP({
   name: 'growi-mcp-server',
