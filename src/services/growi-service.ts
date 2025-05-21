@@ -33,7 +33,8 @@ export class GrowiApiError extends Error {
 }
 
 export class GrowiService {
-  private readonly api: typeof ky;
+  private readonly apiV1: typeof ky;
+  private readonly apiV3: typeof ky;
 
   constructor() {
     if (!config.growi.baseUrl) {
@@ -43,8 +44,16 @@ export class GrowiService {
       throw new Error('GROWI API token is not configured');
     }
 
-    this.api = ky.create({
-      prefixUrl: `${config.growi.baseUrl}/api/${config.growi.apiVersion}`,
+    this.apiV1 = ky.create({
+      prefixUrl: `${config.growi.baseUrl}/_api/`,
+      headers: {
+        Authorization: `Bearer ${config.growi.apiToken}`,
+      },
+      timeout: 10000,
+    });
+
+    this.apiV3 = ky.create({
+      prefixUrl: `${config.growi.baseUrl}/_api/v3/`,
       headers: {
         Authorization: `Bearer ${config.growi.apiToken}`,
       },
@@ -54,8 +63,8 @@ export class GrowiService {
 
   async getPage(pagePath: string): Promise<GrowiPage> {
     try {
-      const response = await this.api
-        .get('pages.get', {
+      const response = await this.apiV3
+        .get('page', {
           searchParams: {
             path: pagePath,
           },
