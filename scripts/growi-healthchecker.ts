@@ -9,7 +9,7 @@ const healthcheckResponseSchema = z.object({
 const baseUrl = new URL(config.growi.baseUrl);
 const healthcheckUrl = new URL('/_api/v3/healthcheck', baseUrl);
 
-console.log(`Checking if GROWI server is available at ${healthcheckUrl}...`);
+console.log(`Checking if GROWI server is available at ${healthcheckUrl}...\n`);
 
 try {
   const response = await ky
@@ -22,19 +22,19 @@ try {
   const result = healthcheckResponseSchema.safeParse(response);
 
   if (result.success) {
-    console.log('GROWI server is available.');
-    process.exit(0); // 成功
+    console.log('✅ GROWI server is available.\n');
+    process.exit(0);
   } else {
-    console.error('Invalid healthcheck response:', result.error.format());
-    process.exit(1); // 失敗
+    console.error('❌ Invalid healthcheck response:', result.error.format(), '\n');
+    process.exit(1);
   }
 } catch (err) {
   if (err.name === 'TimeoutError') {
-    console.error('GROWI server is not available: Request timed out.');
+    console.error('❌ GROWI server is not available: Request timed out.');
   } else if (err.name === 'HTTPError') {
-    console.error(`GROWI server responded with status code: ${err.response.status}`);
+    console.error(`❌ GROWI server responded with status code: ${err.response.status}`, '\n');
   } else {
-    console.error('GROWI server is not available or request failed:', err.message);
+    console.error('❌ GROWI server is not available or request failed:', err.message, '\n');
   }
   process.exit(1);
 }
