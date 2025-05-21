@@ -17,8 +17,8 @@
     "prebuild": "pnpm run clean",
     "clean": "rimraf dist",
     "start": "pnpm build && node dist/index.js",
-    "dev": "fastmcp dev src/index.ts",
-    "inspect": "fastmcp inspect src/index.ts",
+    "dev": "tsx scripts/growi-healthchecker.ts && fastmcp dev src/index.ts || echo \"Skipping dev server start due to port check failure.\"",
+    "inspect": "tsx scripts/growi-healthchecker.ts && fastmcp inspect src/index.ts",
     "lint": "biome check",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
