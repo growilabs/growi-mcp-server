@@ -4,13 +4,9 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 
 ## 開発スタートアップ
 
-1. 共有ネットワークを作成
-    docker network create growi-mcp-dev-network
-
-1. 既存のdevcontainerを新しいネットワークに接続
-    docker network connect growi-mcp-dev-network growi_devcontainer-app-1
-    docker network connect growi-mcp-dev-network <growi-mcp-server>
+1. GROWI 本体開発用 devcontainer のデフォルトネットワークに接続
+    docker network connect growi_devcontainer_default growi-mcp-server-dev
 
 1. `.env.local`
-    GROWI_BASE_URL=http://growi_devcontainer-app-1:3000
+    GROWI_BASE_URL=http://app:3000
     GROWI_API_TOKEN=your_growi_api_token

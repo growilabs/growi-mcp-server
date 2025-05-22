@@ -3,6 +3,7 @@
 {
   "name": "growi-mcp-server-Dev",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "runArgs": ["--name", "growi-mcp-server-dev", "--network", "growi_devcontainer_default"],
 
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
@@ -11,7 +12,7 @@
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
+  "forwardPorts": [6274, 6277],
 
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "/bin/bash ./.devcontainer/postCreateCommand.sh",
