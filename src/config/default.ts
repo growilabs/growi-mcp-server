@@ -4,7 +4,7 @@ import type { Config } from './types';
 
 // Define schema for environment variables
 const envSchema = z.object({
-  PORT: z.number().optional().default(8080),
+  // PORT: z.number().optional().default(8080), // for httpStream transport
   GROWI_BASE_URL: z.string().url(),
   GROWI_API_TOKEN: z.string(),
 });
@@ -19,9 +19,9 @@ if (!parsedEnv.success) {
 }
 
 const config: Config = {
-  server: {
-    port: parsedEnv.data.PORT,
-  },
+  // remoteServer: {
+  //   port: parsedEnv.data.PORT,
+  // },
   growi: {
     baseUrl: parsedEnv.data.GROWI_BASE_URL,
     apiToken: parsedEnv.data.GROWI_API_TOKEN,

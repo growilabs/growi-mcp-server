@@ -1,6 +1,6 @@
-export interface ServerConfig {
-  port: number;
-}
+// export interface RemoteServerConfig {
+//   port: number;
+// }
 
 export interface GrowiConfig {
   baseUrl: string;
@@ -8,6 +8,6 @@ export interface GrowiConfig {
 }
 
 export interface Config {
-  server: ServerConfig;
+  // remoteServer: RemoteServerConfig;
   growi: GrowiConfig;
 }

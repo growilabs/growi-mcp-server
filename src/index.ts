@@ -2,7 +2,6 @@
 
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
-import config from './config/default.js';
 import { GrowiService } from './services/growi-service.js';
 
 const server = new FastMCP({
@@ -38,10 +37,7 @@ async function main(): Promise<void> {
 
   try {
     await server.start({
-      transportType: 'httpStream',
-      httpStream: {
-        port: config.server.port,
-      },
+      transportType: 'stdio',
     });
     console.log('MCP Server is running');
   } catch (error) {
