@@ -29,7 +29,7 @@ async function main(): Promise<void> {
         return JSON.stringify(page);
       } catch (error) {
         if (isGrowiApiError(error)) {
-          throw new Error(`Failed to get page: [${error.statusCode}]${error.details != null ? `\n${JSON.stringify(error.details)}` : ''}`);
+          throw new Error(`Failed to get page: [${error.statusCode}] ${error.message}${error.details != null ? `\n${JSON.stringify(error.details)}` : ''}`);
         }
         throw error;
       }
