@@ -2,17 +2,7 @@ import ky from 'ky';
 import config from '../config/default.js';
 
 import type { IPage } from '@growi/core/dist/interfaces';
-
-export class GrowiApiError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number,
-    public details?: unknown,
-  ) {
-    super(message);
-    this.name = 'GrowiApiError';
-  }
-}
+import { GrowiApiError, isGrowiApiError } from './growi-api-error.js';
 
 export class GrowiService {
   private readonly apiV1: typeof ky;
@@ -53,7 +43,7 @@ export class GrowiService {
 
       return response.page;
     } catch (error) {
-      if (error instanceof GrowiApiError) {
+      if (isGrowiApiError(error)) {
         throw error;
       }
 

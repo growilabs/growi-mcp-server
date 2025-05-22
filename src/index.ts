@@ -2,6 +2,7 @@
 
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
+import { isGrowiApiError } from './services/growi-api-error.js';
 import { GrowiService } from './services/growi-service.js';
 
 const server = new FastMCP({
@@ -27,8 +28,8 @@ async function main(): Promise<void> {
         const page = await growiService.getPage(pagePath);
         return JSON.stringify(page);
       } catch (error) {
-        if (error instanceof Error) {
-          throw new Error(`Failed to get page: ${error.message}`);
+        if (isGrowiApiError(error)) {
+          throw new Error(`Failed to get page: [${error.statusCode}]${error.details != null ? `\n${JSON.stringify(error.details)}` : ''}`);
         }
         throw error;
       }
@@ -39,7 +40,6 @@ async function main(): Promise<void> {
     await server.start({
       transportType: 'stdio',
     });
-    console.log('MCP Server is running');
   } catch (error) {
     console.error('Failed to start server:', error instanceof Error ? error.message : String(error));
     process.exit(1);
