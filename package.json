@@ -17,7 +17,7 @@
     "prebuild": "pnpm run clean",
     "clean": "rimraf dist",
     "start": "pnpm build && cross-env NODE_ENV=production node dist/index.js",
-    "dev:cli": "nodemon --watch src --ext ts,json --exec \"cross-env NODE_ENV=development pnpm dlx @wong2/mcp-cli --pass-env pnpm tsx src/index.ts\"",
+    "dev:cli": "nodemon --watch src --ext ts,json --no-stdin --exec \"cross-env NODE_ENV=development pnpm dlx @wong2/mcp-cli --pass-env pnpm tsx src/index.ts\"",
     "predev:cli": "cross-env NODE_ENV=development tsx scripts/growi-healthchecker.ts || (echo \"Canceled starting mcp-cli due to healthcheck failure.\" && exit 1)",
     "dev:inspect": "pnpm dlx @modelcontextprotocol/inspector pnpm nodemon --quiet --watch src --ext ts,json --exec \"cross-env NODE_ENV=development pnpm tsx src/index.ts\"",
     "lint": "biome check",
