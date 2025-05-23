@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
 import { FastMCP } from 'fastmcp';
-import { loadPrompts } from './prompts/index.js';
-import { loadResources } from './resources/index.js';
-import { loadTools } from './tools/index.js';
 
 const server = new FastMCP({
   name: 'growi-mcp-server',
@@ -11,11 +8,15 @@ const server = new FastMCP({
 });
 
 async function main(): Promise<void> {
-  await loadTools(server);
-  await loadResources(server);
-  await loadPrompts(server);
-
   try {
+    // Loaders are imported dynamically so that the module will be garbage collected
+    const { loadTools } = await import('./tools/index.js');
+    const { loadResources } = await import('./resources/index.js');
+    const { loadPrompts } = await import('./prompts/index.js');
+    await loadTools(server);
+    await loadResources(server);
+    await loadPrompts(server);
+
     await server.start({
       transportType: 'stdio',
     });
