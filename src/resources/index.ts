@@ -1,12 +1,12 @@
 import type { FastMCP } from 'fastmcp';
 import { registerGrowiPageResource } from './growiPageResource.js';
-// 将来的に他のリソース定義ファイルをここにインポート
+// Import other resource definition files here in the future
 // import { registerAnotherResource } from './anotherResource.js';
 
 export async function loadResources(server: FastMCP): Promise<void> {
-  // 現在のリソース登録
+  // Current resource registration
   registerGrowiPageResource(server);
 
-  // 将来的に他のリソース登録関数をここに追加
+  // Add other resource registration functions here in the future
   // registerAnotherResource(server);
 }

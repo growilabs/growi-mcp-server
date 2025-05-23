@@ -1,10 +1,10 @@
 import type { FastMCP } from 'fastmcp';
 import { registerSummarizePagePrompt } from './summarizePagePrompt.js';
-// 他のプロンプト定義ファイルをインポート可能
+// Other prompt definition files can be imported here
 
 export async function loadPrompts(server: FastMCP): Promise<void> {
-  // 各プロンプトの登録
+  // Register each prompt
   registerSummarizePagePrompt(server);
-  // 将来的に他のプロンプトの登録を追加可能
-  // 例: await registerAnotherPrompt(server);
+  // Additional prompt registrations can be added in the future
+  // Example: await registerAnotherPrompt(server);
 }
