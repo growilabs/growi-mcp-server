@@ -1,9 +1,10 @@
 import type { IPage } from '@growi/core/dist/interfaces';
 import type { FastMCP } from 'fastmcp';
-import { GrowiService } from '../services/growi-service.js';
+import { container } from 'tsyringe';
+import { type IGrowiService, tokenGrowiService } from '../services/growi-service.js';
 
 export function registerGrowiPageResource(server: FastMCP): void {
-  const growiService = new GrowiService();
+  const growiService = container.resolve<IGrowiService>(tokenGrowiService);
 
   server.addResourceTemplate({
     uriTemplate: 'growi://page/{pagePath}',

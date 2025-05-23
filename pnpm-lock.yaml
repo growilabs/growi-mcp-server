@@ -20,9 +20,15 @@ importers:
       ky:
         specifier: ^1.8.1
         version: 1.8.1
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
       tsx:
         specifier: ^4.19.4
         version: 4.19.4
+      tsyringe:
+        specifier: ^4.10.0
+        version: 4.10.0
       zod:
         specifier: ^3.25.7
         version: 3.25.7
@@ -827,6 +833,9 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
 
+  reflect-metadata@0.2.2:
+    resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
+
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
@@ -951,10 +960,17 @@ packages:
     resolution: {integrity: sha512-r0eojU4bI8MnHr8c5bNo7lJDdI2qXlWWJk6a9EAFG7vbhTjElYhBVS3/miuE0uOuoLdb8Mc/rVfsmm6eo5o9GA==}
     hasBin: true
 
+  tslib@1.14.1:
+    resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
+
   tsx@4.19.4:
     resolution: {integrity: sha512-gK5GVzDkJK1SI1zwHf32Mqxf2tSJkNx+eYcNly5+nHvWqXUJYUkWBQtKauoESz3ymezAI++ZwT855x5p5eop+Q==}
     engines: {node: '>=18.0.0'}
     hasBin: true
+
+  tsyringe@4.10.0:
+    resolution: {integrity: sha512-axr3IdNuVIxnaK5XGEUFTu3YmAQ6lllgrvqfEoR16g/HGnYY/6We4oWENtAnzK6/LpJ2ur9PAb80RBt7/U4ugw==}
+    engines: {node: '>= 6.0.0'}
 
   type-is@2.0.1:
     resolution: {integrity: sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==}
@@ -1500,7 +1516,7 @@ snapshots:
       strict-event-emitter-types: 2.0.0
       undici: 7.10.0
       uri-templates: 0.2.0
-      xsschema: 0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.7))
+      xsschema: 0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.13))
       yargs: 17.7.2
       zod: 3.25.13
       zod-to-json-schema: 3.24.5(zod@3.25.13)
@@ -1785,6 +1801,8 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
+  reflect-metadata@0.2.2: {}
+
   require-directory@2.1.1: {}
 
   require-from-string@2.0.2: {}
@@ -1926,12 +1944,18 @@ snapshots:
 
   touch@3.1.1: {}
 
+  tslib@1.14.1: {}
+
   tsx@4.19.4:
     dependencies:
       esbuild: 0.25.4
       get-tsconfig: 4.10.1
     optionalDependencies:
       fsevents: 2.3.3
+
+  tsyringe@4.10.0:
+    dependencies:
+      tslib: 1.14.1
 
   type-is@2.0.1:
     dependencies:
@@ -1975,7 +1999,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  xsschema@0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.7)):
+  xsschema@0.2.0-beta.3(zod-to-json-schema@3.24.5(zod@3.25.13)):
     optionalDependencies:
       zod-to-json-schema: 3.24.5(zod@3.25.13)
 
