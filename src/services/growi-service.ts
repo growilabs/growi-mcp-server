@@ -2,9 +2,16 @@ import ky from 'ky';
 import config from '../config/default.js';
 
 import type { IPage } from '@growi/core/dist/interfaces';
+import { container } from 'tsyringe';
 import { GrowiApiError, isGrowiApiError } from './growi-api-error.js';
 
-export class GrowiService {
+export const tokenGrowiService = 'GrowiService';
+
+export interface IGrowiService {
+  getPage(pagePath: string): Promise<IPage>;
+}
+
+class GrowiService implements IGrowiService {
   private readonly apiV1: typeof ky;
   private readonly apiV3: typeof ky;
 
@@ -59,3 +66,5 @@ export class GrowiService {
     }
   }
 }
+
+container.registerSingleton(tokenGrowiService, GrowiService);

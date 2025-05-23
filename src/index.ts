@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import 'reflect-metadata';
 import { FastMCP } from 'fastmcp';
 
 const server = new FastMCP({
