@@ -19,7 +19,6 @@ async function main(): Promise<void> {
     await server.start({
       transportType: 'stdio',
     });
-    console.log('GROWI MCP Server started successfully.');
   } catch (error) {
     console.error('Failed to start server:', error instanceof Error ? error.message : String(error));
     process.exit(1);

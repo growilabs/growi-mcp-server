@@ -7,6 +7,4 @@ export async function loadPrompts(server: FastMCP): Promise<void> {
   registerSummarizePagePrompt(server);
   // 将来的に他のプロンプトの登録を追加可能
   // 例: await registerAnotherPrompt(server);
-
-  console.log('All prompts loaded and registered.');
 }

@@ -13,6 +13,4 @@ export async function loadTools(server: FastMCP): Promise<void> {
   // Add other tool registrations here as they are created
   // Example:
   // registerAnotherTool(server);
-
-  console.log('All tools loaded and registered.');
 }

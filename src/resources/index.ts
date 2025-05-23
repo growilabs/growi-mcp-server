@@ -9,6 +9,4 @@ export async function loadResources(server: FastMCP): Promise<void> {
 
   // 将来的に他のリソース登録関数をここに追加
   // registerAnotherResource(server);
-
-  console.log('All resources loaded and registered.');
 }
