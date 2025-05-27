@@ -3,9 +3,6 @@
 import 'reflect-metadata';
 import { FastMCP } from 'fastmcp';
 
-// Import services to register them with tsyringe
-import './services/index.js';
-
 const server = new FastMCP({
   name: 'growi-mcp-server',
   version: '1.0.0',

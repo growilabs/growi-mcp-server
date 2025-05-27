@@ -1,7 +1,7 @@
 import type { IPage } from '@growi/core/dist/interfaces';
 import type { FastMCP } from 'fastmcp';
 import { container } from 'tsyringe';
-import { type IPageService, tokenPageService } from '../services/index.js';
+import { type IPageService, tokenPageService } from '../services/page-service.js';
 
 export function registerGrowiPageResource(server: FastMCP): void {
   const pageService = container.resolve<IPageService>(tokenPageService);

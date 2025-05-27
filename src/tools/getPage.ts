@@ -1,7 +1,8 @@
 import type { FastMCP } from 'fastmcp';
 import { container } from 'tsyringe';
 import { z } from 'zod';
-import { type IPageService, isGrowiApiError, tokenPageService } from '../services/index.js';
+import { isGrowiApiError } from '../services/growi-api-error.js';
+import { type IPageService, tokenPageService } from '../services/page-service.js';
 
 const getPageSchema = z.object({
   pagePath: z.string().describe('Path of the page to retrieve'),
