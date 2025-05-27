@@ -1,15 +1,14 @@
 import type { FastMCP } from 'fastmcp';
 import { container } from 'tsyringe';
 import { z } from 'zod';
-import { isGrowiApiError } from '../services/growi-api-error.js';
-import { type IGrowiService, tokenGrowiService } from '../services/growi-service.js';
+import { type IPageService, isGrowiApiError, tokenPageService } from '../services/index.js';
 
 const getPageSchema = z.object({
   pagePath: z.string().describe('Path of the page to retrieve'),
 });
 
 export function registerGetPageTool(server: FastMCP): void {
-  const growiService = container.resolve<IGrowiService>(tokenGrowiService);
+  const pageService = container.resolve<IPageService>(tokenPageService);
 
   server.addTool({
     name: 'getPage',
@@ -18,7 +17,7 @@ export function registerGetPageTool(server: FastMCP): void {
     execute: async (args) => {
       const { pagePath } = getPageSchema.parse(args);
       try {
-        const page = await growiService.getPage(pagePath);
+        const page = await pageService.getPage(pagePath);
         return JSON.stringify(page);
       } catch (error) {
         if (isGrowiApiError(error)) {
