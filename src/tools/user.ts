@@ -10,6 +10,13 @@ export const meSchema = z.object({});
 export const getExternalAccountsSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
 });
+export const getUserPagesSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  limit: z.number().min(1).optional(),
+  offset: z.number().min(0).optional(),
+  sort: z.string().optional(),
+  status: z.string().optional(),
+});
 
 export const logoutSchema = z.object({});
 
@@ -130,6 +137,34 @@ export function registerGetExternalAccountsTool(server: FastMCP): void {
           throw new Error(`Failed to get external accounts: [${error.statusCode}] ${error.message}`);
         }
         throw new Error('Failed to get external accounts. Please try again later.');
+      }
+    },
+  });
+}
+
+export function registerGetUserPagesTool(server: FastMCP): void {
+  const userService = container.resolve<IUserService>(tokenUserService);
+
+  server.addTool({
+    name: 'getUserPages',
+    description: 'Get pages created by a specific user',
+    parameters: getUserPagesSchema,
+    execute: async (args) => {
+      const params = getUserPagesSchema.parse(args);
+      try {
+        const response = await userService.getPages(params);
+        return JSON.stringify(response);
+      } catch (error) {
+        if (isGrowiApiError(error)) {
+          if (error.statusCode === 404) {
+            throw new Error('User not found');
+          }
+          if (error.statusCode === 403) {
+            throw new Error('Access denied: You do not have permission to view these pages');
+          }
+          throw new Error(`Failed to get user pages: [${error.statusCode}] ${error.message}`);
+        }
+        throw new Error('Failed to get user pages. Please try again later.');
       }
     },
   });

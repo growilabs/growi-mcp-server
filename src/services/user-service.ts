@@ -9,6 +9,33 @@ export interface LoginParams {
   password: string;
 }
 
+export interface GetUserPagesParams {
+  userId: string;
+  limit?: number;
+  offset?: number;
+  sort?: string;
+  status?: string;
+}
+
+export interface UserPage {
+  _id: string;
+  path: string;
+  revision: {
+    _id: string;
+    body: string;
+  };
+  status: string;
+  grant: number;
+  descendantCount: number;
+  isEmpty: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserPagesResponse {
+  pages: UserPage[];
+}
+
 export interface ExternalAccount {
   id: string;
   providerType: string;
@@ -84,6 +111,13 @@ export interface IUserService {
    * @throws {GrowiApiError} when external accounts retrieval fails or other API errors occur
    */
   getExternalAccounts(userId: string): Promise<ExternalAccountsResponse>;
+
+  /**
+   * Get pages created by a specific user
+   * @param params Parameters for retrieving user pages
+   * @throws {GrowiApiError} when pages retrieval fails or other API errors occur
+   */
+  getPages(params: GetUserPagesParams): Promise<UserPagesResponse>;
 }
 
 /**
@@ -185,6 +219,35 @@ class UserService extends BaseService implements IUserService {
         throw error;
       }
       throw new GrowiApiError('Failed to get external accounts', 500, error);
+    }
+  }
+
+  async getPages(params: GetUserPagesParams): Promise<UserPagesResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.limit !== undefined) queryParams.set('limit', params.limit.toString());
+      if (params.offset !== undefined) queryParams.set('offset', params.offset.toString());
+      if (params.sort) queryParams.set('sort', params.sort);
+      if (params.status) queryParams.set('status', params.status);
+
+      const response = await this.apiV3.get(`users/${params.userId}/pages?${queryParams.toString()}`).json<UserPagesResponse>();
+
+      if (!response.pages) {
+        throw new GrowiApiError('Failed to get user pages', 404);
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof GrowiApiError) {
+        if (error.statusCode === 404) {
+          throw new GrowiApiError('User not found', 404);
+        }
+        if (error.statusCode === 403) {
+          throw new GrowiApiError('Access denied', 403);
+        }
+        throw error;
+      }
+      throw new GrowiApiError('Failed to get user pages', 500, error);
     }
   }
 }
