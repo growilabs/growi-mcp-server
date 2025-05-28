@@ -1,20 +1,191 @@
 import { container } from 'tsyringe';
 import { BaseService } from './base-service.js';
+import { GrowiApiError } from './growi-api-error.js';
 
 export const tokenUserService = 'UserService';
 
+export interface LoginParams {
+  username: string;
+  password: string;
+}
+
+export interface ExternalAccount {
+  id: string;
+  providerType: string;
+  accountId: string;
+  createdAt: string;
+  user: string;
+}
+
+export interface ExternalAccountsResponse {
+  externalAccounts: ExternalAccount[];
+}
+
+export interface MeResponse {
+  user: {
+    _id: string;
+    name: string;
+    username: string;
+    email: string;
+    lang: string;
+    status: string;
+    admin: boolean;
+    createdAt: string;
+  };
+}
+
+export interface LoginResponse {
+  user: {
+    [key: string]: unknown;
+  };
+}
+
+export interface RegisterParams {
+  username: string;
+  password: string;
+  name?: string;
+  email?: string;
+}
+
+export interface RegisterResponse {
+  user: {
+    [key: string]: unknown;
+  };
+}
+
 export interface IUserService {
-  // Placeholder method - will be replaced with actual user-related methods
-  _placeholder?(): void;
+  /**
+   * Authenticate user with username and password
+   * @throws {GrowiApiError} when authentication fails or other API errors occur
+   */
+  login(params: LoginParams): Promise<LoginResponse>;
+
+  /**
+   * Register a new user
+   * @throws {GrowiApiError} when registration fails (e.g., username taken) or other API errors occur
+   */
+  register(params: RegisterParams): Promise<RegisterResponse>;
+
+  /**
+   * Logout current user
+   * @throws {GrowiApiError} when logout fails or other API errors occur
+   */
+  logout(): Promise<void>;
+
+  /**
+   * Get current user information
+   * @throws {GrowiApiError} when user info retrieval fails or other API errors occur
+   */
+  me(): Promise<MeResponse>;
+
+  /**
+   * Get external accounts for a user
+   * @param userId The ID of the user to get external accounts for
+   * @throws {GrowiApiError} when external accounts retrieval fails or other API errors occur
+   */
+  getExternalAccounts(userId: string): Promise<ExternalAccountsResponse>;
 }
 
 /**
  * Service for handling GROWI user-related API operations
  */
 class UserService extends BaseService implements IUserService {
-  // Placeholder method - will be replaced with actual user-related methods
-  _placeholder?(): void {
-    // This method will be removed when actual user methods are implemented
+  async login(params: LoginParams): Promise<LoginResponse> {
+    try {
+      const response = await this.apiV1
+        .post('login', {
+          json: {
+            loginForm: {
+              username: params.username,
+              password: params.password,
+            },
+          },
+        })
+        .json<LoginResponse>();
+
+      if (!response.user) {
+        throw new GrowiApiError('Login failed', 401);
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof GrowiApiError) {
+        throw error;
+      }
+      throw new GrowiApiError('Login failed', 401, error);
+    }
+  }
+
+  async register(params: RegisterParams): Promise<RegisterResponse> {
+    try {
+      const response = await this.apiV1
+        .post('register', {
+          json: {
+            registerForm: params,
+          },
+        })
+        .json<RegisterResponse>();
+
+      if (!response.user) {
+        throw new GrowiApiError('Registration failed', 400);
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof GrowiApiError) {
+        if (error.statusCode === 409) {
+          throw new GrowiApiError('Username is already taken', 409);
+        }
+        if (error.statusCode === 400) {
+          throw new GrowiApiError('Invalid registration data', 400);
+        }
+        throw error;
+      }
+      throw new GrowiApiError('Registration failed', 500, error);
+    }
+  }
+  async logout(): Promise<void> {
+    try {
+      await this.apiV3.get('logout');
+    } catch (error) {
+      if (error instanceof GrowiApiError) {
+        throw error;
+      }
+      throw new GrowiApiError('Logout failed', 500, error);
+    }
+  }
+
+  async me(): Promise<MeResponse> {
+    try {
+      const response = await this.apiV3.get('me').json<MeResponse>();
+
+      if (!response.user) {
+        throw new GrowiApiError('Failed to get user info', 401);
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof GrowiApiError) {
+        throw error;
+      }
+      throw new GrowiApiError('Failed to get user info', 500, error);
+    }
+  }
+  async getExternalAccounts(userId: string): Promise<ExternalAccountsResponse> {
+    try {
+      const response = await this.apiV3.get(`users/${userId}/external-accounts`).json<ExternalAccountsResponse>();
+
+      if (!response.externalAccounts) {
+        throw new GrowiApiError('Failed to get external accounts', 404);
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof GrowiApiError) {
+        throw error;
+      }
+      throw new GrowiApiError('Failed to get external accounts', 500, error);
+    }
   }
 }
 
