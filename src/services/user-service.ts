@@ -1,3 +1,4 @@
+import type { IExternalAccount, IPageHasId, IRevisionHasId, IUserHasId } from '@growi/core/dist/interfaces';
 import { container } from 'tsyringe';
 import { BaseService } from './base-service.js';
 import { GrowiApiError } from './growi-api-error.js';
@@ -17,54 +18,37 @@ export interface GetUserPagesParams {
   status?: string;
 }
 
-export interface UserPage {
-  _id: string;
-  path: string;
-  revision: {
-    _id: string;
-    body: string;
-  };
-  status: string;
-  grant: number;
-  descendantCount: number;
-  isEmpty: boolean;
+export type UserPage = Pick<IPageHasId, '_id' | 'path' | 'status' | 'grant' | 'descendantCount' | 'isEmpty'> & {
+  revision: Pick<IRevisionHasId, '_id' | 'body'>;
   createdAt: string;
   updatedAt: string;
-}
+};
 
 export interface UserPagesResponse {
   pages: UserPage[];
 }
 
-export interface ExternalAccount {
-  id: string;
-  providerType: string;
-  accountId: string;
-  createdAt: string;
-  user: string;
-}
+export type AuthProviderType = 'local' | 'ldap' | 'saml' | 'oidc' | 'google' | 'github';
 
+export type ExternalAccount = IExternalAccount<AuthProviderType> & {
+  _id: string;
+  createdAt: string;
+};
+
+/**
+ * Response type for getExternalAccounts
+ * Contains array of external authentication accounts linked to a user
+ */
 export interface ExternalAccountsResponse {
   externalAccounts: ExternalAccount[];
 }
 
 export interface MeResponse {
-  user: {
-    _id: string;
-    name: string;
-    username: string;
-    email: string;
-    lang: string;
-    status: string;
-    admin: boolean;
-    createdAt: string;
-  };
+  user: IUserHasId;
 }
 
 export interface LoginResponse {
-  user: {
-    [key: string]: unknown;
-  };
+  user: IUserHasId;
 }
 
 export interface RegisterParams {
@@ -75,9 +59,7 @@ export interface RegisterParams {
 }
 
 export interface RegisterResponse {
-  user: {
-    [key: string]: unknown;
-  };
+  user: IUserHasId;
 }
 
 export interface IUserService {

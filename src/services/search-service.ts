@@ -1,3 +1,4 @@
+import type { IPageHasId, IRevisionHasId } from '@growi/core';
 import { container } from 'tsyringe';
 import { BaseService } from './base-service.js';
 import { GrowiApiError, isGrowiApiError } from './growi-api-error.js';
@@ -26,11 +27,12 @@ export interface SearchResponse {
     total: number;
     results: number;
   };
-  data: Array<{
-    _id: string;
-    path: string;
-    body: string;
-  }>;
+  data: Array<
+    IPageHasId & {
+      body: string;
+      revision?: IRevisionHasId;
+    }
+  >;
 }
 
 export interface ISearchService {

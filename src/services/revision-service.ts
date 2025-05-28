@@ -1,3 +1,4 @@
+import type { IRevisionHasId, IRevisionsForPagination } from '@growi/core';
 import { container } from 'tsyringe';
 import { BaseService } from './base-service.js';
 import { GrowiApiError, isGrowiApiError } from './growi-api-error.js';
@@ -10,32 +11,15 @@ export interface GetRevisionsParams {
   offset?: number;
 }
 
-export interface GetRevisionsResponse {
-  revisions: Array<{
-    _id: string;
-    pageId: string;
-    body: string;
-    format: string;
-    createdAt: string;
-    hasDiffToPrev: boolean;
-  }>;
+export type GetRevisionsResponse = {
+  revisions: IRevisionHasId[];
   totalCount: number;
   offset?: number;
-}
+};
 
-export interface GetRevisionResponse {
-  revision: {
-    _id: string;
-    body: string;
-    format: string;
-    author: {
-      _id: string;
-      name: string;
-    };
-    path: string;
-    createdAt: string;
-  };
-}
+export type GetRevisionResponse = {
+  revision: IRevisionHasId;
+};
 
 export interface IRevisionService {
   getRevisions(params: GetRevisionsParams): Promise<GetRevisionsResponse>;

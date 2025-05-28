@@ -5,7 +5,24 @@ import { isGrowiApiError } from '../services/growi-api-error.js';
 import type { IUserService } from '../services/user-service.js';
 import { tokenUserService } from '../services/user-service.js';
 
-export const meSchema = z.object({});
+export const meSchema = z.object({
+  user: z.object({
+    _id: z.string(),
+    name: z.string(),
+    username: z.string(),
+    email: z.string(),
+    admin: z.boolean(),
+    imageUrlCached: z.string(),
+    isGravatarEnabled: z.boolean(),
+    isEmailPublished: z.boolean(),
+    lang: z.string(),
+    status: z.number(),
+    createdAt: z.string().or(z.date()),
+    lastLoginAt: z.string().or(z.date()).optional(),
+    introduction: z.string(),
+    isQuestionnaireEnabled: z.boolean(),
+  }),
+});
 
 export const getExternalAccountsSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
@@ -25,12 +42,15 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export const registerSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().optional(),
-  email: z.string().email('Invalid email format').optional(),
-});
+export const registerSchema = z
+  .object({
+    username: z.string().min(1, 'Username is required'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    name: z.string().optional().describe('User display name'),
+    email: z.string().email('Invalid email format').optional(),
+  })
+  .strict()
+  .describe('Registration parameters matching subset of IUser interface');
 
 export function registerLoginTool(server: FastMCP): void {
   const userService = container.resolve<IUserService>(tokenUserService);

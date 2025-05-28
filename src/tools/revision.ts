@@ -1,3 +1,4 @@
+import type { IRevision, IRevisionHasId, IRevisionsForPagination } from '@growi/core';
 import type { FastMCP } from 'fastmcp';
 import { container } from 'tsyringe';
 import { z } from 'zod';
@@ -8,11 +9,13 @@ const getRevisionSchema = z.object({
   id: z.string().describe('ID of the revision to get'),
 });
 
-const getRevisionsSchema = z.object({
-  pageId: z.string().optional().describe('ID of the page to get revisions for'),
-  limit: z.number().int().min(1).optional().describe('Maximum number of revisions to return'),
-  offset: z.number().int().min(0).optional().describe('Number of revisions to skip'),
-});
+const getRevisionsSchema = z
+  .object({
+    pageId: z.string().optional().describe('ID of the page to get revisions for'),
+    limit: z.number().int().min(1).optional().describe('Maximum number of revisions to return'),
+    offset: z.number().int().min(0).optional().describe('Number of revisions to skip'),
+  })
+  .describe('Parameters for getting page revisions');
 
 export function registerGetRevisionTool(server: FastMCP): void {
   const revisionService = container.resolve<IRevisionService>(tokenRevisionService);
@@ -25,6 +28,10 @@ export function registerGetRevisionTool(server: FastMCP): void {
       const params = getRevisionSchema.parse(args);
       try {
         const response = await revisionService.getRevision(params.id);
+        // Convert date strings to Date objects to match IRevisionHasId type
+        response.revision.createdAt = new Date(response.revision.createdAt);
+        // Use createdAt as updatedAt if updatedAt is not provided
+        response.revision.updatedAt = new Date(response.revision.updatedAt ?? response.revision.createdAt);
         return JSON.stringify(response);
       } catch (error) {
         if (isGrowiApiError(error)) {
@@ -47,6 +54,13 @@ export function registerGetRevisionsTool(server: FastMCP): void {
       const params = getRevisionsSchema.parse(args);
       try {
         const response = await revisionService.getRevisions(params);
+        // Convert date strings to Date objects for each revision to match IRevisionHasId type
+        response.revisions = response.revisions.map((revision) => ({
+          ...revision,
+          createdAt: new Date(revision.createdAt),
+          // Use createdAt as updatedAt if updatedAt is not provided
+          updatedAt: new Date(revision.updatedAt ?? revision.createdAt),
+        }));
         return JSON.stringify(response);
       } catch (error) {
         if (isGrowiApiError(error)) {
