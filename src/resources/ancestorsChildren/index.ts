@@ -1,1 +1,1 @@
-export { registerGetAncestorsChildrenTool } from './register.js';
+export { registerAncestorsChildrenResource } from './register.js';

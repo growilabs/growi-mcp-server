@@ -1,6 +1,6 @@
 import type { IPage } from '@growi/core/dist/interfaces';
-import { apiV3 } from '../../commons/api/client-v3.js';
-import { GrowiApiError, isGrowiApiError } from '../../commons/api/growi-api-error.js';
+import { apiV3 } from '../../../commons/api/client-v3.js';
+import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import type { UpdatePageParam } from './schema.js';
 
 export const updatePage = async (params: UpdatePageParam): Promise<IPage> => {

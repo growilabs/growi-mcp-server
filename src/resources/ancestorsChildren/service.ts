@@ -1,8 +1,19 @@
+import type { IPage } from '@growi/core/dist/interfaces';
 import { apiV3 } from '../../commons/api/client-v3.js';
 import { GrowiApiError, isGrowiApiError } from '../../commons/api/growi-api-error.js';
-import type { GetAncestorsChildrenParam, GetAncestorsChildrenResponse } from './schema.js';
 
-export async function getAncestorsChildren(params: GetAncestorsChildrenParam): Promise<GetAncestorsChildrenResponse> {
+export type ListAncestorsChildrenParams = {
+  pageId: string;
+};
+
+export interface ListAncestorsChildrenResponse {
+  ancestorsChildren: {
+    ancestor: IPage;
+    children: IPage[];
+  }[];
+}
+
+export async function listAncestorsChildren(params: ListAncestorsChildrenParams): Promise<ListAncestorsChildrenResponse> {
   try {
     const response = await apiV3
       .get('page-listing/ancestors-children', {
@@ -10,7 +21,7 @@ export async function getAncestorsChildren(params: GetAncestorsChildrenParam): P
           pageId: params.pageId,
         },
       })
-      .json<GetAncestorsChildrenResponse>();
+      .json<ListAncestorsChildrenResponse>();
 
     if (!response.ancestorsChildren) {
       throw new GrowiApiError('Ancestors children not found', 404);

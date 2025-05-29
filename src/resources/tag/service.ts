@@ -1,8 +1,18 @@
 import { apiV1 } from '../../commons/api/client-v1.js';
 import { GrowiApiError, isGrowiApiError } from '../../commons/api/growi-api-error.js';
-import type { GetPageTagParam, GetPageTagResponse } from './schema.js';
 
-export async function getPageTag(params: GetPageTagParam): Promise<GetPageTagResponse> {
+export interface GetPageTagParams {
+  pageId: string;
+}
+
+export interface GetPageTagResponse {
+  tags: Array<{
+    name: string;
+    count: number;
+  }>;
+}
+
+export async function getPageTags(params: GetPageTagParams): Promise<GetPageTagResponse> {
   try {
     const response = await apiV1
       .get('pages.getPageTag', {

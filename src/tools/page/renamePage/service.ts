@@ -1,5 +1,5 @@
-import { apiV1 } from '../../commons/api/client-v1.js';
-import { GrowiApiError, isGrowiApiError } from '../../commons/api/growi-api-error.js';
+import { apiV1 } from '../../../commons/api/client-v1.js';
+import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import type { IPage, RenamePageParam } from './schema.js';
 
 export async function renamePage(params: RenamePageParam): Promise<IPage> {

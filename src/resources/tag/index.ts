@@ -1,1 +1,1 @@
-export { registerGetPageTagTool } from './register.js';
+export { registerPageTagsResource } from './register.js';
