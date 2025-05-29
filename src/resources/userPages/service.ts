@@ -1,21 +1,15 @@
 import { apiV3 } from '../../commons/api/client-v3.js';
 import { isGrowiApiError } from '../../commons/api/growi-api-error.js';
-import type { GetUserPagesParams } from './types.js';
 
-export async function getMe() {
-  try {
-    const response = await apiV3.get('users/me').json();
-    return response;
-  } catch (error) {
-    if (isGrowiApiError(error)) {
-      throw new Error(`Failed to get user info: [${error.statusCode}] ${error.message}`);
-    }
-    throw new Error('Failed to get user info. Please check if you are authenticated.');
-  }
-}
+export type ListUserPagesParams = {
+  userId: string;
+  limit?: number;
+  offset?: number;
+  sort?: string;
+  status?: string;
+};
 
-export async function getUserPages(params: GetUserPagesParams) {
-  const { userId, limit, offset, sort, status } = params;
+export async function listUserPages({ userId, limit, offset, sort, status }: ListUserPagesParams): Promise<unknown> {
   try {
     const searchParams = new URLSearchParams();
     if (limit) searchParams.set('limit', limit.toString());
