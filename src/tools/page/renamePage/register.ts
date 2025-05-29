@@ -1,4 +1,5 @@
-import type { FastMCP } from 'fastmcp';
+import { type FastMCP, UserError } from 'fastmcp';
+import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { renamePageParamSchema } from './schema.js';
 import { renamePage } from './service.js';
@@ -10,13 +11,30 @@ export function registerRenamePageTool(server: FastMCP): void {
     parameters: renamePageParamSchema,
     execute: async (params) => {
       try {
-        const page = await renamePage(params);
+        // Validate parameters
+        const validatedParams = renamePageParamSchema.parse(params);
+
+        // Call service
+        const page = await renamePage(validatedParams);
         return JSON.stringify(page);
       } catch (error) {
-        if (isGrowiApiError(error)) {
-          throw new Error(`Failed to rename page: [${error.statusCode}] ${error.message}${error.details != null ? `\n${JSON.stringify(error.details)}` : ''}`);
+        // Handle Zod validation errors
+        if (error instanceof z.ZodError) {
+          throw new UserError('Invalid parameters provided', {
+            validationErrors: error.errors,
+          });
         }
-        throw error;
+
+        // Handle API errors
+        if (isGrowiApiError(error)) {
+          throw new UserError(`Failed to rename page: ${error.message}`, {
+            statusCode: error.statusCode,
+            details: error.details,
+          });
+        }
+
+        // Handle unexpected errors
+        throw new UserError('A system error occurred. Please contact the administrator.');
       }
     },
   });

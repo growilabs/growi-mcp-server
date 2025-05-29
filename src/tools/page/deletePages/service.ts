@@ -16,7 +16,7 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
       .json<DeletePagesResponse>();
 
     if (!response.paths) {
-      throw new GrowiApiError('Failed to delete pages', 500);
+      throw new GrowiApiError('The API response is missing required data', 500);
     }
 
     return response;
@@ -25,14 +25,13 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
       throw error;
     }
 
-    if (error instanceof Error) {
-      // Handle ky library errors
-      if ('response' in error) {
-        const response = (error as { response: Response }).response;
-        throw new GrowiApiError('Failed to delete pages in GROWI', response.status, await response.json().catch(() => undefined));
-      }
+    // Handle ky library errors
+    if (error instanceof Error && 'response' in error) {
+      const response = (error as { response: Response }).response;
+      throw new GrowiApiError('Failed to delete pages through the API', response.status, await response.json().catch(() => undefined));
     }
 
-    throw new GrowiApiError('Unknown error occurred', 500, error);
+    // Handle unexpected errors
+    throw new GrowiApiError('An unexpected error occurred while deleting pages', 500, error);
   }
 };

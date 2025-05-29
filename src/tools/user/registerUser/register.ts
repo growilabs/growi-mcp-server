@@ -1,4 +1,5 @@
 import { type FastMCP, UserError } from 'fastmcp';
+import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { registerUserSchema } from './schema.js';
 import { registerUser } from './service.js';
@@ -17,17 +18,30 @@ export function registerRegisterUserTool(server: FastMCP): void {
     },
     execute: async (params, context) => {
       try {
-        const response = await registerUser(params);
+        // Validate parameters
+        const validatedParams = registerUserSchema.parse(params);
+
+        // Execute service with validated parameters
+        const response = await registerUser(validatedParams);
         return JSON.stringify(response);
       } catch (error) {
+        // Handle Zod validation errors
+        if (error instanceof z.ZodError) {
+          throw new UserError('Invalid parameters provided', {
+            validationErrors: error.errors,
+          });
+        }
+
+        // Handle API errors
         if (isGrowiApiError(error)) {
-          throw new UserError(`ユーザー登録に失敗しました: ${error.message}`, {
+          throw new UserError(`Failed to register user: ${error.message}`, {
             statusCode: error.statusCode,
             details: error.details,
           });
         }
 
-        throw new UserError('ユーザー登録に失敗しました。しばらく時間をおいて再度お試しください。');
+        // Handle unexpected errors
+        throw new UserError('Registration failed. Please try again later.');
       }
     },
   });

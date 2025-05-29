@@ -24,18 +24,16 @@ export async function renamePage(params: RenamePageParam): Promise<IPage> {
 
     return response.page;
   } catch (error) {
+    // Handle ky library errors
+    if (error instanceof Error && 'response' in error) {
+      const response = (error as { response: Response }).response;
+      throw new GrowiApiError('Failed to rename page in GROWI', response.status, await response.json().catch(() => undefined));
+    }
+
     if (isGrowiApiError(error)) {
       throw error;
     }
 
-    if (error instanceof Error) {
-      // Handle ky library errors
-      if ('response' in error) {
-        const response = (error as { response: Response }).response;
-        throw new GrowiApiError('Failed to rename page in GROWI', response.status, await response.json().catch(() => undefined));
-      }
-    }
-
-    throw new GrowiApiError('Unknown error occurred', 500, error);
+    throw new GrowiApiError('An unexpected error occurred', 500, error);
   }
 }

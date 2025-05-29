@@ -17,23 +17,24 @@ export const createPage = async (params: CreatePageParam): Promise<IPage> => {
       .json<{ page: IPage }>();
 
     if (!response.page) {
-      throw new GrowiApiError('Failed to create page', 500);
+      throw new GrowiApiError('Page creation response is invalid', 500);
     }
 
     return response.page;
   } catch (error) {
+    // If it's already a GrowiApiError, rethrow it
     if (isGrowiApiError(error)) {
       throw error;
     }
 
-    if (error instanceof Error) {
-      // Handle ky library errors
-      if ('response' in error) {
-        const response = (error as { response: Response }).response;
-        throw new GrowiApiError('Failed to create page in GROWI', response.status, await response.json().catch(() => undefined));
-      }
+    // Handle ky library errors with response
+    if (error instanceof Error && 'response' in error) {
+      const response = (error as { response: Response }).response;
+      const errorData = await response.json().catch(() => undefined);
+      throw new GrowiApiError('Failed to create page in GROWI', response.status, errorData);
     }
 
-    throw new GrowiApiError('Unknown error occurred', 500, error);
+    // Handle network or other unexpected errors
+    throw new GrowiApiError('An unexpected error occurred while creating the page', 500, error instanceof Error ? error.message : error);
   }
 };

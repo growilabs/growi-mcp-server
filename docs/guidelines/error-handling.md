@@ -6,6 +6,10 @@
 
 ## エラーハンドリングの基本方針
 
+### [重要] 言語
+本ドキュメントには日本語で書かれており、サンプルとなるコード例中でも例えばコード内コメントや、エラーメッセージなどに日本語が使われているが、**実際の実装コードはこれらを全て英語で記述すること**。
+
+
 ### サービス層（`service.ts`）
 
 サービス層では、API呼び出しやビジネスロジックの実行時に発生したエラーを適切に捕捉し、明確な情報を含むエラーオブジェクトとしてスローします。
@@ -67,14 +71,34 @@ if (isGrowiApiError(error)) {
 
 ### バリデーションエラー
 
-パラメータのバリデーションエラーは、具体的な問題点を示すメッセージと共に`UserError`としてスローします。
+パラメータのバリデーションには、[Zod](https://github.com/colinhacks/zod)を使用することを推奨します。Zodは以下の利点を提供します：
+
+1. 型安全性の保証
+2. 包括的なバリデーションルールの定義
+3. 詳細なエラーメッセージの生成
+4. スキーマ定義の再利用性
 
 ```typescript
-if (!isValidPagePath(path)) {
-  throw new UserError(
-    'ページパスが不正です。使用できない文字が含まれているか、形式が間違っています。',
-    { invalidPath: path }
-  );
+// スキーマ定義の例（schema.ts）
+import { z } from 'zod';
+
+export const createPageParamSchema = z.object({
+  path: z.string().min(1, 'Page path is required'),
+  body: z.string(),
+  grant: z.number().optional(),
+  overwrite: z.boolean().optional(),
+});
+
+// バリデーションの例（register.ts）
+try {
+  const validatedParams = createPageParamSchema.parse(params);
+  // 検証済みパラメータを使用して処理を続行
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    throw new UserError('Invalid parameters provided', {
+      validationErrors: error.errors,
+    });
+  }
 }
 ```
 
@@ -129,7 +153,14 @@ throw new UserError(
 
 ```typescript
 import { UserError } from 'fastmcp';
+import { z } from 'zod';
 import { isGrowiApiError } from '../commons/api/growi-api-error.js';
+
+// パラメータスキーマの定義
+const someParamSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  value: z.number().min(0, 'Value must be non-negative'),
+});
 
 export function registerSomeTool(server: FastMCP): void {
   server.addTool({
@@ -143,22 +174,25 @@ export function registerSomeTool(server: FastMCP): void {
     },
     execute: async (params, context) => {
       try {
-        // パラメータのバリデーション
-        if (!isValidParams(params)) {
-          throw new UserError(
-            '無効なパラメータが指定されました',
-            { invalidParams: params }
-          );
-        }
+        // zodによるパラメータバリデーション
+        const validatedParams = someParamSchema.parse(params);
 
-        // 操作の実行
-        const result = await someService(params);
+        // 検証済みパラメータを使用して操作を実行
+        const result = await someService(validatedParams);
         return JSON.stringify(result);
 
       } catch (error) {
+        // zodバリデーションエラーの処理
+        if (error instanceof z.ZodError) {
+          throw new UserError('Invalid parameters provided', {
+            validationErrors: error.errors,
+          });
+        }
+
+        // APIエラーの処理
         if (isGrowiApiError(error)) {
           throw new UserError(
-            `操作に失敗しました: ${error.message}`,
+            `Operation failed: ${error.message}`,
             {
               statusCode: error.statusCode,
               details: error.details
@@ -166,7 +200,8 @@ export function registerSomeTool(server: FastMCP): void {
           );
         }
 
-        throw new UserError('操作を完了できませんでした。');
+        // その他の予期せぬエラーの処理
+        throw new UserError('The operation could not be completed.');
       }
     }
   });
@@ -175,7 +210,7 @@ export function registerSomeTool(server: FastMCP): void {
 
 このコード例は以下の要素を示しています：
 
-1. 適切なツールアノテーションの設定
-2. パラメータバリデーションの実装
-3. 様々なエラー種別に対する適切な処理
+1. zodを使用したパラメータスキーマの定義
+2. 型安全なバリデーションの実装
+3. 様々なエラー種別（Zod、API、その他）に対する適切な処理
 4. ユーザーフレンドリーなエラーメッセージの生成

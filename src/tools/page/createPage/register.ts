@@ -1,4 +1,5 @@
 import { type FastMCP, UserError } from 'fastmcp';
+import { ZodError } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { createPageParamSchema } from './schema.js';
 import { createPage } from './service.js';
@@ -17,17 +18,32 @@ export function registerCreatePageTool(server: FastMCP): void {
     },
     execute: async (params, context) => {
       try {
-        const page = await createPage(params);
+        // Validate input using zod schema
+        const validatedParams = createPageParamSchema.parse(params);
+
+        const page = await createPage(validatedParams);
         return JSON.stringify(page);
       } catch (error) {
-        if (isGrowiApiError(error)) {
-          throw new UserError(`ページの作成に失敗しました: ${error.message}`, {
-            statusCode: error.statusCode,
-            details: error.details,
+        // Handle zod validation errors
+        if (error instanceof ZodError) {
+          throw new UserError('Invalid parameters provided', {
+            validationErrors: error.errors,
           });
         }
 
-        throw new UserError('ページの作成に失敗しました。しばらく時間をおいて再度お試しください。');
+        // Handle GROWI API errors
+        if (isGrowiApiError(error)) {
+          throw new UserError(`Failed to create page: ${error.message}`, {
+            statusCode: error.statusCode,
+            details: error.details,
+            path: params.path,
+          });
+        }
+
+        // Handle unexpected errors
+        throw new UserError('The page creation operation could not be completed. Please try again later.', {
+          originalError: error instanceof Error ? error.message : String(error),
+        });
       }
     },
   });

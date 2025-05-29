@@ -19,7 +19,7 @@ export const updatePage = async (params: UpdatePageParam): Promise<IPage> => {
       .json<{ page: IPage }>();
 
     if (!response.page) {
-      throw new GrowiApiError('Failed to update page', 500);
+      throw new GrowiApiError('Failed to retrieve page data after update', 500);
     }
 
     return response.page;
@@ -32,10 +32,16 @@ export const updatePage = async (params: UpdatePageParam): Promise<IPage> => {
       // Handle ky library errors
       if ('response' in error) {
         const response = (error as { response: Response }).response;
-        throw new GrowiApiError('Failed to update page in GROWI', response.status, await response.json().catch(() => undefined));
+        const errorData = await response.json().catch(() => undefined);
+        throw new GrowiApiError('Failed to update page', response.status, {
+          originalError: error.message,
+          apiResponse: errorData,
+        });
       }
     }
 
-    throw new GrowiApiError('Unknown error occurred', 500, error);
+    throw new GrowiApiError('An unexpected error occurred while updating the page', 500, {
+      originalError: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
