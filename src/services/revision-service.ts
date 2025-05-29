@@ -1,7 +1,7 @@
 import type { IRevisionHasId, IRevisionsForPagination } from '@growi/core';
 import { container } from 'tsyringe';
+import { GrowiApiError, isGrowiApiError } from '../commons/api/growi-api-error.js';
 import { BaseService } from './base-service.js';
-import { GrowiApiError, isGrowiApiError } from './growi-api-error.js';
 
 export const tokenRevisionService = 'RevisionService';
 

@@ -2,7 +2,7 @@ import type { IRevision, IRevisionHasId, IRevisionsForPagination } from '@growi/
 import type { FastMCP } from 'fastmcp';
 import { container } from 'tsyringe';
 import { z } from 'zod';
-import { isGrowiApiError } from '../services/growi-api-error.js';
+import { isGrowiApiError } from '../commons/api/growi-api-error.js';
 import { type IRevisionService, tokenRevisionService } from '../services/revision-service.js';
 
 const getRevisionSchema = z.object({

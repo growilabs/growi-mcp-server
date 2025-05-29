@@ -1,5 +1,5 @@
 import type { FastMCP } from 'fastmcp';
-import { registerCreatePageTool } from './createPage.js';
+import { registerCreatePageTool } from './createPage';
 import { registerDeletePagesTool } from './deletePages.js';
 import { registerGetAncestorsChildrenTool } from './getAncestorsChildren.js';
 import { registerGetPageTool } from './getPage.js';

@@ -1,7 +1,7 @@
 import type { IExternalAccount, IPageHasId, IRevisionHasId, IUserHasId } from '@growi/core/dist/interfaces';
 import { container } from 'tsyringe';
+import { GrowiApiError } from '../commons/api/growi-api-error.js';
 import { BaseService } from './base-service.js';
-import { GrowiApiError } from './growi-api-error.js';
 
 export const tokenUserService = 'UserService';
 
