@@ -42,6 +42,7 @@ export interface ISearchService {
 
 /**
  * Service for handling GROWI search-related API operations
+ * @deprecated
  */
 class SearchService extends BaseService implements ISearchService {
   async search(query: string, limit?: number, offset?: number, sort?: string): Promise<SearchResponse> {

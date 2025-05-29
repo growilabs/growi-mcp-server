@@ -104,6 +104,7 @@ export interface IUserService {
 
 /**
  * Service for handling GROWI user-related API operations
+ * @deprecated
  */
 class UserService extends BaseService implements IUserService {
   async login(params: LoginParams): Promise<LoginResponse> {

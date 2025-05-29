@@ -28,6 +28,7 @@ export interface IRevisionService {
 
 /**
  * Service for handling GROWI revision-related API operations
+ * @deprecated
  */
 class RevisionService extends BaseService implements IRevisionService {
   async getRevisions(params: GetRevisionsParams): Promise<GetRevisionsResponse> {
