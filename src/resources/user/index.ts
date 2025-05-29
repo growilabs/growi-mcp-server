@@ -1,9 +1,7 @@
 import type { FastMCP } from 'fastmcp';
-import { container } from 'tsyringe';
 import { z } from 'zod';
-import { isGrowiApiError } from '../commons/api/growi-api-error.js';
-import type { IUserService } from '../services/user-service.js';
-import { tokenUserService } from '../services/user-service.js';
+import { apiV3 } from '../../commons/api/client-v3.js';
+import { isGrowiApiError } from '../../commons/api/growi-api-error.js';
 
 export const meSchema = z.object({
   user: z.object({
@@ -27,6 +25,7 @@ export const meSchema = z.object({
 export const getExternalAccountsSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
 });
+
 export const getUserPagesSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   limit: z.number().min(1).optional(),
@@ -35,49 +34,15 @@ export const getUserPagesSchema = z.object({
   status: z.string().optional(),
 });
 
-export const registerSchema = z
-  .object({
-    username: z.string().min(1, 'Username is required'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    name: z.string().optional().describe('User display name'),
-    email: z.string().email('Invalid email format').optional(),
-  })
-  .strict()
-  .describe('Registration parameters matching subset of IUser interface');
-
-export function registerRegisterTool(server: FastMCP): void {
-  const userService = container.resolve<IUserService>(tokenUserService);
-
-  server.addTool({
-    name: 'register',
-    description: 'Register a new user account in GROWI',
-    parameters: registerSchema,
-    execute: async (args) => {
-      const params = registerSchema.parse(args);
-      try {
-        const response = await userService.register(params);
-        return JSON.stringify(response);
-      } catch (error) {
-        if (isGrowiApiError(error)) {
-          throw new Error(`Registration failed: [${error.statusCode}] ${error.message}`);
-        }
-        throw new Error('Registration failed. Please try again later.');
-      }
-    },
-  });
-}
-
-export function registerMeTool(server: FastMCP): void {
-  const userService = container.resolve<IUserService>(tokenUserService);
-
-  server.addTool({
+export function registerMeResource(server: FastMCP): void {
+  server.addResource({
     name: 'me',
     description: 'Get current user information from GROWI',
-    parameters: meSchema,
+    schema: meSchema,
     execute: async () => {
       try {
-        const response = await userService.me();
-        return JSON.stringify(response);
+        const response = await apiV3.get('users/me').json();
+        return response;
       } catch (error) {
         if (isGrowiApiError(error)) {
           throw new Error(`Failed to get user info: [${error.statusCode}] ${error.message}`);
@@ -88,18 +53,16 @@ export function registerMeTool(server: FastMCP): void {
   });
 }
 
-export function registerGetExternalAccountsTool(server: FastMCP): void {
-  const userService = container.resolve<IUserService>(tokenUserService);
-
-  server.addTool({
+export function registerGetExternalAccountsResource(server: FastMCP): void {
+  server.addResource({
     name: 'getExternalAccounts',
     description: 'Get external accounts for a specific user',
-    parameters: getExternalAccountsSchema,
+    schema: getExternalAccountsSchema,
     execute: async (args) => {
       const params = getExternalAccountsSchema.parse(args);
       try {
-        const response = await userService.getExternalAccounts(params.userId);
-        return JSON.stringify(response);
+        const response = await apiV3.get(`users/${params.userId}/external-accounts`).json();
+        return response;
       } catch (error) {
         if (isGrowiApiError(error)) {
           throw new Error(`Failed to get external accounts: [${error.statusCode}] ${error.message}`);
@@ -110,18 +73,26 @@ export function registerGetExternalAccountsTool(server: FastMCP): void {
   });
 }
 
-export function registerGetUserPagesTool(server: FastMCP): void {
-  const userService = container.resolve<IUserService>(tokenUserService);
-
-  server.addTool({
+export function registerGetUserPagesResource(server: FastMCP): void {
+  server.addResource({
     name: 'getUserPages',
     description: 'Get pages created by a specific user',
-    parameters: getUserPagesSchema,
+    schema: getUserPagesSchema,
     execute: async (args) => {
       const params = getUserPagesSchema.parse(args);
       try {
-        const response = await userService.getPages(params);
-        return JSON.stringify(response);
+        const searchParams = new URLSearchParams();
+        if (params.limit) searchParams.set('limit', params.limit.toString());
+        if (params.offset) searchParams.set('offset', params.offset.toString());
+        if (params.sort) searchParams.set('sort', params.sort);
+        if (params.status) searchParams.set('status', params.status);
+
+        const response = await apiV3
+          .get(`users/${params.userId}/pages`, {
+            searchParams,
+          })
+          .json();
+        return response;
       } catch (error) {
         if (isGrowiApiError(error)) {
           if (error.statusCode === 404) {
@@ -136,4 +107,10 @@ export function registerGetUserPagesTool(server: FastMCP): void {
       }
     },
   });
+}
+
+export function loadUserResources(server: FastMCP): void {
+  registerMeResource(server);
+  registerGetExternalAccountsResource(server);
+  registerGetUserPagesResource(server);
 }
