@@ -1,5 +1,6 @@
 import type { FastMCP } from 'fastmcp';
 import { registerAncestorsChildrenResource } from './ancestorsChildren';
+import { registerGetExternalAccountsResource } from './externalAccounts';
 import { registerMeResource } from './me';
 import { registerPageResource } from './page/register';
 import { registerPageTagsResource } from './tag';
@@ -10,5 +11,6 @@ export async function loadResources(server: FastMCP): Promise<void> {
   registerAncestorsChildrenResource(server);
   registerPageTagsResource(server);
   registerMeResource(server);
+  registerGetExternalAccountsResource(server);
   loadUserResources(server);
 }

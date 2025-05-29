@@ -1,5 +1,5 @@
 import type { FastMCP } from 'fastmcp';
-import { getExternalAccounts, getMe, getUserPages } from './service.js';
+import { getMe, getUserPages } from './service.js';
 
 export function registerMeResource(server: FastMCP): void {
   server.addResourceTemplate({
@@ -9,25 +9,6 @@ export function registerMeResource(server: FastMCP): void {
     arguments: [], // 空の配列を指定
     async load() {
       const result = await getMe();
-      return { text: JSON.stringify(result) };
-    },
-  });
-}
-
-export function registerGetExternalAccountsResource(server: FastMCP): void {
-  server.addResourceTemplate({
-    uriTemplate: 'growi://user/{userId}/external-accounts',
-    name: 'GROWI User External Accounts',
-    mimeType: 'application/json',
-    arguments: [
-      {
-        name: 'userId',
-        description: 'ID of the user',
-        required: true,
-      },
-    ],
-    async load({ userId }) {
-      const result = await getExternalAccounts(userId);
       return { text: JSON.stringify(result) };
     },
   });
@@ -80,6 +61,5 @@ export function registerGetUserPagesResource(server: FastMCP): void {
 
 export function loadUserResources(server: FastMCP): void {
   registerMeResource(server);
-  registerGetExternalAccountsResource(server);
   registerGetUserPagesResource(server);
 }
