@@ -2,14 +2,7 @@ import type { FastMCP } from 'fastmcp';
 import { loadPageTools } from './page/index.js';
 import { registerGetRevisionTool, registerGetRevisionsTool } from './revision.js';
 import { registerSearchIndicesTool, registerSearchTool } from './search.js';
-import {
-  registerGetExternalAccountsTool,
-  registerGetUserPagesTool,
-  registerLoginTool,
-  registerLogoutTool,
-  registerMeTool,
-  registerRegisterTool,
-} from './user.js';
+import { registerGetExternalAccountsTool, registerGetUserPagesTool, registerMeTool, registerRegisterTool } from './user.js';
 
 /**
  * Loads and registers all MCP tools with the server.
@@ -20,9 +13,7 @@ export async function loadTools(server: FastMCP): Promise<void> {
   loadPageTools(server);
 
   // Register authentication tools
-  registerLoginTool(server);
   registerRegisterTool(server);
-  registerLogoutTool(server);
   registerMeTool(server);
   registerGetExternalAccountsTool(server);
   registerGetUserPagesTool(server);

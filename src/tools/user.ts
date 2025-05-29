@@ -35,13 +35,6 @@ export const getUserPagesSchema = z.object({
   status: z.string().optional(),
 });
 
-export const logoutSchema = z.object({});
-
-export const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
-});
-
 export const registerSchema = z
   .object({
     username: z.string().min(1, 'Username is required'),
@@ -51,30 +44,6 @@ export const registerSchema = z
   })
   .strict()
   .describe('Registration parameters matching subset of IUser interface');
-
-export function registerLoginTool(server: FastMCP): void {
-  const userService = container.resolve<IUserService>(tokenUserService);
-
-  server.addTool({
-    name: 'login',
-    description: 'Login to GROWI with username and password',
-    parameters: loginSchema,
-    execute: async (args) => {
-      const params = loginSchema.parse(args);
-      try {
-        const response = await userService.login(params);
-        return JSON.stringify(response);
-      } catch (error) {
-        if (isGrowiApiError(error)) {
-          // Don't include the password in error messages
-          throw new Error(`Login failed: [${error.statusCode}] Authentication failed`);
-        }
-        // Generic error without exposing details
-        throw new Error('Login failed. Please check your credentials and try again.');
-      }
-    },
-  });
-}
 
 export function registerRegisterTool(server: FastMCP): void {
   const userService = container.resolve<IUserService>(tokenUserService);
@@ -93,27 +62,6 @@ export function registerRegisterTool(server: FastMCP): void {
           throw new Error(`Registration failed: [${error.statusCode}] ${error.message}`);
         }
         throw new Error('Registration failed. Please try again later.');
-      }
-    },
-  });
-}
-
-export function registerLogoutTool(server: FastMCP): void {
-  const userService = container.resolve<IUserService>(tokenUserService);
-
-  server.addTool({
-    name: 'logout',
-    description: 'Logout current user from GROWI',
-    parameters: logoutSchema,
-    execute: async () => {
-      try {
-        await userService.logout();
-        return JSON.stringify({ status: 'success' });
-      } catch (error) {
-        if (isGrowiApiError(error)) {
-          throw new Error(`Logout failed: [${error.statusCode}] ${error.message}`);
-        }
-        throw new Error('Logout failed. Please try again later.');
       }
     },
   });

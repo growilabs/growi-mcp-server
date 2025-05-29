@@ -47,10 +47,6 @@ export interface MeResponse {
   user: IUserHasId;
 }
 
-export interface LoginResponse {
-  user: IUserHasId;
-}
-
 export interface RegisterParams {
   username: string;
   password: string;
@@ -64,22 +60,10 @@ export interface RegisterResponse {
 
 export interface IUserService {
   /**
-   * Authenticate user with username and password
-   * @throws {GrowiApiError} when authentication fails or other API errors occur
-   */
-  login(params: LoginParams): Promise<LoginResponse>;
-
-  /**
    * Register a new user
    * @throws {GrowiApiError} when registration fails (e.g., username taken) or other API errors occur
    */
   register(params: RegisterParams): Promise<RegisterResponse>;
-
-  /**
-   * Logout current user
-   * @throws {GrowiApiError} when logout fails or other API errors occur
-   */
-  logout(): Promise<void>;
 
   /**
    * Get current user information
@@ -107,32 +91,6 @@ export interface IUserService {
  * @deprecated
  */
 class UserService extends BaseService implements IUserService {
-  async login(params: LoginParams): Promise<LoginResponse> {
-    try {
-      const response = await this.apiV1
-        .post('login', {
-          json: {
-            loginForm: {
-              username: params.username,
-              password: params.password,
-            },
-          },
-        })
-        .json<LoginResponse>();
-
-      if (!response.user) {
-        throw new GrowiApiError('Login failed', 401);
-      }
-
-      return response;
-    } catch (error) {
-      if (error instanceof GrowiApiError) {
-        throw error;
-      }
-      throw new GrowiApiError('Login failed', 401, error);
-    }
-  }
-
   async register(params: RegisterParams): Promise<RegisterResponse> {
     try {
       const response = await this.apiV1
@@ -159,16 +117,6 @@ class UserService extends BaseService implements IUserService {
         throw error;
       }
       throw new GrowiApiError('Registration failed', 500, error);
-    }
-  }
-  async logout(): Promise<void> {
-    try {
-      await this.apiV3.get('logout');
-    } catch (error) {
-      if (error instanceof GrowiApiError) {
-        throw error;
-      }
-      throw new GrowiApiError('Logout failed', 500, error);
     }
   }
 
