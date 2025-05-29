@@ -1,11 +1,11 @@
 import type { FastMCP } from 'fastmcp';
 import { registerCreatePageTool } from './createPage';
-import { registerDeletePagesTool } from './deletePages.js';
-import { registerGetAncestorsChildrenTool } from './getAncestorsChildren.js';
+import { registerDeletePagesTool } from './deletePages/index.js';
+import { registerGetAncestorsChildrenTool } from './getAncestorsChildren/index.js';
 import { registerGetPageTool } from './getPage/index.js';
 import { registerGetPageTagTool } from './getPageTag/index.js';
-import { registerGetRootPagesTool } from './getRootPages.js';
-import { registerRenamePageTool } from './renamePage.js';
+import { registerGetRootPagesTool } from './getRootPages/index.js';
+import { registerRenamePageTool } from './renamePage/index.js';
 import { registerGetRevisionTool, registerGetRevisionsTool } from './revision.js';
 import { registerSearchIndicesTool, registerSearchTool } from './search.js';
 import { registerUpdatePageTool } from './updatePage/index.js';

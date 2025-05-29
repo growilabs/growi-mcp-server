@@ -1,0 +1,1 @@
+export { registerGetRootPagesTool } from './register.js';

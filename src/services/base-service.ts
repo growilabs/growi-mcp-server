@@ -3,6 +3,7 @@ import config from '../config/default.js';
 
 /**
  * Base service class that provides common HTTP clients for GROWI API communication
+ * @deprecated
  */
 export abstract class BaseService {
   protected readonly apiV1: typeof ky;
