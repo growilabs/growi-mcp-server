@@ -12,8 +12,12 @@ export async function registerUser(params: RegisterUserSchema): Promise<unknown>
     return response;
   } catch (error) {
     if (isGrowiApiError(error)) {
-      throw new Error(`Registration failed: [${error.statusCode}] ${error.message}`);
+      throw error; // GrowiApiErrorをそのままスロー
     }
-    throw new Error('Registration failed. Please try again later.');
+    // その他のエラーの場合は、より詳細な情報を含めてスロー
+    if (error instanceof Error) {
+      throw new Error('Registration failed. Please try again later.', { cause: error });
+    }
+    throw new Error('An unknown error occurred during registration.');
   }
 }
