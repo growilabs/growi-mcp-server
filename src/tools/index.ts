@@ -1,7 +1,14 @@
 import type { FastMCP } from 'fastmcp';
+import { registerCreatePageTool } from './createPage.js';
+import { registerDeletePagesTool } from './deletePages.js';
+import { registerGetAncestorsChildrenTool } from './getAncestorsChildren.js';
 import { registerGetPageTool } from './getPage.js';
+import { registerGetPageTagTool } from './getPageTag.js';
+import { registerGetRootPagesTool } from './getRootPages.js';
+import { registerRenamePageTool } from './renamePage.js';
 import { registerGetRevisionTool, registerGetRevisionsTool } from './revision.js';
 import { registerSearchIndicesTool, registerSearchTool } from './search.js';
+import { registerUpdatePageTool } from './updatePage.js';
 import {
   registerGetExternalAccountsTool,
   registerGetUserPagesTool,
@@ -25,8 +32,15 @@ export async function loadTools(server: FastMCP): Promise<void> {
   registerGetExternalAccountsTool(server);
   registerGetUserPagesTool(server);
 
-  // Register the getPage tool
+  // Register page-related tools
   registerGetPageTool(server);
+  registerGetPageTagTool(server);
+  registerCreatePageTool(server);
+  registerUpdatePageTool(server);
+  registerGetRootPagesTool(server);
+  registerGetAncestorsChildrenTool(server);
+  registerRenamePageTool(server);
+  registerDeletePagesTool(server);
 
   // Register the revision tools
   registerGetRevisionTool(server);
