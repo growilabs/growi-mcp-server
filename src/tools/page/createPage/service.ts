@@ -1,6 +1,6 @@
 import type { IPage } from '@growi/core/dist/interfaces';
-import { apiV1 } from '../../commons/api/client-v1';
-import { GrowiApiError, isGrowiApiError } from '../../commons/api/growi-api-error';
+import { apiV1 } from '../../../commons/api/client-v1';
+import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error';
 import type { CreatePageParam } from './schema';
 
 export const createPage = async (params: CreatePageParam): Promise<IPage> => {

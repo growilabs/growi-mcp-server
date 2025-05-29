@@ -1,5 +1,5 @@
 import type { FastMCP } from 'fastmcp';
-import { isGrowiApiError } from '../../commons/api/growi-api-error.js';
+import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { deletePagesParamSchema } from './schema.js';
 import { deletePages } from './service.js';
 
@@ -8,8 +8,7 @@ export function registerDeletePagesTool(server: FastMCP): void {
     name: 'deletePages',
     description: 'Delete pages in GROWI',
     parameters: deletePagesParamSchema,
-    execute: async (args) => {
-      const params = deletePagesParamSchema.parse(args);
+    execute: async (params) => {
       try {
         const response = await deletePages(params);
         return JSON.stringify(response);

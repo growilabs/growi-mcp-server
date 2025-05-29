@@ -1,9 +1,12 @@
 import type { IPage } from '@growi/core/dist/interfaces';
 import { apiV3 } from '../../commons/api/client-v3.js';
 import { GrowiApiError, isGrowiApiError } from '../../commons/api/growi-api-error.js';
-import type { GetPageParam } from './schema.js';
 
-export async function getPage(params: GetPageParam): Promise<IPage> {
+type GetPageParams = {
+  pagePath: string;
+};
+
+export async function getPage(params: GetPageParams): Promise<IPage> {
   try {
     const response = await apiV3
       .get('page', {

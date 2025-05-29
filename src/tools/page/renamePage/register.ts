@@ -1,5 +1,5 @@
 import type { FastMCP } from 'fastmcp';
-import { isGrowiApiError } from '../../commons/api/growi-api-error.js';
+import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { renamePageParamSchema } from './schema.js';
 import { renamePage } from './service.js';
 
@@ -8,8 +8,7 @@ export function registerRenamePageTool(server: FastMCP): void {
     name: 'renamePage',
     description: 'Rename or move a page in GROWI',
     parameters: renamePageParamSchema,
-    execute: async (args) => {
-      const params = renamePageParamSchema.parse(args);
+    execute: async (params) => {
       try {
         const page = await renamePage(params);
         return JSON.stringify(page);

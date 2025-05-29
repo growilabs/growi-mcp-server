@@ -1,5 +1,5 @@
 import type { FastMCP } from 'fastmcp';
-import { isGrowiApiError } from '../../commons/api/growi-api-error.js';
+import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { createPageParamSchema } from './schema.js';
 import { createPage } from './service.js';
 
@@ -8,8 +8,7 @@ export function registerCreatePageTool(server: FastMCP): void {
     name: 'createPage',
     description: 'Create a new page in GROWI',
     parameters: createPageParamSchema,
-    execute: async (args) => {
-      const params = createPageParamSchema.parse(args);
+    execute: async (params) => {
       try {
         const page = await createPage(params);
         return JSON.stringify(page);

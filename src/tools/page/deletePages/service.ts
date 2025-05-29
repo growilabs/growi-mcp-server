@@ -1,5 +1,5 @@
-import { apiV3 } from '../../commons/api/client-v3.js';
-import { GrowiApiError, isGrowiApiError } from '../../commons/api/growi-api-error.js';
+import { apiV3 } from '../../../commons/api/client-v3.js';
+import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import type { DeletePagesParam, DeletePagesResponse } from './schema.js';
 
 export const deletePages = async (params: DeletePagesParam): Promise<DeletePagesResponse> => {
