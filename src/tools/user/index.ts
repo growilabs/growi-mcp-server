@@ -1,12 +1,6 @@
 import type { FastMCP } from 'fastmcp';
-import { registerCreatePageTool } from './createPage';
-import { registerDeletePagesTool } from './deletePages';
-import { registerRenamePageTool } from './renamePage';
-import { registerUpdatePageTool } from './updatePage';
+import { registerRegisterUserTool } from './registerUser';
 
-export async function loadPageTools(server: FastMCP): Promise<void> {
-  registerCreatePageTool(server);
-  registerUpdatePageTool(server);
-  registerRenamePageTool(server);
-  registerDeletePagesTool(server);
+export async function loadUserTools(server: FastMCP): Promise<void> {
+  registerRegisterUserTool(server);
 }

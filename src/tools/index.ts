@@ -1,8 +1,8 @@
 import type { FastMCP } from 'fastmcp';
-import { loadPageTools } from './page/index.js';
+import { loadPageTools } from './page';
 import { registerGetRevisionTool, registerGetRevisionsTool } from './revision.js';
 import { registerSearchIndicesTool, registerSearchTool } from './search.js';
-import { registerRegisterTool } from './user.js';
+import { loadUserTools } from './user';
 
 /**
  * Loads and registers all MCP tools with the server.
@@ -13,7 +13,7 @@ export async function loadTools(server: FastMCP): Promise<void> {
   loadPageTools(server);
 
   // Register authentication tools
-  registerRegisterTool(server);
+  loadUserTools(server);
 
   // Register the revision tools
   registerGetRevisionTool(server);
