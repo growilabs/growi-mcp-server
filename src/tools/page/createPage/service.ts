@@ -6,7 +6,7 @@ import type { CreatePageParam } from './schema';
 export const createPage = async (params: CreatePageParam): Promise<IPage> => {
   try {
     const response = await apiV1
-      .post('pages', {
+      .post('/pages', {
         json: {
           path: params.path,
           body: params.body,

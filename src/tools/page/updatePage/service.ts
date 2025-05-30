@@ -6,7 +6,7 @@ import type { UpdatePageParam } from './schema.js';
 export const updatePage = async (params: UpdatePageParam): Promise<IPage> => {
   try {
     const response = await apiV3
-      .put('page', {
+      .put('/page', {
         json: {
           page_id: params.pageId,
           body: params.body,

@@ -5,7 +5,7 @@ import type { DeletePagesParam, DeletePagesResponse } from './schema.js';
 export const deletePages = async (params: DeletePagesParam): Promise<DeletePagesResponse> => {
   try {
     const response = await apiV3
-      .post('pages/delete', {
+      .post('/pages/delete', {
         json: {
           pageIdToRevisionIdMap: params.pageIdToRevisionIdMap,
           isCompletely: params.isCompletely,
