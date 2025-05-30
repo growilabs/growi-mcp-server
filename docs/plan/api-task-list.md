@@ -3,7 +3,6 @@
 このドキュメントは、GROWI API の MCP 実装におけるタスク管理リストです。
 LLM Agent が利用することを想定し、各APIの優先度、進捗、種別を管理します。
 
-
 ## 優先度 高 (改修)
 
 ### `tools/page/createPage` の改修
@@ -29,7 +28,6 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 ## 優先度 高 (新規実装)
 
----
 
 ### `/page/info` (apiV3 GET)
 - **進捗状況:** 未着手
@@ -37,6 +35,35 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 - **備考:** ページ情報取得のための基本的なAPI。PageParamsスキーマの定義確認が必要
 
 ---
+
+### `/pages/list` (apiV3 GET)
+- **進捗状況:** 未着手
+- **種別:** resource
+- **備考:** ページ一覧取得API。path検索、ページネーション機能あり。User情報を含むページ情報を返却
+
+---
+
+### `/pages/duplicate` (メソッドは処理フローに記載)
+- **進捗状況:** 未着手
+- **種別:** tool
+- **備考:** ページ複製API。再帰的な複製やユーザー関連リソースのみの複製など、複雑な操作をサポート
+- **処理フロー**
+  1. apiV3 で GET `/pages/exist-paths` に成功
+  2. 1ページ削除なら apiv1 で POST `/pages.remove`、複数ページ削除なら apiv3 で POST `/pages/duplicate`
+
+---
+
+### `/search` (apiV1 GET)
+- **進捗状況:** 未着手
+- **種別:** resource
+- **備考:** ページ検索API。Elasticsearchを使用し、ページネーション機能あり
+
+---
+
+
+
+## 優先度 中
+
 
 ### `/page/grant-data` (apiV3 GET)
 - **進捗状況:** 未着手
@@ -73,23 +100,6 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 ---
 
-### `/pages/list` (apiV3 GET)
-- **進捗状況:** 未着手
-- **種別:** resource
-- **備考:** ページ一覧取得API。path検索、ページネーション機能あり。User情報を含むページ情報を返却
-
----
-
-### `/pages/duplicate` (メソッドは処理フローに記載)
-- **進捗状況:** 未着手
-- **種別:** tool
-- **備考:** ページ複製API。再帰的な複製やユーザー関連リソースのみの複製など、複雑な操作をサポート
-- **処理フロー**
-  1. apiV3 で GET `/pages/exist-paths` に成功
-  2. 1ページ削除なら apiv1 で POST `/pages.remove`、複数ページ削除なら apiv3 で POST `/pages/duplicate`
-
----
-
 ### `/page/exist` (apiV3 GET)
 - **優先度:** 中
 - **進捗状況:** 未着手
@@ -116,13 +126,6 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 - **進捗状況:** 未着手
 - **種別:** resource
 - **備考:** ページのリビジョンに対するコメント取得API。page_idとrevision_idによる指定が可能
-
----
-
-### `/search` (apiV1 GET)
-- **進捗状況:** 未着手
-- **種別:** resource
-- **備考:** ページ検索API。Elasticsearchを使用し、ページネーション機能あり
 
 ---
 
@@ -160,9 +163,6 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 - **備考:** 指定したリビジョンの詳細情報取得API。pageIdとrevisionIdの両方が必要
 
 ---
-
-
-## 優先度 中
 
 ### `/page-listing/info` (apiV3 GET)
 - **進捗状況:** 未着手

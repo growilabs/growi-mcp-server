@@ -42,7 +42,9 @@ src/
 
 docs/              # ドキュメント
 ├── guidelines/    # 開発ガイドライン
-├── openapi/      # OpenAPI仕様
+├── openapi/      # OpenAPI仕様書
+│   ├── openapi-v1.json      # GROWI API v1 仕様書
+│   └── openapi-v3.jxon      # GROWI API v3 仕様書
 └── plan/         # 実装計画
 
 scripts/          # ユーティリティスクリプト
