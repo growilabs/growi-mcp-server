@@ -1,11 +1,11 @@
-import { apiV1 } from '../../../commons/api/client-v1.js';
+import { apiV3 } from '../../../commons/api/client-v3.js';
 import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import type { IPage, RenamePageParam } from './schema.js';
 
 export async function renamePage(params: RenamePageParam): Promise<IPage> {
   try {
-    const response = await apiV1
-      .post('pages/rename', {
+    const response = await apiV3
+      .post('/pages/rename', {
         json: {
           page_id: params.pageId,
           new_path: params.newPagePath,
