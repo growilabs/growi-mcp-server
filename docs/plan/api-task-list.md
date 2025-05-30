@@ -27,7 +27,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 ---
 ### `tools/page/deletePage` の改修
-- **進捗状況:** 実装済み、要改修
+- **進捗状況:** 改修済み
 - **種別:** tool
 - **備考:** 1ページ削除なら apiv1 で POST `/pages.remove`、複数ページ削除なら apiv3 で POST `/pages/delete`
 
@@ -36,7 +36,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 
 ### `/page/info` (apiV3 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** 実装済み
 - **種別:** resource
 - **備考:** ページ情報取得のための基本的なAPI。PageParamsスキーマの定義確認が必要
 
