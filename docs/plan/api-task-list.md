@@ -7,7 +7,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 ### `tools/page/createPage` の改修
 
-- **進捗状況:** 実装済み、要改修
+- **進捗状況:** 実装済み、改修済み
 - **種別:** tool
 - **処理フロー**
   1. apiV3 で GET `/page/exist` に成功
@@ -16,7 +16,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 ---
 ### `tools/page/renamePage` の改修
 
-- **進捗状況:** 実装済み、要改修
+- **進捗状況:** 改修済み
 - **種別:** tool
 - **処理フロー**
   1. apiV3 で GET `/pages/exist-paths` に成功
@@ -24,6 +24,12 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 - **備考:**
   - スキーマの必須パラメータ更新（revisionIdを必須に）
   - 他にもリクエストパラメータがたくさんあるので正確な仕様を確認し対応する
+
+---
+### `tools/page/deletePage` の改修
+- **進捗状況:** 実装済み、要改修
+- **種別:** tool
+- **備考:** 1ページ削除なら apiv1 で POST `/pages.remove`、複数ページ削除なら apiv3 で POST `/pages/delete`
 
 
 ## 優先度 高 (新規実装)
@@ -43,13 +49,13 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 ---
 
-### `/pages/duplicate` (メソッドは処理フローに記載)
+### `/pages/duplicate`
 - **進捗状況:** 未着手
 - **種別:** tool
 - **備考:** ページ複製API。再帰的な複製やユーザー関連リソースのみの複製など、複雑な操作をサポート
 - **処理フロー**
   1. apiV3 で GET `/pages/exist-paths` に成功
-  2. 1ページ削除なら apiv1 で POST `/pages.remove`、複数ページ削除なら apiv3 で POST `/pages/duplicate`
+  2. apiV3 で POST `/pages/duplicate`
 
 ---
 

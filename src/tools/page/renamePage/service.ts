@@ -4,16 +4,30 @@ import type { IPage, RenamePageParam } from './schema.js';
 
 export async function renamePage(params: RenamePageParam): Promise<IPage> {
   try {
+    // Check if pages exist at the new path
+    const existResponse = await apiV3
+      .get('pages/exist-paths', {
+        searchParams: {
+          fromPath: params.newPagePath,
+          toPath: params.newPagePath,
+        },
+      })
+      .json<{ existPaths: Record<string, boolean> }>();
+
+    if (existResponse.existPaths && Object.keys(existResponse.existPaths).length > 0) {
+      throw new GrowiApiError('Page already exists at the target path', 409);
+    }
+
+    // Proceed with renaming
     const response = await apiV3
       .post('/pages/rename', {
         json: {
-          page_id: params.pageId,
-          new_path: params.newPagePath,
-          revision_id: params.revisionId,
-          rename_redirect: params.isRenameRedirect,
-          recursively: params.isRecursively,
-          move_mode: params.isMoveMode,
-          update_metadata: params.updateMetadata,
+          pageId: params.pageId,
+          revisionId: params.revisionId,
+          newPagePath: params.newPagePath,
+          isRenameRedirect: params.isRenameRedirect ?? false,
+          isRecursively: params.isRecursively ?? false,
+          updateMetadata: params.updateMetadata ?? false,
         },
       })
       .json<{ page: IPage }>();
@@ -27,7 +41,16 @@ export async function renamePage(params: RenamePageParam): Promise<IPage> {
     // Handle ky library errors
     if (error instanceof Error && 'response' in error) {
       const response = (error as { response: Response }).response;
-      throw new GrowiApiError('Failed to rename page in GROWI', response.status, await response.json().catch(() => undefined));
+      const responseData = await response.json().catch(() => undefined);
+
+      if (response.status === 409) {
+        throw new GrowiApiError('Page already exists at the target path', 409, responseData);
+      }
+      if (response.status === 401) {
+        throw new GrowiApiError('Invalid page ID', 401, responseData);
+      }
+
+      throw new GrowiApiError('Failed to rename page in GROWI', response.status, responseData);
     }
 
     if (isGrowiApiError(error)) {
