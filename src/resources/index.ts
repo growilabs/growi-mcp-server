@@ -1,12 +1,16 @@
 import type { FastMCP } from 'fastmcp';
-import { registerGrowiPageResource } from './growiPageResource.js';
-// Import other resource definition files here in the future
-// import { registerAnotherResource } from './anotherResource.js';
+import { registerAncestorsChildrenResource } from './ancestorsChildren';
+import { registerGetExternalAccountsResource } from './externalAccounts';
+import { registerMeResource } from './me';
+import { registerPageResource } from './page';
+import { registerPageInfoResource } from './page/info';
+import { registerPageTagsResource } from './tag';
 
 export async function loadResources(server: FastMCP): Promise<void> {
-  // Current resource registration
-  registerGrowiPageResource(server);
-
-  // Add other resource registration functions here in the future
-  // registerAnotherResource(server);
+  registerPageResource(server);
+  registerPageInfoResource(server);
+  registerAncestorsChildrenResource(server);
+  registerPageTagsResource(server);
+  registerMeResource(server);
+  registerGetExternalAccountsResource(server);
 }
