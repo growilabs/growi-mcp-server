@@ -1,6 +1,6 @@
 {
-  "name": "@growilabs/growi-mcp-server",
-  "version": "0.9.0",
+  "name": "@growi/mcp-server",
+  "version": "1.0.0-RC.0",
   "description": "A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses.",
   "type": "module",
   "license": "MIT",
@@ -9,7 +9,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "@growilabs/growi-mcp-server": "./dist/index.js"
+    "@growi/mcp-server": "./dist/index.js"
   },
   "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
