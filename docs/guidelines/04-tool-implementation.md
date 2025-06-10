@@ -138,16 +138,26 @@ export function registerSomeTool(server: FastMCP): void {
 
 ```typescript
 import { z } from 'zod';
-import type { Page, PageInfo } from '@growi/sdk-typescript/v3';
+import type { PostPageBody } from '@growi/sdk-typescript/v3';
 
 // SDKの型定義を活用したスキーマ例
-export const createPageParamSchema = z.object({
+const postPageBodySchema = z.object({
   path: z.string().min(1, 'Page path is required'),
   body: z.string(),
   grant: z.number().min(0).max(5).optional(),
+  grantUserGroupId: z.string().optional(),
+  overwrite: z.boolean().optional(),
+} satisfies { [K in keyof PostPageBody]: z.ZodType<PostPageBody[K]> });
+
+// 拡張したスキーマ
+export const createPageParamSchema = postPageBodySchema.extend({
+  // 追加のカスタムフィールド
+  tags: z.array(z.string()).optional(),
+  notification: z.boolean().optional(),
 });
 
-export type CreatePageParam = z.infer<typeof createPageParamSchema>;
+// SDKの型定義を継承した型
+export type CreatePageParam = PostPageBody & z.infer<typeof createPageParamSchema>;
 ```
 
 ### `service.ts` (オプショナル)
