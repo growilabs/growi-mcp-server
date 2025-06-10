@@ -2,132 +2,147 @@
 
 ## はじめに
 
-本ドキュメントは、GROWI MCP サーバーにおける Tool 実装時の一貫したエラーハンドリングの実装指針を提供します。この指針は、人間の開発者とLLM（大規模言語モデル）の両方が理解しやすいように設計されています。
+本ドキュメントは、GROWI MCP サーバーにおける Tool 実装時の一貫したエラーハンドリングの実装指針を提供します。GROWI SDK（`@growi/sdk-typescript`）を活用したエラー処理の標準的なパターンを説明します。この指針は、人間の開発者とLLM（大規模言語モデル）の両方が理解しやすいように設計されています。
 
 ## エラーハンドリングの基本方針
 
 ### [重要] 言語
 本ドキュメントには日本語で書かれており、サンプルとなるコード例中でも例えばコード内コメントや、エラーメッセージなどに日本語が使われているが、**実際の実装コードはこれらを全て英語で記述すること**。
 
+### エラー処理の階層構造
 
-### サービス層（`service.ts`）
-
-サービス層では、API呼び出しやビジネスロジックの実行時に発生したエラーを適切に捕捉し、明確な情報を含むエラーオブジェクトとしてスローします。
-
-```typescript
-try {
-  const response = await apiClient.createPage(params);
-  return response.data;
-} catch (error) {
-  // APIエラーの場合、GrowiApiErrorとしてスロー
-  throw new GrowiApiError(
-    'ページの作成に失敗しました',
-    error.response?.status ?? 500,
-    error.response?.data
-  );
-}
-```
-
-### ツール登録層（`register.ts`）
-
-ツール登録層では、サービス層からスローされたエラーを適切にハンドリングし、ユーザーフレンドリーなエラーメッセージに変換します。
+1. ツール登録層（`register.ts`）
+   - 各レイヤーのエラーをユーザーフレンドリーな形に変換
+   - エラー種別に応じた適切な処理の振り分け
+   - デバッグに有用な情報の付加
 
 ```typescript
-try {
-  const result = await service.someOperation(params);
-  return JSON.stringify(result);
-} catch (error) {
-  if (isGrowiApiError(error)) {
-    // ユーザーフレンドリーなエラーとして再スロー
-    throw new UserError(
-      `操作に失敗しました: ${error.message}`,
-      {
-        statusCode: error.statusCode,
-        details: error.details
+import { type FastMCP, UserError } from 'fastmcp';
+import { ZodError } from 'zod';
+import apiv3 from '@growi/sdk-typescript/v3';
+import { createPageParamSchema } from './schema';
+
+export function registerSomeTool(server: FastMCP): void {
+  server.addTool({
+    // ... tool registration ...
+    execute: async (params, context) => {
+      try {
+        // 1. バリデーション層のエラーハンドリング
+        const validatedParams = createPageParamSchema.parse(params);
+
+        // 2. SDK/API層の呼び出し
+        const result = await apiv3.someMethod(validatedParams);
+        return JSON.stringify(result);
+
+      } catch (error) {
+        // バリデーションエラーの処理
+        if (error instanceof ZodError) {
+          throw new UserError('Invalid parameters provided', {
+            validationErrors: error.errors,
+          });
+        }
+
+        // APIエラーの処理
+        if ('isAxiosError' in error) {
+          const axiosError = error as AxiosError;
+          throw new UserError(`Operation failed: ${axiosError.message}`, {
+            statusCode: axiosError.response?.status,
+            details: axiosError.response?.data,
+          });
+        }
+
+        // 予期せぬエラーの処理
+        throw new UserError('An unexpected error occurred', {
+          originalError: error instanceof Error ? error.message : String(error),
+        });
       }
-    );
-  }
-
-  // 予期せぬエラーの場合
-  throw new UserError('システムエラーが発生しました。管理者に連絡してください。');
-}
-```
-
-## エラー種別ごとの対応
-
-### `GrowiApiError`
-
-[`GrowiApiError`](src/commons/api/growi-api-error.ts:1)は、GROWI APIとの通信時に発生するエラーを表現するカスタムエラークラスです。
-
-```typescript
-// エラー判定の例
-if (isGrowiApiError(error)) {
-  throw new UserError(`操作に失敗しました: ${error.message}`, {
-    statusCode: error.statusCode,
-    details: error.details
+    },
   });
 }
 ```
 
-### バリデーションエラー
-
-パラメータのバリデーションには、[Zod](https://github.com/colinhacks/zod)を使用することを推奨します。Zodは以下の利点を提供します：
-
-1. 型安全性の保証
-2. 包括的なバリデーションルールの定義
-3. 詳細なエラーメッセージの生成
-4. スキーマ定義の再利用性
+2. バリデーション層（`schema.ts`）
+   - zodによる型安全なバリデーション
+   - SDKの型定義との整合性確保
+   - 入力値の検証と型付け
 
 ```typescript
-// スキーマ定義の例（schema.ts）
 import { z } from 'zod';
+import type { PostPageBody } from '@growi/sdk-typescript/v3';
 
-export const createPageParamSchema = z.object({
+const postPageBodySchema = z.object({
   path: z.string().min(1, 'Page path is required'),
   body: z.string(),
-  grant: z.number().optional(),
+  grant: z.number().min(0).max(5).optional(),
+  grantUserGroupId: z.string().optional(),
   overwrite: z.boolean().optional(),
-});
+} satisfies { [K in keyof PostPageBody]: z.ZodType<PostPageBody[K]> });
+```
 
-// バリデーションの例（register.ts）
+3. SDK/API層
+   - SDKが提供するエラー型の活用
+   - axiosベースのエラー情報の取得
+   - HTTPステータスとエラーレスポンスの処理
+
+```typescript
 try {
-  const validatedParams = createPageParamSchema.parse(params);
-  // 検証済みパラメータを使用して処理を続行
+  const result = await apiv3.someMethod(params);
+  return result;
 } catch (error) {
-  if (error instanceof z.ZodError) {
-    throw new UserError('Invalid parameters provided', {
-      validationErrors: error.errors,
-    });
+  if ('isAxiosError' in error) {
+    const axiosError = error as AxiosError;
+    // エラー情報をregister層に伝播
+    throw error;
   }
 }
 ```
 
-### その他のエラー
+### UserErrorの使用方針
 
-予期せぬエラーは、一般的なエラーメッセージと共に`UserError`としてスローします。
+1. エラーメッセージの構造化
+   - 明確で具体的なメッセージ
+   - エラーの種類に応じた追加情報
+   - デバッグに有用なコンテキスト
 
 ```typescript
-throw new UserError(
-  '操作を完了できませんでした。しばらく時間をおいて再度お試しください。'
-);
+// バリデーションエラー
+throw new UserError('Invalid parameters provided', {
+  validationErrors: zodError.errors,
+  receivedInput: params,
+});
+
+// APIエラー
+throw new UserError('Operation failed', {
+  statusCode: error.response?.status,
+  endpoint: error.config?.url,
+  errorResponse: error.response?.data,
+});
+
+// ビジネスロジックエラー
+throw new UserError('Operation not permitted', {
+  operation: 'createPage',
+  reason: 'insufficient_permissions',
+  requiredPermission: 'write',
+});
 ```
 
-## FastMCPにおけるエラーの扱い
+2. エラー情報のセキュリティ考慮事項
+   - スタックトレースを含めない
+   - 機密情報を露出させない
+   - 必要最小限の情報提供
 
-### `UserError`の使用
+```typescript
+// 良い例：必要な情報のみを含める
+throw new UserError('Authentication failed', {
+  reason: 'invalid_token',
+});
 
-[FastMCP](https://github.com/punkpeye/fastmcp)の`UserError`クラスは、ユーザーに表示することを意図したエラーを表現します。以下の原則に従って使用します：
-
-1. ユーザーフレンドリーなメッセージを第一引数として渡す
-2. デバッグに有用な情報を`extras`として第二引数に渡す
-
-### `ContentResult`の使用
-
-`ContentResult`の`isError: true`は原則として使用しません。ただし、以下の場合は例外とします：
-
-- エラー情報自体がツールの主要な成果物である場合
-  - 例：バリデーションツールが複数のエラー箇所をリストとして返す場合
-  - 例：依存関係の解析ツールが競合を検出して報告する場合
+// 悪い例：機密情報を含める
+throw new UserError('Authentication failed', {
+  token: 'actual-token-value', // 機密情報を含めない
+  stackTrace: error.stack,     // スタックトレースを含めない
+});
+```
 
 ## セキュリティ考慮事項
 
@@ -135,7 +150,7 @@ throw new UserError(
 
 - すべてのパラメータをスキーマに対して検証
 - ファイルパスやシステムコマンドの安全性確保
-- URL や外部識別子の検証
+- URLや外部識別子の検証
 - パラメータのサイズと範囲のチェック
 - コマンドインジェクションの防止
 
@@ -147,61 +162,63 @@ throw new UserError(
 4. エラー発生後のリソースクリーンアップを確実に実行
 5. 返値の検証を行う
 
-## コード例
-
-典型的なエラーハンドリングのパターンを示します：
+## 実装例
 
 ```typescript
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
-import { isGrowiApiError } from '../commons/api/growi-api-error.js';
+import type { AxiosError } from 'axios';
+import apiv3 from '@growi/sdk-typescript/v3';
+import type { PostPageBody } from '@growi/sdk-typescript/v3';
 
 // パラメータスキーマの定義
-const someParamSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  value: z.number().min(0, 'Value must be non-negative'),
-});
+const postPageBodySchema = z.object({
+  path: z.string().min(1, 'Page path is required'),
+  body: z.string(),
+  grant: z.number().min(0).max(5).optional(),
+  grantUserGroupId: z.string().optional(),
+  overwrite: z.boolean().optional(),
+} satisfies { [K in keyof PostPageBody]: z.ZodType<PostPageBody[K]> });
 
-export function registerSomeTool(server: FastMCP): void {
+export function registerCreatePageTool(server: FastMCP): void {
   server.addTool({
-    name: 'someTool',
-    description: '何らかの操作を行うツール',
-    parameters: someParamSchema,
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: true,
-      title: '操作ツール'
-    },
+    name: 'createPage',
+    description: 'Create a new page in GROWI',
+    parameters: postPageBodySchema,
     execute: async (params, context) => {
       try {
-        // zodによるパラメータバリデーション
-        const validatedParams = someParamSchema.parse(params);
+        // パラメータのバリデーション
+        const validatedParams = postPageBodySchema.parse(params);
 
-        // 検証済みパラメータを使用して操作を実行
-        const result = await someService(validatedParams);
+        // SDKを使用したページ作成
+        const result = await apiv3.postPage(validatedParams);
         return JSON.stringify(result);
 
       } catch (error) {
-        // zodバリデーションエラーの処理
+        // バリデーションエラー
         if (error instanceof z.ZodError) {
           throw new UserError('Invalid parameters provided', {
             validationErrors: error.errors,
           });
         }
 
-        // APIエラーの処理
-        if (isGrowiApiError(error)) {
+        // APIエラー
+        if ('isAxiosError' in error) {
+          const axiosError = error as AxiosError;
           throw new UserError(
-            `Operation failed: ${error.message}`,
+            `Failed to create page: ${axiosError.message}`,
             {
-              statusCode: error.statusCode,
-              details: error.details
+              statusCode: axiosError.response?.status,
+              details: axiosError.response?.data,
+              path: params.path,
             }
           );
         }
 
-        // その他の予期せぬエラーの処理
-        throw new UserError('The operation could not be completed.');
+        // 予期せぬエラー
+        throw new UserError('An unexpected error occurred', {
+          originalError: error instanceof Error ? error.message : String(error),
+        });
       }
     }
   });
@@ -210,7 +227,8 @@ export function registerSomeTool(server: FastMCP): void {
 
 このコード例は以下の要素を示しています：
 
-1. zodを使用したパラメータスキーマの定義
-2. 型安全なバリデーションの実装
-3. 様々なエラー種別（Zod、API、その他）に対する適切な処理
-4. ユーザーフレンドリーなエラーメッセージの生成
+1. register.ts でのカスケード的なエラー処理
+2. zodによる型安全なバリデーション
+3. SDKを使用したAPI操作とエラーハンドリング
+4. エラー情報の適切な変換と構造化
+5. セキュリティを考慮したエラー情報の扱い
