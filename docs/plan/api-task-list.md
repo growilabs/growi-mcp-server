@@ -7,7 +7,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 ### `tools/page/createPage` の改修
 
-- **進捗状況:** 実装済み、改修済み
+- **進捗状況:** 要再実装 (GROWI SDK 利用)
 - **種別:** tool
 - **処理フロー**
   1. apiV3 で GET `/page/exist` に成功
@@ -16,7 +16,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 ---
 ### `tools/page/renamePage` の改修
 
-- **進捗状況:** 改修済み
+- **進捗状況:** 要再実装 (GROWI SDK 利用)
 - **種別:** tool
 - **処理フロー**
   1. apiV3 で GET `/pages/exist-paths` に成功
@@ -26,19 +26,19 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
   - 他にもリクエストパラメータがたくさんあるので正確な仕様を確認し対応する
 
 ---
-### `tools/page/deletePage` の改修
+- **進捗状況:** 要再実装 (GROWI SDK 利用)
 - **進捗状況:** 改修済み
 - **種別:** tool
 - **備考:** 1ページ削除なら apiv1 で POST `/pages.remove`、複数ページ削除なら apiv3 で POST `/pages/delete`
 
 
-## 優先度 高 (新規実装)
-
-
 ### `/page/info` (apiV3 GET)
-- **進捗状況:** 実装済み
+- **進捗状況:** 要再実装 (GROWI SDK 利用)
 - **種別:** resource
 - **備考:** ページ情報取得のための基本的なAPI。PageParamsスキーマの定義確認が必要
+
+
+## 優先度 高 (新規実装)
 
 ---
 
@@ -174,6 +174,13 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 - **進捗状況:** 未着手
 - **種別:** tool
 - **備考:** 複数ページのサマリ情報を得るための API
+
+---
+
+### `/pages.getPageTag` (apiV1 GET)
+- **進捗状況:** 未着手
+- **種別:** resource
+- **備考:** ページのタグ取得API。pageId の指定が必要
 
 ---
 
