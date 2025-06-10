@@ -27,6 +27,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@growi/core": "^1.5.0",
+    "@growi/sdk-typescript": "^1.0.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/config": "^3.3.3",
     "@types/node": "^20.11.30",
