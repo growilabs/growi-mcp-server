@@ -2,6 +2,17 @@
 
 本ドキュメントは、MCPサーバーにおけるリソース実装のガイドラインを提供します。
 
+## はじめに
+
+GROWI MCPサーバーのリソース実装では、`@growi/sdk-typescript`を直接利用することを推奨します。このアプローチにより：
+
+- 型安全性の向上
+- API仕様との一貫性維持
+- コード量の削減
+- メンテナンス性の向上
+
+が期待できます。
+
 ## ディレクトリ構造
 
 リソースは以下のディレクトリ構造に従って実装します：
@@ -11,8 +22,10 @@ src/resources/
 └── {resourceName}/
     ├── index.ts      # エクスポート定義
     ├── register.ts   # リソース登録
-    └── service.ts    # ビジネスロジック
+    └── service.ts    # （オプション）SDKでカバーされない追加のビジネスロジック
 ```
+
+`service.ts`は、SDKの機能で十分な場合は不要です。複雑なビジネスロジックや、複数のSDK関数を組み合わせる必要がある場合にのみ作成します。
 
 ## 各モジュールの責務
 
@@ -31,20 +44,29 @@ export { register{ResourceName}Resource } from './register.js';
 - URIテンプレートの定義
 - リソースの名前とMIMEタイプの定義
 - パラメータの定義（必要な場合）
-- `service.ts` で定義された関数の呼び出し
+- SDKの関数の直接呼び出し
 - エラーハンドリングとエラーメッセージの定義
 
 主な実装パターン：
 
 ```typescript
+import apiv3 from '@growi/sdk-typescript/v3';
+
 export function register{ResourceName}Resource(server: FastMCP): void {
-  server.addResource({
-    uri: 'growi://{resource-name}/{identifier}',
+  server.addResourceTemplate({
+    uriTemplate: 'growi://{resource-name}/{identifier}',
     name: 'リソースの説明',
     mimeType: 'application/json',
-    async load(params) {
+    arguments: [
+      {
+        name: 'identifier',
+        description: 'リソースを特定するための識別子',
+        required: true,
+      },
+    ],
+    async load({ identifier }) {
       try {
-        const result = await serviceFunction(params);
+        const result = await apiv3.getSomeResource({ id: identifier });
         return { text: JSON.stringify(result) };
       } catch (error) {
         console.error(`Error message:`, error);
@@ -55,112 +77,107 @@ export function register{ResourceName}Resource(server: FastMCP): void {
 }
 ```
 
-### service.ts
+### service.ts (オプション)
 
-- ビジネスロジックの実装
-- APIクライアントを使用したGROWI APIとの通信
-- 型定義（パラメータと戻り値の型）
-- 詳細なエラーハンドリング
+SDKの機能だけでは対応できない場合にのみ作成します：
 
-## APIクライアントの利用
+- 複数のSDK関数を組み合わせた複雑なビジネスロジック
+- キャッシュやデータ変換などの追加機能
+- カスタムエラーハンドリング
 
-### クライアントの選択
+## SDKの利用
 
-- V1 API利用時: `import { apiV1 } from '../../commons/api/client-v1.js';`
-- V3 API利用時: `import { apiV3 } from '../../commons/api/client-v3.js';`
-
-### 使用パターン
+### SDKのインポート
 
 ```typescript
-const response = await api{Version}
-  .get('endpoint-name', {
-    searchParams: {
-      param: value,
-    },
-  })
-  .json<ResponseType>();
+// V3 APIの場合
+import apiv3 from '@growi/sdk-typescript/v3';
+
+// V1 APIの場合（非推奨）
+import apiv1 from '@growi/sdk-typescript/v1';
+```
+
+### 基本的な使用パターン
+
+```typescript
+// ページ取得の例
+const page = await apiv3.getPage({ path: '/some-path' });
+
+// ユーザー情報取得の例
+const user = await apiv3.getUser({ userId: 'user123' });
+```
+
+## エラーハンドリング
+
+SDKから投げられるエラーは適切に型付けされているため、以下のようなパターンでハンドリングできます：
+
+```typescript
+try {
+  const result = await apiv3.getSomeResource(params);
+  return { text: JSON.stringify(result) };
+} catch (error) {
+  if (error instanceof apiv3.ApiError) {
+    // APIエラーの詳細なハンドリング
+    console.error(`API Error: ${error.status} - ${error.message}`);
+    throw new Error(`Failed to get resource: ${error.message}`);
+  }
+  // その他の予期せぬエラー
+  console.error('Unexpected error:', error);
+  throw new Error('An unexpected error occurred');
+}
 ```
 
 ## 命名規則
 
 ### ファイル名
 
-- モジュールファイル: `index.ts`, `register.ts`, `service.ts`
+- モジュールファイル: `index.ts`, `register.ts`, `service.ts`（必要な場合のみ）
 - テストファイル: `{target}.spec.ts`
 
 ### 型定義
 
-- パラメータ型: `{Method}Params`
-  ```typescript
-  type GetResourceParams = {
-    id: string;
-  };
-  ```
-- レスポンス型: `{Method}Response`
-  ```typescript
-  interface GetResourceResponse {
-    data: ResourceData;
-  }
-  ```
-
-### 関数名
-
-- サービス関数: `{action}{Resource}` （例：`getPage`, `updateUser`）
-- 登録関数: `register{Resource}Resource`
-
-## エラーハンドリング
-
-すべてのサービス関数は以下のエラーハンドリングパターンに従う：
+SDKが提供する型を積極的に活用します：
 
 ```typescript
-try {
-  // API呼び出しと処理
-} catch (error) {
-  if (isGrowiApiError(error)) {
-    throw error;
-  }
+import type { Page, User } from '@growi/sdk-typescript/v3';
 
-  if (error instanceof Error) {
-    // ky libraryのエラー処理
-    if ('response' in error) {
-      const response = (error as { response: Response }).response;
-      throw new GrowiApiError(
-        'エラーメッセージ',
-        response.status,
-        await response.json().catch(() => undefined)
-      );
-    }
-  }
-
-  throw new GrowiApiError('Unknown error occurred', 500, error);
+// SDKの型を拡張する場合
+interface ExtendedPageData extends Page {
+  customField: string;
 }
 ```
 
+### 関数名
+
+- 登録関数: `register{Resource}Resource`
+- サービス関数（必要な場合）: `{action}{Resource}`
+
 ## テスト
 
-- テストファイルは実装ファイルと同じディレクトリに配置
-- サービス関数のユニットテストを作成
-- APIクライアントはモック化してテスト
+### SDKのモック化
 
-テストファイルの例：
 ```typescript
-import { describe, expect, it, vi } from 'vitest';
-import { getResource } from './service';
+import { vi, describe, it, expect } from 'vitest';
+import apiv3 from '@growi/sdk-typescript/v3';
 
-describe('getResource', () => {
-  it('should return resource data', async () => {
-    // テストケースの実装
-  });
+vi.mock('@growi/sdk-typescript/v3', () => ({
+  default: {
+    getPage: vi.fn().mockResolvedValue({ /* モックデータ */ }),
+  },
+}));
 
-  it('should handle errors properly', async () => {
-    // エラーケースのテスト
+describe('pageResource', () => {
+  it('should fetch page data', async () => {
+    const result = await loadResource({ path: '/test' });
+    expect(apiv3.getPage).toHaveBeenCalledWith({ path: '/test' });
+    expect(result).toMatchSnapshot();
   });
 });
 ```
 
 ## その他の注意点
 
-1. すべての外部通信は `service.ts` で行い、`register.ts` では純粋なリソース定義のみを行う
-2. 型定義は可能な限り厳密に行い、`any` の使用は避ける
+1. SDKが提供する型を最大限活用し、型安全性を確保する
+2. SDKのバージョンアップに注意を払い、Breaking Changesに対応する
 3. エラーメッセージは開発者とエンドユーザーの両方にとって理解しやすい表現を使用する
-4. コメントは必要最小限とし、コードの意図が不明確な場合のみ追加する
+4. 複雑なビジネスロジックが必要な場合のみ`service.ts`を作成し、それ以外はSDKを直接利用する

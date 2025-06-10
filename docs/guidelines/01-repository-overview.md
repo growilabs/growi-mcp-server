@@ -3,6 +3,7 @@
 ## 参考URL
 - MCP公式ドキュメント: https://modelcontextprotocol.io/introduction
 - FastMCP: https://github.com/punkpeye/fastmcp
+- GROWI SDK: https://github.com/growilabs/growi-sdk-typescript
 
 ## 1. リポジトリ構造の分析
 
@@ -38,14 +39,11 @@ src/
 │   │   ├── registerUser/
 │   │   └── index.ts
 │   └── index.ts
-└── index.ts       # アプリケーションエントリーポイント
+└── index.ts        # アプリケーションエントリーポイント
 
-docs/              # ドキュメント
-├── guidelines/    # 開発ガイドライン
-├── openapi/      # OpenAPI仕様書
-│   ├── openapi-v1.json      # GROWI API v1 仕様書
-│   └── openapi-v3.jxon      # GROWI API v3 仕様書
-└── plan/         # 実装計画
+docs/                  # ドキュメント
+├── guidelines/     # 開発ガイドライン
+└── plan/           # 実装計画
 
 scripts/          # ユーティリティスクリプト
 ```
