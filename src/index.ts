@@ -3,12 +3,25 @@
 import 'reflect-metadata';
 import { FastMCP } from 'fastmcp';
 
+import config from './config/default.js';
+
 const server = new FastMCP({
   name: 'growi-mcp-server',
   version: '1.0.0',
 });
 
+/**
+ * Sets up the default Axios instance for GROWI API requests.
+ */
+const setupDefaultAxiosInstance = async () => {
+  const { AXIOS_DEFAULT } = await import('@growi/sdk-typescript');
+  AXIOS_DEFAULT.setBaseURL(config.growi.baseUrl);
+  AXIOS_DEFAULT.setAuthorizationHeader(config.growi.apiToken);
+};
+
 async function main(): Promise<void> {
+  await setupDefaultAxiosInstance();
+
   try {
     // Loaders are imported dynamically so that the module will be garbage collected
     const { loadTools } = await import('./tools/index.js');
