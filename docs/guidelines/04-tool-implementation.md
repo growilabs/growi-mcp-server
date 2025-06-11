@@ -34,31 +34,6 @@ src/tools/
 import apiv3 from '@growi/sdk-typescript/v3';
 import type { Page, PageInfo } from '@growi/sdk-typescript/v3';
 
-// ページ一覧の取得
-try {
-  const pages = await apiv3.getPagesList({
-    limit: 20,
-    offset: 0
-  });
-  console.log(pages);
-} catch (error) {
-  console.error('Failed to fetch pages:', error);
-}
-
-// 最近のページの取得
-try {
-  const recentPages = await apiv3.getPagesRecent();
-  console.log(recentPages);
-} catch (error) {
-  console.error('Failed to fetch recent pages:', error);
-}
-
-// パラメータを使用した操作
-const pageInfo: PageInfo = {
-  path: '/test',
-  // 他の必要なプロパティ...
-};
-
 // 型安全な操作の例
 const createPage = async (pageInfo: PageInfo): Promise<Page> => {
   try {
@@ -67,7 +42,12 @@ const createPage = async (pageInfo: PageInfo): Promise<Page> => {
       body: 'Page content',
       grant: 1,
     });
-    return result.data;
+    
+    if (!result.data?.page) {
+      throw new Error('Invalid response: page data not found');
+    }
+    
+    return result.data.page;
   } catch (error) {
     throw new Error(`Failed to create page: ${error}`);
   }
@@ -206,40 +186,54 @@ export const createPageWithMetadata = async (params: CreatePageParam): Promise<P
      - エラーハンドリングの確認
 
 3. モック化
-   ```typescript
-   import apiv3 from '@growi/sdk-typescript/v3';
-   
-   // SDKメソッドのモック
-   jest.mock('@growi/sdk-typescript/v3', () => ({
-     getPagesList: jest.fn(),
-     postPage: jest.fn(),
-   }));
-
-   // テストでのモックの使用
-   describe('createPage', () => {
-     it('should create a page using SDK', async () => {
-       const mockPage = { _id: '123', path: '/test' };
-       (apiv3.postPage as jest.Mock).mockResolvedValueOnce({ data: mockPage });
-
-       const result = await createPage(validParams);
-       expect(apiv3.postPage).toHaveBeenCalledWith(validParams);
-       expect(result).toEqual(mockPage);
-     });
-   });
-   ```
+    ```typescript
+    // SDKメソッドのモック
+    jest.mock('@growi/sdk-typescript/v3', () => ({
+      postPage: jest.fn().mockResolvedValue({
+        data: { page: { _id: '123', path: '/test' } }
+      }),
+    }));
+    ```
 
 ## 実装時の注意点
 
 1. 型安全性
-   - SDKの型定義を最大限活用
-   ```typescript
-   import type { Page, PageInfo, PostPageBody } from '@growi/sdk-typescript/v3';
-   
-   // SDKの型定義を活用したパラメータ定義
-   interface CreatePageParams extends PostPageBody {
-     customField?: string;
-   }
-   ```
+
+    ### スキーマ定義と型の整合性
+    ```typescript
+    // スキーマ定義時の型チェック
+    const schema = z.object({...}) satisfies z.ZodType<SDKType>;
+
+    // オプショナル属性の適切な定義
+    const schema = z.object({
+      required: z.string(),
+      optional: z.string().optional(),
+    });
+    ```
+
+    ### 型の拡張と検証
+    ```typescript
+    // 必要な場合のみ型の拡張
+    type ExtendedType = SDKType & {
+      additionalField?: string;
+    };
+
+    // レスポンスの型安全性
+    const response: PostPage201 = await apiv3.postPage(params);
+    if (!response.data?.page) {
+      throw new GrowiApiError('Invalid response', 500);
+    }
+    ```
+
+    ### 型安全性の確保のベストプラクティス
+    - satisfies演算子の活用による型定義の厳密化
+    - 明示的な型アノテーションの使用
+    - コンパイラオプションの厳格化
+    - nullやundefinedの適切な取り扱い
+
+    ### データ処理時の注意点
+    - 循環参照への対処
+    - エンコード不可能な値の考慮
 
 2. パフォーマンス
    - 不要なAPI呼び出しの削減
@@ -272,32 +266,10 @@ export const createPageWithMetadata = async (params: CreatePageParam): Promise<P
    ```
 
 4. メンテナンス性
-   - SDKの型定義の変更に追従しやすい実装
-   - 責務の明確な分離（SDKの利用とカスタムロジックの分離）
-   - 適切なコメントの記述
-   - 再利用可能なコードの抽出
-
-   ```typescript
-   // SDKの型定義を拡張する場合の例
-   import type { Page } from '@growi/sdk-typescript/v3';
-
-   // 拡張インターフェースを別ファイルで定義
-   // types.ts
-   export interface EnhancedPage extends Page {
-     customField?: string;
-   }
-
-   // service.ts
-   import type { EnhancedPage } from './types';
-
-   export const enhancePage = async (page: Page): Promise<EnhancedPage> => {
-     // ページの拡張処理
-     return {
-       ...page,
-       customField: 'value',
-     };
-   };
-   ```
+    - SDKの型定義の変更に追従しやすい実装
+    - 責務の明確な分離（SDKの利用とカスタムロジックの分離）
+    - 適切なコメントの記述
+    - 再利用可能なコードの抽出
 
 5. エラーハンドリング
    - SDKのエラー型の適切な処理
