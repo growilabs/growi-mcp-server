@@ -7,7 +7,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 ### `tools/page/createPage` の改修
 
-- **進捗状況:** 要再実装 (GROWI SDK 利用)
+- **進捗状況:** GROWI SDK 利用方式で再実装完了
 - **種別:** tool
 - **処理フロー**
   1. apiV3 で GET `/page/exist` に成功
@@ -16,7 +16,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 ---
 ### `tools/page/renamePage` の改修
 
-- **進捗状況:** 要再実装 (GROWI SDK 利用)
+- **進捗状況:** GROWI SDK 利用方式で再実装完了
 - **種別:** tool
 - **処理フロー**
   1. apiV3 で GET `/pages/exist-paths` に成功

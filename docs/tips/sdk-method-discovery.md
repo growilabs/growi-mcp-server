@@ -1,4 +1,4 @@
-# GROWI SDK メソッドの探索手順
+# GROWI SDK メソッドの探索・目的のメソッドの特定手順
 
 ## 1. 型定義ファイルの場所を特定
 
@@ -17,7 +17,7 @@
    ls node_modules/@growi/sdk-typescript/
 
    # package.jsonでパッケージ情報を確認
-   cat node_modules/@growi/sdk-typescript/package.json
+   ls node_modules/@growi/sdk-typescript/package.json
    ```
 
 3. ディレクトリ構造の詳細を確認
