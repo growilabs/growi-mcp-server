@@ -29,14 +29,17 @@
    find node_modules/@growi/sdk-typescript/ -name "index.d.ts"
    
    # 以下のような構造が見える
-   ./dist/apiv3/index.d.ts          # メソッドのエクスポート定義
-   ./dist/generated/v3/index.schemas.d.ts  # 型定義
+   ./dist/apiv1/index.d.ts                 # apiv1 メソッドのエクスポート定義
+   ./dist/generated/v1/index.schemas.d.ts  # apiv1 の型定義
+   ./dist/apiv3/index.d.ts                 # apiv3 メソッドのエクスポート定義
+   ./dist/generated/v3/index.schemas.d.ts  # apiv3 の型定義
    ```
 
 4. 型定義ファイルを特定
    - TypeScriptの型定義は通常 `.d.ts` ファイルに格納
    - `dist/`配下を優先的に確認（ビルド済みファイル）
    - `src/`は参考用（必要に応じて確認）
+   - apiv3 でそれらしきものが見つからなかった場合や一致度が低いと判断した場合は apiv1 も確認
 
 ## 2. メソッドの探索
 
