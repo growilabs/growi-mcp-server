@@ -33,7 +33,7 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 
 
 ### `/page/info` (apiV3 GET)
-- **進捗状況:** 要再実装 (GROWI SDK 利用)
+- **進捗状況:** GROWI SDK 利用方式で再実装完了
 - **種別:** resource
 - **備考:** ページ情報取得のための基本的なAPI。PageParamsスキーマの定義確認が必要
 
