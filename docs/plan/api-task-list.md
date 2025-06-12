@@ -26,8 +26,8 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
   - 他にもリクエストパラメータがたくさんあるので正確な仕様を確認し対応する
 
 ---
-- **進捗状況:** 要再実装 (GROWI SDK 利用)
-- **進捗状況:** 改修済み
+### `tools/page/deletePages` の改修
+- **進捗状況:** GROWI SDK 利用方式で再実装完了
 - **種別:** tool
 - **備考:** 1ページ削除なら apiv1 で POST `/pages.remove`、複数ページ削除なら apiv3 で POST `/pages/delete`
 

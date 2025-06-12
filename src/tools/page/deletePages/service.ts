@@ -1,9 +1,9 @@
-import { apiV1 } from '../../../commons/api/client-v1.js';
-import { apiV3 } from '../../../commons/api/client-v3.js';
-import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
-import type { ApiV1Response } from '../../../commons/api/growi-api-v1-response.js';
-import type { DeletePagesParam, DeletePagesResponse, PageDeleteV1Response } from './schema.js';
-import { pageDeleteV1ResponseSchema } from './schema.js';
+import apiv1 from '@growi/sdk-typescript/v1';
+import type { RemovePageBody } from '@growi/sdk-typescript/v1';
+import apiv3 from '@growi/sdk-typescript/v3';
+import type { PostDeleteForPagesBody } from '@growi/sdk-typescript/v3';
+import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
+import type { DeletePagesParam, DeletePagesResponse } from './schema.js';
 
 export const deletePages = async (params: DeletePagesParam): Promise<DeletePagesResponse> => {
   try {
@@ -15,63 +15,46 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
       const pageId = Object.keys(params.pageIdToRevisionIdMap)[0];
       const revisionId = params.pageIdToRevisionIdMap[pageId];
 
-      const response = await apiV1
-        .post('pages.remove', {
-          json: {
-            page_id: pageId,
-            revision_id: revisionId,
-            completely: params.isCompletely || false,
-            recursively: params.isRecursively || false,
-          },
-        })
-        .json<ApiV1Response<PageDeleteV1Response>>();
+      const removePageBody: RemovePageBody = {
+        page_id: pageId,
+        revision_id: revisionId,
+        completely: params.isCompletely ?? false,
+        recursively: params.isRecursively ?? false,
+      };
 
-      if (!response.ok || response.error) {
-        const statusCode = response.code ? Number.parseInt(response.code, 10) : 500;
-        throw new GrowiApiError(response.error || 'Unknown error occurred', statusCode);
-      }
-
-      const result = pageDeleteV1ResponseSchema.safeParse(response.data);
-      if (!result.success) {
-        throw new GrowiApiError('The API response data is invalid', 500);
-      }
+      const response = await apiv1.removePage(removePageBody);
 
       return {
-        paths: [result.data.path],
-        isRecursively: result.data.isRecursively,
-        isCompletely: result.data.isCompletely,
+        paths: [response.path],
+        isRecursively: response.isRecursively ?? false,
+        isCompletely: response.isCompletely ?? false,
       };
     }
 
     // For multiple pages deletion, use v3 API
-    const response = await apiV3
-      .post('/pages/delete', {
-        json: {
-          pageIdToRevisionIdMap: params.pageIdToRevisionIdMap,
-          isCompletely: params.isCompletely,
-          isRecursively: params.isRecursively,
-          isAnyoneWithTheLink: params.isAnyoneWithTheLink,
-        },
-      })
-      .json<DeletePagesResponse>();
+    const postDeleteBody: PostDeleteForPagesBody = {
+      pageIdToRevisionIdMap: params.pageIdToRevisionIdMap,
+      isCompletely: params.isCompletely ?? false,
+      isRecursively: params.isRecursively ?? false,
+      isAnyoneWithTheLink: params.isAnyoneWithTheLink,
+    };
+
+    const response = await apiv3.postDeleteForPages(postDeleteBody);
 
     if (!response.paths) {
       throw new GrowiApiError('The API response is missing required data', 500);
     }
 
-    return response;
+    return {
+      paths: response.paths,
+      isRecursively: response.isRecursively ?? false,
+      isCompletely: response.isCompletely ?? false,
+    };
   } catch (error) {
-    if (isGrowiApiError(error)) {
-      throw error;
+    // エラーを GrowiApiError としてラップ
+    if (error instanceof Error) {
+      throw new GrowiApiError(error.message, 500, error);
     }
-
-    // Handle ky library errors
-    if (error instanceof Error && 'response' in error) {
-      const response = (error as { response: Response }).response;
-      throw new GrowiApiError('Failed to delete pages through the API', response.status, await response.json().catch(() => undefined));
-    }
-
-    // Handle unexpected errors
     throw new GrowiApiError('An unexpected error occurred while deleting pages', 500, error);
   }
 };
