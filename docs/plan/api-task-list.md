@@ -170,28 +170,28 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 ---
 
 ### `/share-links` (apiV3 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** resource
 - **備考:** 特定ページの共有リンク一覧取得API。セキュリティ要件（cookieAuth）あり
 
 ---
 
 ### `/share-links` (apiV3 POST)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** tool
 - **備考:** 共有リンク作成API。有効期限と説明を設定可能。セキュリティ要件（cookieAuth）あり
 
 ---
 
 ### `/share-links` (apiV3 DELETE)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** tool
 - **備考:** ページに関連する全共有リンク削除API。セキュリティ要件（cookieAuth）あり
 
 ---
 
 ### `/share-links/{id}` (apiV3 DELETE)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** tool
 - **備考:** 特定の共有リンク削除API。セキュリティ要件（cookieAuth）あり
 

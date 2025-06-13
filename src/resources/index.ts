@@ -7,6 +7,7 @@ import { registerPageListingRootResource } from './pageListingRoot';
 import { registerPageTagResource } from './pageTag';
 import { registerRecentPagesResource } from './recent';
 import { registerRevisionResource } from './revision';
+import { registerShareLinksResource } from './shareLinks';
 import { registerTagListResource } from './tagList';
 import { registerTagSearchResource } from './tagSearch';
 import { registerUserRecentResource } from './user';
@@ -23,4 +24,5 @@ export async function loadResources(server: FastMCP): Promise<void> {
   registerPageTagResource(server);
   registerTagSearchResource(server);
   registerTagListResource(server);
+  registerShareLinksResource(server);
 }
