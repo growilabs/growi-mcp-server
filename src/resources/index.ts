@@ -5,6 +5,7 @@ import { registerPageInfoResource } from './page/info';
 import { registerPageListingChildrenResource } from './pageListingChildren';
 import { registerPageListingRootResource } from './pageListingRoot';
 import { registerRecentPagesResource } from './recent';
+import { registerRevisionResource } from './revision';
 import { registerUserRecentResource } from './user';
 
 export async function loadResources(server: FastMCP): Promise<void> {
@@ -15,4 +16,5 @@ export async function loadResources(server: FastMCP): Promise<void> {
   registerPageListingChildrenResource(server);
   registerCommentsResource(server);
   registerUserRecentResource(server);
+  registerRevisionResource(server);
 }
