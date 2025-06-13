@@ -1,5 +1,6 @@
 import type { FastMCP } from 'fastmcp';
-import { getPage } from './service.js';
+
+import apiv3 from '@growi/sdk-typescript/v3';
 
 export function registerPageResource(server: FastMCP): void {
   // Root page resource
@@ -9,7 +10,7 @@ export function registerPageResource(server: FastMCP): void {
     mimeType: 'application/json',
     async load() {
       try {
-        const page = await getPage({ pagePath: '/' });
+        const page = await apiv3.getPage({ path: '/' });
         return { text: JSON.stringify(page) };
       } catch (error) {
         console.error(`Error loading GROWI page resource for path "/":`, error);
@@ -20,23 +21,59 @@ export function registerPageResource(server: FastMCP): void {
 
   // Page resource with pagePath parameter
   server.addResourceTemplate({
-    uriTemplate: 'growi://page/{pagePath}',
+    uriTemplate: 'growi://page/{path}',
     name: 'GROWI Page Content',
     mimeType: 'application/json',
     arguments: [
       {
-        name: 'pagePath',
-        description: 'Path of the GROWI page',
+        name: 'path',
+        description: 'Page path of the GROWI page',
         required: true,
       },
     ],
-    async load({ pagePath }) {
+    async load({ path }) {
       try {
-        const page = await getPage({ pagePath });
+        const page = await apiv3.getPage({ path });
         return { text: JSON.stringify(page) };
       } catch (error) {
-        console.error(`Error loading GROWI page resource for path "${pagePath}":`, error);
-        throw new Error(`Failed to load GROWI page: ${pagePath}`);
+        console.error(`Error loading GROWI page resource for path "${path}":`, error);
+        throw new Error(`Failed to load GROWI page: ${path}`);
+      }
+    },
+  });
+  // Pages List resource
+  server.addResourceTemplate({
+    uriTemplate: 'growi://pages/list{?path,limit,page}',
+    name: 'GROWI Pages List',
+    mimeType: 'application/json',
+    arguments: [
+      {
+        name: 'path',
+        description: '検索対象のページパス',
+        required: false,
+      },
+      {
+        name: 'limit',
+        description: '1ページあたりの取得件数',
+        required: false,
+      },
+      {
+        name: 'page',
+        description: 'ページ番号',
+        required: false,
+      },
+    ],
+    async load({ path, limit, page }) {
+      try {
+        const result = await apiv3.getListForPages({
+          path,
+          limit: limit ? Number.parseInt(limit, 10) : undefined,
+          page: page ? Number.parseInt(page, 10) : undefined,
+        });
+        return { text: JSON.stringify(result) };
+      } catch (error) {
+        console.error('Error loading GROWI pages list:', error);
+        throw new Error('Failed to load GROWI pages list');
       }
     },
   });

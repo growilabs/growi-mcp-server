@@ -1,6 +1,6 @@
 import { type FastMCP, UserError } from 'fastmcp';
 import { ZodError } from 'zod';
-import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { createPageParamSchema } from './schema.js';
 import { createPage } from './service.js';
 
@@ -21,8 +21,13 @@ export function registerCreatePageTool(server: FastMCP): void {
         // Validate input using zod schema
         const validatedParams = createPageParamSchema.parse(params);
 
-        const page = await createPage(validatedParams);
-        return JSON.stringify(page);
+        const response = await createPage(validatedParams);
+
+        try {
+          return JSON.stringify(response.data);
+        } catch (jsonError) {
+          throw new GrowiApiError('Failed to serialize API response', 500, { error: jsonError instanceof Error ? jsonError.message : String(jsonError) });
+        }
       } catch (error) {
         // Handle zod validation errors
         if (error instanceof ZodError) {
@@ -31,12 +36,11 @@ export function registerCreatePageTool(server: FastMCP): void {
           });
         }
 
-        // Handle GROWI API errors
+        // Convert GrowiApiError to UserError
         if (isGrowiApiError(error)) {
-          throw new UserError(`Failed to create page: ${error.message}`, {
+          throw new UserError(error.message, {
             statusCode: error.statusCode,
             details: error.details,
-            path: params.path,
           });
         }
 
