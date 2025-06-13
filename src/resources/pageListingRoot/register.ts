@@ -1,5 +1,5 @@
+import apiv3 from '@growi/sdk-typescript/v3';
 import type { FastMCP } from 'fastmcp';
-import { getPageListingRoot } from './service.js';
 
 export function registerPageListingRootResource(server: FastMCP): void {
   server.addResource({
@@ -9,7 +9,7 @@ export function registerPageListingRootResource(server: FastMCP): void {
     mimeType: 'application/json',
     async load() {
       try {
-        const response = await getPageListingRoot();
+        const response = await apiv3.getRootForPageListing();
         return { text: JSON.stringify(response) };
       } catch (error) {
         console.error('Error loading GROWI root page listing:', error);

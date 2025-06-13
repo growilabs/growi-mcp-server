@@ -1,5 +1,5 @@
+import apiv3 from '@growi/sdk-typescript/v3';
 import type { FastMCP } from 'fastmcp';
-import { getPageListingChildren } from './service.js';
 
 export function registerPageListingChildrenResource(server: FastMCP): void {
   server.addResourceTemplate({
@@ -19,12 +19,12 @@ export function registerPageListingChildrenResource(server: FastMCP): void {
         required: false,
       },
     ],
-    async load({ id, path }) {
+    async load(params) {
       try {
-        const params = { id, path };
-        const response = await getPageListingChildren(params);
-        return { text: JSON.stringify(response) };
+        const result = await apiv3.getChildrenForPageListing(params);
+        return { text: JSON.stringify(result) };
       } catch (error) {
+        const { id, path } = params;
         console.error(`Error loading GROWI page listing children for id="${id}" path="${path}":`, error);
         throw new Error(`Failed to load GROWI page listing children: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
