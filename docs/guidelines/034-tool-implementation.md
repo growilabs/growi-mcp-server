@@ -23,41 +23,6 @@ src/tools/
 │       └── service.ts        # (オプション) SDKでカバーされない追加のビジネスロジック
 ```
 
-## GROWI SDKの活用
-
-### 基本方針
-
-1. SDKが提供する機能を最大限活用
-2. 直接的なAPIクライアントの使用を避ける
-3. 型定義やバリデーションにSDKの定義を活用
-4. カスタムロジックは必要な場合のみservice.tsに実装
-
-### SDKの基本的な使用方法
-
-```typescript
-import apiv3 from '@growi/sdk-typescript/v3';
-import type { Page, PageInfo } from '@growi/sdk-typescript/v3';
-
-// 型安全な操作の例
-const createPage = async (pageInfo: PageInfo): Promise<Page> => {
-  try {
-    const result = await apiv3.postPage({
-      path: pageInfo.path,
-      body: 'Page content',
-      grant: 1,
-    });
-    
-    if (!result.data?.page) {
-      throw new Error('Invalid response: page data not found');
-    }
-    
-    return result.data.page;
-  } catch (error) {
-    throw new Error(`Failed to create page: ${error}`);
-  }
-};
-```
-
 ## ツール固有の実装
 
 ### `register.ts`
