@@ -25,6 +25,80 @@ src/tools/
 
 ## ツール固有の実装
 
+### `schema.ts`
+
+入力パラメータの型定義とバリデーションスキーマを定義します。
+
+**責務：**
+- 入力パラメータの型定義
+- Zodを使用したバリデーションスキーマの定義
+- TypeScriptの型エクスポート
+
+**基本的なスキーマ定義：**
+```typescript
+import { z } from 'zod';
+
+export const paramSchema = z.object({
+  // パラメータの定義
+} satisfies { [K in keyof Param]: z.ZodType<Param[K]> });
+
+export type ParamType = z.infer<typeof paramSchema>;
+```
+
+### register.tsでのバリデーション
+
+```typescript
+execute: async (params, context) => {
+  try {
+    // zodによるパラメータバリデーション
+    const validatedParams = paramSchema.parse(params);
+    
+    // バリデーション済みパラメータを使用
+    const result = await apiv3.someMethod(validatedParams);
+    
+    return JSON.stringify(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new UserError(`Invalid parameters: ${error.message}`);
+    }
+    // その他のエラーハンドリング
+  }
+}
+```
+
+### スキーマ定義のベストプラクティス
+
+```typescript
+import { z } from 'zod';
+import type { PostPageBody } from '@growi/sdk-typescript/v3';
+
+// SDKの型定義を活用したスキーマ例
+const postPageBodySchema = z.object({
+  path: z.string().min(1, 'Page path is required'),
+  body: z.string(),
+  grant: z.number().min(0).max(5).optional(),
+  grantUserGroupId: z.string().optional(),
+  overwrite: z.boolean().optional(),
+} satisfies { [K in keyof PostPageBody]: z.ZodType<PostPageBody[K]> });
+
+// 拡張したスキーマ
+export const createPageParamSchema = postPageBodySchema.extend({
+  // 追加のカスタムフィールド
+  tags: z.array(z.string()).optional(),
+  notification: z.boolean().optional(),
+});
+
+// SDKの型定義を継承した型
+export type CreatePageParam = PostPageBody & z.infer<typeof createPageParamSchema>;
+
+// セキュリティを考慮したバリデーション
+const securePathSchema = z.string()
+  .min(1, 'Path is required')
+  .regex(/^\//, 'Path must start with /')
+  .refine(path => !path.includes('..'), 'Path traversal not allowed');
+```
+
+
 ### `register.ts`
 
 - ツールの登録処理を実装
