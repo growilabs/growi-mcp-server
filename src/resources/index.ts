@@ -1,4 +1,5 @@
 import type { FastMCP } from 'fastmcp';
+import { registerCommentsResource } from './comments';
 import { registerPageResource } from './page';
 import { registerPageInfoResource } from './page/info';
 import { registerPageListingChildrenResource } from './pageListingChildren';
@@ -12,5 +13,6 @@ export async function loadResources(server: FastMCP): Promise<void> {
   registerRecentPagesResource(server);
   registerPageListingRootResource(server);
   registerPageListingChildrenResource(server);
+  registerCommentsResource(server);
   registerUserRecentResource(server);
 }
