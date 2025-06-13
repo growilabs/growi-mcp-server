@@ -24,10 +24,6 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
 
       const response = await apiv1.removePage(removePageBody);
 
-      if (!response.path) {
-        throw new GrowiApiError('Failed to delete page: No path returned', 500);
-      }
-
       return {
         paths: [response.path],
         isRecursively: response.isRecursively ?? false,
