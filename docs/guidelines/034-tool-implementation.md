@@ -6,7 +6,7 @@
 
 ## 共通構造について
 
-ツールとリソースで共通するモジュール構造（`index.ts`、`register.ts`の責務）とパラメータバリデーション（Zod）については、[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+ツールとリソースで共通するモジュール構造（`index.ts`、`register.ts`の責務）とパラメータバリデーション（Zod）については、[**共通モジュール構造ガイドライン**](./031-common-module-structure.md)を参照してください。
 
 ## ディレクトリ構造
 
@@ -70,7 +70,7 @@ const createPage = async (pageInfo: PageInfo): Promise<Page> => {
 
 主な実装パターン:
 
-基本的な実装パターンは[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+基本的な実装パターンは[**共通モジュール構造ガイドライン**](./031-common-module-structure.md)を参照してください。
 
 ```typescript
 import { FastMCP, UserError } from 'fastmcp';
@@ -124,7 +124,7 @@ annotations: {
 
 ### `schema.ts` の実装
 
-詳細な実装方法については[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+詳細な実装方法については[**共通モジュール構造ガイドライン**](./031-common-module-structure.md)を参照してください。
 
 ツール固有の考慮事項：
 - annotations設定に応じた適切なバリデーション
@@ -187,7 +187,7 @@ export const createPageWithMetadata = async (params: CreatePageParam): Promise<P
 
 ## 実装時の注意点
 
-型安全性やスキーマ定義については[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+型安全性やスキーマ定義については[**共通モジュール構造ガイドライン**](./031-common-module-structure.md)を参照してください。
 
 1. パフォーマンス
    - 不要なAPI呼び出しの削減
@@ -215,4 +215,4 @@ export const createPageWithMetadata = async (params: CreatePageParam): Promise<P
 4. エラーハンドリング
    - ツール実行エラーの適切な分類
    - ユーザーに対するツール固有のエラーメッセージ
-   - 詳細は[`04-tool-error-handling.md`](04-tool-error-handling.md)を参照
+   - 詳細は[`035-tool-error-handling.md`](./035-tool-error-handling.md)を参照

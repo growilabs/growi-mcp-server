@@ -15,7 +15,7 @@ GROWI MCPサーバーのリソース実装では、`@growi/sdk-typescript`を直
 
 ## 共通構造について
 
-リソースとツールで共通するモジュール構造（`index.ts`、`register.ts`の責務）とパラメータバリデーション（Zod）については、[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+リソースとツールで共通するモジュール構造（`index.ts`、`register.ts`の責務）とパラメータバリデーション（Zod）については、[**共通モジュール構造ガイドライン**](./031-common-module-structure.md)を参照してください。
 
 ## ディレクトリ構造
 
