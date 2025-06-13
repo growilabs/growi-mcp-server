@@ -107,28 +107,28 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 ---
 
 ### `/comments.get` (apiV1 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** resource
 - **備考:** ページのリビジョンに対するコメント取得API。page_idとrevision_idによる指定が可能
 
 ---
 
 ### `/{id}/recent` (apiV3 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** resource
 - **備考:** 特定ユーザーの最近作成したページ一覧取得API。ページネーション機能あり（PaginateResult）
 
 ---
 
 ### `/revisions/list` (apiV3 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** tool
 - **備考:** ページのリビジョン一覧取得API。ページネーション機能あり、totalCountとoffset情報も返却
 
 ---
 
 ### `/revisions/{id}` (apiV3 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** resource
 - **備考:** 指定したリビジョンの詳細情報取得API。pageIdとrevisionIdの両方が必要
 
