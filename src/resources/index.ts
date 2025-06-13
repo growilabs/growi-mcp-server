@@ -4,8 +4,10 @@ import { registerPageResource } from './page';
 import { registerPageInfoResource } from './page/info';
 import { registerPageListingChildrenResource } from './pageListingChildren';
 import { registerPageListingRootResource } from './pageListingRoot';
+import { registerPageTagResource } from './pageTag';
 import { registerRecentPagesResource } from './recent';
 import { registerRevisionResource } from './revision';
+import { registerTagSearchResource } from './tagSearch';
 import { registerUserRecentResource } from './user';
 
 export async function loadResources(server: FastMCP): Promise<void> {
@@ -17,4 +19,6 @@ export async function loadResources(server: FastMCP): Promise<void> {
   registerCommentsResource(server);
   registerUserRecentResource(server);
   registerRevisionResource(server);
+  registerPageTagResource(server);
+  registerTagSearchResource(server);
 }

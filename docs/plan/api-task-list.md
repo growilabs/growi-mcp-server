@@ -135,28 +135,28 @@ LLM Agent が利用することを想定し、各APIの優先度、進捗、種�
 ---
 
 ### `/page-listing/info` (apiV3 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** tool
 - **備考:** 複数ページのサマリ情報を得るための API
 
 ---
 
 ### `/pages.getPageTag` (apiV1 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** resource
 - **備考:** ページのタグ取得API。pageId の指定が必要
 
 ---
 
 ### `/tags.search` (apiV1 GET)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** resource
 - **備考:** タグ検索API。キーワードによるシンプルな検索機能
 
 ---
 
 ### `/tags.update` (apiV1 POST)
-- **進捗状況:** 未着手
+- **進捗状況:** GROWI SDK 利用方式で実装完了
 - **種別:** tool
 - **備考:** タグ更新API。pageId, revisionId, tagsの指定が必要
 
