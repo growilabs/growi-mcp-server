@@ -2,6 +2,7 @@ import type { FastMCP } from 'fastmcp';
 import { registerCreatePageTool } from './createPage';
 import { registerDeletePagesTool } from './deletePages';
 import { registerRenamePageTool } from './renamePage';
+import { registerSearchPagesTool } from './searchPages';
 import { registerUpdatePageTool } from './updatePage';
 
 export async function loadPageTools(server: FastMCP): Promise<void> {
@@ -9,4 +10,5 @@ export async function loadPageTools(server: FastMCP): Promise<void> {
   registerUpdatePageTool(server);
   registerRenamePageTool(server);
   registerDeletePagesTool(server);
+  registerSearchPagesTool(server);
 }
