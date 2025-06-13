@@ -25,7 +25,7 @@ export function registerCommentsResource(server: FastMCP): void {
           page_id,
           ...(revision_id && { revision_id }),
         };
-        
+
         const response = await apiv1.getComments(params);
         return { text: JSON.stringify(response) };
       } catch (error) {
