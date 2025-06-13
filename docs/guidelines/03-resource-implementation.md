@@ -13,6 +13,10 @@ GROWI MCPサーバーのリソース実装では、`@growi/sdk-typescript`を直
 
 が期待できます。
 
+## 共通構造について
+
+リソースとツールで共通するモジュール構造（`index.ts`、`register.ts`の責務）とパラメータバリデーション（Zod）については、[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+
 ## ディレクトリ構造
 
 リソースは以下のディレクトリ構造に従って実装します：
@@ -27,16 +31,7 @@ src/resources/
 
 `service.ts`は、SDKの機能で十分な場合は不要です。複雑なビジネスロジックや、複数のSDK関数を組み合わせる必要がある場合にのみ作成します。
 
-## 各モジュールの責務
-
-### index.ts
-
-- リソース登録関数のエクスポートのみを行う
-- 命名規則：`register{ResourceName}Resource`
-
-```typescript
-export { register{ResourceName}Resource } from './register.js';
-```
+## リソース固有の実装
 
 ### register.ts
 

@@ -4,6 +4,10 @@
 
 本ドキュメントは、GROWI MCP サーバーにおける `tool` の実装方法について、GROWI SDK（`@growi/sdk-typescript`）を活用した標準的なパターンとベストプラクティスを提供します。
 
+## 共通構造について
+
+ツールとリソースで共通するモジュール構造（`index.ts`、`register.ts`の責務）とパラメータバリデーション（Zod）については、[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+
 ## ディレクトリ構造
 
 toolsは以下のような階層構造で実装します：
@@ -54,17 +58,7 @@ const createPage = async (pageInfo: PageInfo): Promise<Page> => {
 };
 ```
 
-## 各モジュールの責務
-
-### `index.ts`
-
-- エントリーポイントとして機能
-- `register.ts` からの export を行う
-- 必要最小限の実装とし、複雑なロジックは含めない
-
-```typescript
-export * from './register.js';
-```
+## ツール固有の実装
 
 ### `register.ts`
 
@@ -73,6 +67,10 @@ export * from './register.js';
 - パラメータのバリデーション
 - エラーハンドリング
 - SDKメソッドまたは`service.ts`（存在する場合）の呼び出し
+
+主な実装パターン:
+
+基本的な実装パターンは[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
 
 ```typescript
 import { FastMCP, UserError } from 'fastmcp';
@@ -92,53 +90,45 @@ export function registerSomeTool(server: FastMCP): void {
       title: 'Tool Title',
     },
     execute: async (params, context) => {
-      try {
-        // zodによるパラメータバリデーション
-        const validatedParams = toolParamSchema.parse(params);
-        
-        // SDKを使用した基本的な操作
-        const result = await apiv3.someMethod(validatedParams);
-        
-        return JSON.stringify(result);
-      } catch (error) {
-        // エラーハンドリング（詳細は04-tool-error-handling.mdを参照）
-        throw new UserError('Operation failed', { details: error });
-      }
+      // パラメータバリデーション・エラーハンドリングは共通文書参照
+      const validatedParams = toolParamSchema.parse(params);
+      
+      // ツール固有のビジネスロジック
+      const result = await apiv3.someMethod(validatedParams);
+      
+      return JSON.stringify(result);
     },
   });
 }
 ```
 
-### `schema.ts`
+### Annotations設定
 
-- 入力パラメータの型定義
-- Zodを使用したバリデーションスキーマの定義
-- TypeScriptの型エクスポート
-- SDKの型定義の活用
+ツールの特性を表すannotationsを適切に設定します：
 
 ```typescript
-import { z } from 'zod';
-import type { PostPageBody } from '@growi/sdk-typescript/v3';
-
-// SDKの型定義を活用したスキーマ例
-const postPageBodySchema = z.object({
-  path: z.string().min(1, 'Page path is required'),
-  body: z.string(),
-  grant: z.number().min(0).max(5).optional(),
-  grantUserGroupId: z.string().optional(),
-  overwrite: z.boolean().optional(),
-} satisfies { [K in keyof PostPageBody]: z.ZodType<PostPageBody[K]> });
-
-// 拡張したスキーマ
-export const createPageParamSchema = postPageBodySchema.extend({
-  // 追加のカスタムフィールド
-  tags: z.array(z.string()).optional(),
-  notification: z.boolean().optional(),
-});
-
-// SDKの型定義を継承した型
-export type CreatePageParam = PostPageBody & z.infer<typeof createPageParamSchema>;
+annotations: {
+  readOnlyHint: false,           // 読み取り専用かどうか
+  destructiveHint: true,         // 破壊的操作かどうか（削除など）
+  idempotentHint: false,         // 冪等性があるかどうか
+  openWorldHint: true,           // オープンワールド仮定
+  title: 'Tool Title',           // ツールのタイトル
+},
 ```
+
+**各annotationの使い方：**
+- `readOnlyHint`: データを変更しない読み取り専用操作では`true`
+- `destructiveHint`: 削除やデータ破壊の可能性がある操作では`true`
+- `idempotentHint`: 同じ操作を複数回実行しても結果が変わらない場合は`true`
+- `openWorldHint`: 通常は`true`、制限された環境でのみ`false`
+
+### `schema.ts` の実装
+
+詳細な実装方法については[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
+
+ツール固有の考慮事項：
+- annotations設定に応じた適切なバリデーション
+- ツールの性質（読み取り専用、破壊的操作など）に応じたパラメータ制限
 
 ### `service.ts` (オプショナル)
 
@@ -197,45 +187,9 @@ export const createPageWithMetadata = async (params: CreatePageParam): Promise<P
 
 ## 実装時の注意点
 
-1. 型安全性
+型安全性やスキーマ定義については[**共通モジュール構造ガイドライン**](./05-common-module-structure.md)を参照してください。
 
-    ### スキーマ定義と型の整合性
-    ```typescript
-    // スキーマ定義時の型チェック
-    const schema = z.object({...}) satisfies z.ZodType<SDKType>;
-
-    // オプショナル属性の適切な定義
-    const schema = z.object({
-      required: z.string(),
-      optional: z.string().optional(),
-    });
-    ```
-
-    ### 型の拡張と検証
-    ```typescript
-    // 必要な場合のみ型の拡張
-    type ExtendedType = SDKType & {
-      additionalField?: string;
-    };
-
-    // レスポンスの型安全性
-    const response: PostPage201 = await apiv3.postPage(params);
-    if (!response.data?.page) {
-      throw new GrowiApiError('Invalid response', 500);
-    }
-    ```
-
-    ### 型安全性の確保のベストプラクティス
-    - satisfies演算子の活用による型定義の厳密化
-    - 明示的な型アノテーションの使用
-    - コンパイラオプションの厳格化
-    - nullやundefinedの適切な取り扱い
-
-    ### データ処理時の注意点
-    - 循環参照への対処
-    - エンコード不可能な値の考慮
-
-2. パフォーマンス
+1. パフォーマンス
    - 不要なAPI呼び出しの削減
    - SDKのキャッシュ機能の活用（利用可能な場合）
    - 複数のAPI呼び出しを必要とする場合は適切な順序で実行
@@ -248,31 +202,17 @@ export const createPageWithMetadata = async (params: CreatePageParam): Promise<P
    const fullPage = await apiv3.getPage({ path: '/path/to/page', includeContent: true });
    ```
 
-3. セキュリティ
-   - 入力値の適切なバリデーション
-   - 機密情報の適切な取り扱い
-   - APIレスポンスの検証
-   - ファイルパスやコマンドの安全性確保
+2. セキュリティ
+   - ツール実行時の権限チェック
+   - 破壊的操作に対する追加確認
+   - ツール固有のセキュリティ要件の実装
 
-   ```typescript
-   // バリデーションの例
-   const schema = z.object({
-     path: z.string()
-       .min(1, 'Path is required')
-       .regex(/^\//, 'Path must start with /')
-       .refine(path => !path.includes('..'), 'Path traversal is not allowed'),
-     content: z.string(),
-   });
-   ```
+3. メンテナンス性
+    - ツール間の依存関係の管理
+    - ツールのバージョニング戦略
+    - annotations設定の一貫性維持
 
-4. メンテナンス性
-    - SDKの型定義の変更に追従しやすい実装
-    - 責務の明確な分離（SDKの利用とカスタムロジックの分離）
-    - 適切なコメントの記述
-    - 再利用可能なコードの抽出
-
-5. エラーハンドリング
-   - SDKのエラー型の適切な処理
-   - ユーザーフレンドリーなエラーメッセージ
-   - デバッグ情報の付加
+4. エラーハンドリング
+   - ツール実行エラーの適切な分類
+   - ユーザーに対するツール固有のエラーメッセージ
    - 詳細は[`04-tool-error-handling.md`](04-tool-error-handling.md)を参照
