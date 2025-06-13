@@ -4,6 +4,7 @@ import { registerDeletePagesTool } from './deletePages';
 import { registerPublishPageTool } from './publishPage';
 import { registerRenamePageTool } from './renamePage';
 import { registerSearchPagesTool } from './searchPages';
+import { registerUnpublishPageTool } from './unpublishPage';
 import { registerUpdatePageTool } from './updatePage';
 
 export async function loadPageTools(server: FastMCP): Promise<void> {
@@ -13,4 +14,5 @@ export async function loadPageTools(server: FastMCP): Promise<void> {
   registerDeletePagesTool(server);
   registerSearchPagesTool(server);
   registerPublishPageTool(server);
+  registerUnpublishPageTool(server);
 }
