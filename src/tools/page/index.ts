@@ -2,6 +2,11 @@ import type { FastMCP } from 'fastmcp';
 import { registerCreatePageTool } from './createPage';
 import { registerDeletePagesTool } from './deletePages';
 import { registerDuplicatePageTool } from './duplicatePages';
+import { registerGetPageInfoTool } from './getPageInfo';
+import { registerGetPageListingChildrenTool } from './getPageListingChildren';
+import { registerGetPageListingRootTool } from './getPageListingRoot';
+import { registerGetPageTagTool } from './getPageTag';
+import { registerGetRecentPagesTool } from './getRecentPages';
 import { registerPageListingInfoTool } from './pageListingInfo';
 import { registerPublishPageTool } from './publishPage';
 import { registerRenamePageTool } from './renamePage';
@@ -19,4 +24,9 @@ export async function loadPageTools(server: FastMCP): Promise<void> {
   registerUnpublishPageTool(server);
   registerDuplicatePageTool(server);
   registerPageListingInfoTool(server);
+  registerGetPageInfoTool(server);
+  registerGetPageListingChildrenTool(server);
+  registerGetPageListingRootTool(server);
+  registerGetPageTagTool(server);
+  registerGetRecentPagesTool(server);
 }
