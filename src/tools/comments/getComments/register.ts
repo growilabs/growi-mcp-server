@@ -23,8 +23,8 @@ export function registerGetCommentsTool(server: FastMCP): void {
 
         // Prepare API parameters
         const apiParams = {
-          page_id: validatedParams.page_id,
-          ...(validatedParams.revision_id && { revision_id: validatedParams.revision_id }),
+          page_id: validatedParams.pageId,
+          ...(validatedParams.revisionId && { revision_id: validatedParams.revisionId }),
         };
 
         // Execute operation using SDK
