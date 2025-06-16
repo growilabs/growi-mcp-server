@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import 'reflect-metadata';
 import { FastMCP } from 'fastmcp';
 
 import config from './config/default.js';
