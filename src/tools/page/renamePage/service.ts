@@ -1,62 +1,64 @@
-import { apiV3 } from '../../../commons/api/client-v3.js';
-import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
-import type { IPage, RenamePageParam } from './schema.js';
+import apiv3 from '@growi/sdk-typescript/v3';
+import type { PutRenameForPages200 } from '@growi/sdk-typescript/v3';
+import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
+import type { RenamePageParam } from './schema.js';
 
-export async function renamePage(params: RenamePageParam): Promise<IPage> {
+export async function renamePage(params: RenamePageParam): Promise<PutRenameForPages200> {
   try {
-    // Check if pages exist at the new path
-    const existResponse = await apiV3
-      .get('pages/exist-paths', {
-        searchParams: {
-          fromPath: params.newPagePath,
-          toPath: params.newPagePath,
-        },
-      })
-      .json<{ existPaths: Record<string, boolean> }>();
+    // Check if pages exist at the new path using SDK only if both paths are provided
+    if (params.path && params.newPagePath) {
+      const existPathsResult = await apiv3.getExistPathsForPage({
+        fromPath: params.path,
+        toPath: params.newPagePath,
+      });
 
-    if (existResponse.existPaths && Object.keys(existResponse.existPaths).length > 0) {
-      throw new GrowiApiError('Page already exists at the target path', 409);
-    }
-
-    // Proceed with renaming
-    const response = await apiV3
-      .post('/pages/rename', {
-        json: {
-          pageId: params.pageId,
-          revisionId: params.revisionId,
-          newPagePath: params.newPagePath,
-          isRenameRedirect: params.isRenameRedirect ?? false,
-          isRecursively: params.isRecursively ?? false,
-          updateMetadata: params.updateMetadata ?? false,
-        },
-      })
-      .json<{ page: IPage }>();
-
-    if (!response.page) {
-      throw new GrowiApiError('Failed to rename page', 500);
-    }
-
-    return response.page;
-  } catch (error) {
-    // Handle ky library errors
-    if (error instanceof Error && 'response' in error) {
-      const response = (error as { response: Response }).response;
-      const responseData = await response.json().catch(() => undefined);
-
-      if (response.status === 409) {
-        throw new GrowiApiError('Page already exists at the target path', 409, responseData);
+      if (existPathsResult.existPaths?.[params.newPagePath]) {
+        throw new GrowiApiError('Page already exists at the target path', 409, {
+          path: params.newPagePath,
+        });
       }
-      if (response.status === 401) {
-        throw new GrowiApiError('Invalid page ID', 401, responseData);
-      }
-
-      throw new GrowiApiError('Failed to rename page in GROWI', response.status, responseData);
     }
 
-    if (isGrowiApiError(error)) {
+    // Proceed with renaming using SDK
+    const renameResult = await apiv3.putRenameForPages({
+      pageId: params.pageId,
+      revisionId: params.revisionId,
+      ...(params.newPagePath && { newPagePath: params.newPagePath }),
+      ...(params.isRenameRedirect !== undefined && { isRenameRedirect: params.isRenameRedirect }),
+      ...(params.isRecursively !== undefined && { isRecursively: params.isRecursively }),
+      ...(params.updateMetadata !== undefined && { updateMetadata: params.updateMetadata }),
+    });
+
+    if (!renameResult.page) {
+      throw new GrowiApiError('Invalid response received from page rename API', 500, { response: renameResult });
+    }
+
+    return renameResult;
+  } catch (error: unknown) {
+    if (error instanceof GrowiApiError) {
       throw error;
     }
 
-    throw new GrowiApiError('An unexpected error occurred', 500, error);
+    // Handle SDK errors
+    const message = error instanceof Error ? error.message : String(error);
+    const statusCode = error instanceof Error && 'response' in error ? (error as { response?: { status?: number } }).response?.status || 500 : 500;
+    const details = {
+      originalError: error,
+      pageId: params.pageId,
+      ...(params.path && { fromPath: params.path }),
+      ...(params.newPagePath && { newPagePath: params.newPagePath }),
+    };
+
+    if (statusCode === 409) {
+      throw new GrowiApiError('Page already exists at the target path', statusCode, details);
+    }
+    if (statusCode === 401) {
+      throw new GrowiApiError('Invalid page ID or insufficient permissions', statusCode, details);
+    }
+    if (statusCode === 400) {
+      throw new GrowiApiError('Invalid request parameters', statusCode, details);
+    }
+
+    throw new GrowiApiError(`Failed to rename page: ${message}`, statusCode, details);
   }
 }

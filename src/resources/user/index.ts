@@ -1,0 +1,1 @@
+export { registerUserRecentResource } from './recent';
