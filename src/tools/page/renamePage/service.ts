@@ -1,9 +1,9 @@
 import apiv3 from '@growi/sdk-typescript/v3';
-import type { PostRenameForPages200 } from '@growi/sdk-typescript/v3';
+import type { PutRenameForPages200 } from '@growi/sdk-typescript/v3';
 import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
 import type { RenamePageParam } from './schema.js';
 
-export async function renamePage(params: RenamePageParam): Promise<PostRenameForPages200> {
+export async function renamePage(params: RenamePageParam): Promise<PutRenameForPages200> {
   try {
     // Check if pages exist at the new path using SDK only if both paths are provided
     if (params.path && params.newPagePath) {
@@ -20,7 +20,7 @@ export async function renamePage(params: RenamePageParam): Promise<PostRenameFor
     }
 
     // Proceed with renaming using SDK
-    const renameResult = await apiv3.postRenameForPages({
+    const renameResult = await apiv3.putRenameForPages({
       pageId: params.pageId,
       revisionId: params.revisionId,
       ...(params.newPagePath && { newPagePath: params.newPagePath }),
