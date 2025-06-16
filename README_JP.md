@@ -1,3 +1,5 @@
+- [English 🇺🇸](./README.md)
+
 # @growi/mcp-server
 
 [![npm version](https://badge.fury.io/js/%40growi%2Fmcp-server.svg)](https://badge.fury.io/js/%40growi%2Fmcp-server)
