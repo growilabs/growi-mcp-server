@@ -1,4 +1,5 @@
 import type { FastMCP } from 'fastmcp';
+import { loadCommentsTools } from './comments';
 import { loadPageTools } from './page';
 import { loadRevisionTools } from './revision';
 import { loadShareLinksTools } from './shareLinks';
@@ -16,4 +17,5 @@ export async function loadTools(server: FastMCP): Promise<void> {
   loadRevisionTools(server);
   loadTagTools(server);
   loadShareLinksTools(server);
+  loadCommentsTools(server);
 }
