@@ -7,14 +7,14 @@ import { pageListingInfoParamSchema } from './schema.js';
 export function registerPageListingInfoTool(server: FastMCP): void {
   server.addTool({
     name: 'pageListingInfo',
-    description: 'Get summary information for multiple pages in GROWI',
+    description: 'Get summary information for pages in GROWI by IDs or path',
     parameters: pageListingInfoParamSchema,
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
       idempotentHint: true,
       openWorldHint: true,
-      title: 'Get Page Listing Info',
+      title: 'Get summary information for pages',
     },
     execute: async (params) => {
       try {
