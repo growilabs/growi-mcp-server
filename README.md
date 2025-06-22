@@ -49,6 +49,7 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 - `deletePages` - Delete pages (bulk operation supported)
 - `duplicatePage` - Duplicate a page (including child pages)
 - `renamePage` - Change page name and path
+- `getPage` - Get a page data
 - `getPageInfo` - Get detailed page information
 - `getRecentPages` - Get list of recently updated pages
 - `getPageListingRoot` - Get root page list
