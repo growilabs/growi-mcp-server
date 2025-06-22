@@ -1,0 +1,1 @@
+export { registerGetPageTool } from './register';
