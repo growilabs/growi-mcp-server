@@ -101,7 +101,7 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 
 1. Clone the repository
 ```bash
-git clone https://github.com/weseek/growi-mcp-server.git
+git clone https://github.com/growilabs/growi-mcp-server.git
 cd growi-mcp-server
 ```
 

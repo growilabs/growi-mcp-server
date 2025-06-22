@@ -101,7 +101,7 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 
 1. リポジトリをクローン
 ```bash
-git clone https://github.com/weseek/growi-mcp-server.git
+git clone https://github.com/growilabs/growi-mcp-server.git
 cd growi-mcp-server
 ```
 
