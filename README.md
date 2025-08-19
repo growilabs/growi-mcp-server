@@ -111,8 +111,8 @@ pnpm install
 
 3. Set up environment variables
 ```bash
-cp .env.example .env.local
-# Edit .env.local to enter GROWI connection information
+cp .env.example .env.development.local
+# Edit .env.development.local to enter GROWI connection information
 ```
 
 4. Start the development server

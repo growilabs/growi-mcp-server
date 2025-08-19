@@ -111,8 +111,8 @@ pnpm install
 
 3. 環境変数を設定
 ```bash
-cp .env.example .env.local
-# .env.localを編集してGROWI接続情報を入力
+cp .env.example .env.development.local
+# .env.development.local を編集してGROWI接続情報を入力
 ```
 
 4. 開発サーバーを起動
