@@ -32,13 +32,15 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@growi/core": "^1.5.0",
-    "@growi/sdk-typescript": "^1.4.0",
+    "@growi/sdk-typescript": "^1.6.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^20.11.30",
     "@vercel/ncc": "^0.38.3",
     "cross-env": "^7.0.3",
+    "ky": "^1.8.2",
     "nodemon": "^3.1.10",
     "rimraf": "^5.0.5",
+    "tsx": "^4.20.4",
     "typescript": "^5.8.3"
   }
 }

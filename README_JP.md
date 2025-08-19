@@ -100,7 +100,7 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 
 1. リポジトリをクローン
 ```bash
-git clone https://github.com/weseek/growi-mcp-server.git
+git clone https://github.com/growilabs/growi-mcp-server.git
 cd growi-mcp-server
 ```
 
@@ -112,7 +112,7 @@ pnpm install
 3. 環境変数を設定
 ```bash
 cp .env.example .env.local
-# .env.localを編集してGROWI接続情報を入力
+# .env.local を編集してGROWI接続情報を入力
 ```
 
 4. 開発サーバーを起動
@@ -136,6 +136,32 @@ pnpm lint
 pnpm start
 ```
 
+### MCPサーバーの設定
+
+1. ビルド
+```bash
+pnpm build
+```
+
+3. MCPサーバー設定
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "node",
+      "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
+      "env": {
+        "GROWI_BASE_URL": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+> [!NOTE]
+> "args" にはビルドで生成された成果物への絶対パスを指定してください
+
 ### トラブルシュート
 
 ### GROWIに接続できない場合
@@ -158,7 +184,7 @@ pnpm start
 プロジェクトへの貢献を歓迎します！
 
 #### 貢献方法
-1. **Issue報告**: バグ報告や機能要求は[GitHub Issues](https://github.com/weseek/growi-mcp-server/issues)で
+1. **Issue報告**: バグ報告や機能要求は[GitHub Issues](https://github.com/growilabs/growi-mcp-server/issues)で
 2. **プルリクエスト**:
    - フォークしてブランチを作成
    - 変更を実装
@@ -179,7 +205,7 @@ pnpm start
 
 - **[GROWI公式サイト](https://growi.org/)** - オープンソースWikiプラットフォーム
 - **[Model Context Protocol](https://modelcontextprotocol.io/)** - AIとツール統合の標準プロトコル
-- **[GROWI SDK TypeScript](https://github.com/weseek/growi-sdk-typescript)** - GROWI API TypeScript SDK
+- **[GROWI SDK TypeScript](https://github.com/growilabs/growi-sdk-typescript)** - GROWI API TypeScript SDK
 - **[FastMCP](https://github.com/punkpeye/fastmcp)** - MCPサーバー開発フレームワーク
 
 ---

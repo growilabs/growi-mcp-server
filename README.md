@@ -100,7 +100,7 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 
 1. Clone the repository
 ```bash
-git clone https://github.com/weseek/growi-mcp-server.git
+git clone https://github.com/growilabs/growi-mcp-server.git
 cd growi-mcp-server
 ```
 
@@ -136,6 +136,32 @@ pnpm lint
 pnpm start
 ```
 
+### MCP Server Configuration
+
+1. Build
+```bash
+pnpm build
+```
+
+2. MCP Server Configuration
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "node",
+      "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
+      "env": {
+        "GROWI_BASE_URL": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Set the absolute path to the built output in "args"
+
 ### Troubleshooting
 
 ### When unable to connect to GROWI
@@ -157,7 +183,7 @@ pnpm start
 Contributions to the project are welcome!
 
 #### How to Contribute
-1. **Issue Reports**: Bug reports and feature requests via [GitHub Issues](https://github.com/weseek/growi-mcp-server/issues)
+1. **Issue Reports**: Bug reports and feature requests via [GitHub Issues](https://github.com/growilabs/growi-mcp-server/issues)
 2. **Pull Requests**:
    - Fork and create a branch
    - Implement changes
@@ -178,7 +204,7 @@ This project is released under the [MIT License](./LICENSE).
 
 - **[GROWI Official Site](https://growi.org/)** - Open source wiki platform
 - **[Model Context Protocol](https://modelcontextprotocol.io/)** - Standard protocol for AI and tool integration
-- **[GROWI SDK TypeScript](https://github.com/weseek/growi-sdk-typescript)** - GROWI API TypeScript SDK
+- **[GROWI SDK TypeScript](https://github.com/growilabs/growi-sdk-typescript)** - GROWI API TypeScript SDK
 - **[FastMCP](https://github.com/punkpeye/fastmcp)** - MCP server development framework
 
 ---

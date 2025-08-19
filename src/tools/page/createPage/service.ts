@@ -19,7 +19,7 @@ export const createPage = async (params: CreatePageParam): Promise<CreatePageRes
     // Create page using SDK
     const response = await apiv3.postPage(params);
 
-    if (!response.data?.page) {
+    if (!response?.page) {
       throw new GrowiApiError('Invalid response received from page creation API', 500, { response });
     }
 

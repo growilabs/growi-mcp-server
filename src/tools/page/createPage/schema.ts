@@ -5,7 +5,14 @@ export const createPageParamSchema = z.object({
   path: z.string(),
   body: z.string(),
   grant: z.number().min(0).max(5).optional(),
-  grantUserGroupIds: z.string().optional(),
+  grantUserGroupIds: z
+    .array(
+      z.object({
+        type: z.string().optional(),
+        item: z.string().optional(),
+      }),
+    )
+    .optional(),
   pageTags: z.array(z.string()).optional(),
 }) satisfies z.ZodType<PostPageBody>;
 
