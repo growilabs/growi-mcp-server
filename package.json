@@ -27,6 +27,7 @@
   "dependencies": {
     "dotenv-flow": "^4.1.0",
     "fastmcp": "^2.0.0",
+    "ky": "^1.8.1",
     "zod": "^3.25.7"
   },
   "devDependencies": {

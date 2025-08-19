@@ -49,6 +49,7 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 - `deletePages` - ページを削除（一括対応）
 - `duplicatePage` - ページを複製（子ページも含む）
 - `renamePage` - ページ名とパスを変更
+- `getPage` - ページの内容を取得
 - `getPageInfo` - ページの詳細情報を取得
 - `getRecentPages` - 最近更新されたページ一覧
 - `getPageListingRoot` - ルートページ一覧を取得
