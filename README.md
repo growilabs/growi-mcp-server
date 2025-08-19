@@ -136,6 +136,32 @@ pnpm lint
 pnpm start
 ```
 
+### MCP Server Configuration
+
+1. Build
+```bash
+pnpm build
+```
+
+2. MCP Server Configuration
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "node",
+      "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
+      "env": {
+        "GROWI_BASE_URL": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Set the absolute path to the built output in "args"
+
 ### Troubleshooting
 
 ### When unable to connect to GROWI

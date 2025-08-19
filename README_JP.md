@@ -136,6 +136,32 @@ pnpm lint
 pnpm start
 ```
 
+### MCPサーバーの設定
+
+1. ビルド
+```bash
+pnpm build
+```
+
+3. MCPサーバー設定
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "node",
+      "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
+      "env": {
+        "GROWI_BASE_URL": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+> [!NOTE]
+> "args" にはビルドで生成された成果物への絶対パスを指定してください
+
 ### トラブルシュート
 
 ### GROWIに接続できない場合
