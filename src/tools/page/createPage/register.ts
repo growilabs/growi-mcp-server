@@ -24,7 +24,7 @@ export function registerCreatePageTool(server: FastMCP): void {
         const response = await createPage(validatedParams);
 
         try {
-          return JSON.stringify(response.data);
+          return JSON.stringify(response);
         } catch (jsonError) {
           throw new GrowiApiError('Failed to serialize API response', 500, { error: jsonError instanceof Error ? jsonError.message : String(jsonError) });
         }
