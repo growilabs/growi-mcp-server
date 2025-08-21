@@ -14,9 +14,6 @@ importers:
       fastmcp:
         specifier: ^2.0.0
         version: 2.0.0
-      ky:
-        specifier: ^1.8.1
-        version: 1.8.2
       zod:
         specifier: ^3.25.7
         version: 3.25.13
@@ -42,6 +39,9 @@ importers:
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
+      ky:
+        specifier: ^1.8.2
+        version: 1.8.2
       nodemon:
         specifier: ^3.1.10
         version: 3.1.10
