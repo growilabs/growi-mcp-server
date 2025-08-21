@@ -14,6 +14,9 @@ importers:
       fastmcp:
         specifier: ^2.0.0
         version: 2.0.0
+      ky:
+        specifier: ^1.8.1
+        version: 1.8.2
       zod:
         specifier: ^3.25.7
         version: 3.25.13
@@ -25,8 +28,8 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0
       '@growi/sdk-typescript':
-        specifier: ^1.6.0
-        version: 1.6.0
+        specifier: ^1.7.0
+        version: 1.7.0
       '@tsconfig/node22':
         specifier: ^22.0.2
         version: 22.0.2
@@ -39,9 +42,6 @@ importers:
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
-      ky:
-        specifier: ^1.8.2
-        version: 1.8.2
       nodemon:
         specifier: ^3.1.10
         version: 3.1.10
@@ -269,8 +269,8 @@ packages:
   '@growi/core@1.5.0':
     resolution: {integrity: sha512-c1Rrui9efxX/7f1r0brb8IVjsY45tGUnuJNbXHWCR5hVkDkXuz63MJ3CgLco8x0A744Vn7W67a/FKgAEvPts1A==}
 
-  '@growi/sdk-typescript@1.6.0':
-    resolution: {integrity: sha512-/7OPtIrbL+yenQjYYe/VuHioRNFZfc2lZQfGtcM87+rNaM7/y71G3MZibn1g2it7LfHteP5UgTgIpmFPPu6zyg==}
+  '@growi/sdk-typescript@1.7.0':
+    resolution: {integrity: sha512-OuQsB/irsn2B/+/w1hF76yWqJ/klvnbec83FmLR7QHr3iUoqHf+nNDTQ4C9f2cdAG64R//xS9phwRKLIziHgQQ==}
     engines: {node: '>=18.0.0'}
 
   '@isaacs/cliui@8.0.2':
@@ -1219,7 +1219,7 @@ snapshots:
       bson-objectid: 2.0.4
       escape-string-regexp: 4.0.0
 
-  '@growi/sdk-typescript@1.6.0':
+  '@growi/sdk-typescript@1.7.0':
     dependencies:
       axios: 1.9.0
     transitivePeerDependencies:
