@@ -7,13 +7,14 @@ export const duplicatePage = async (params: DuplicatePageParams): Promise<Page> 
   try {
     // Check if target path exists
     if (params.pageNameInput) {
-      const existPathResult = await apiv3.getExistPathsForPage({
-        toPath: params.pageNameInput,
+      // Check if page exists
+      const existResponse = await apiv3.getExistForPage({
+        path: params.pageNameInput,
       });
 
       // If path exists, throw error
-      if (existPathResult.existPaths?.[params.pageNameInput]) {
-        throw new GrowiApiError('Target path already exists', 400);
+      if (existResponse.isExist) {
+        throw new GrowiApiError('Page with this path already exists', 409, { path: params.pageNameInput });
       }
     }
 

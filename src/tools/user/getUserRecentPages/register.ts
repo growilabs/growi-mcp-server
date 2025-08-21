@@ -22,7 +22,7 @@ export function registerGetUserRecentPagesTool(server: FastMCP): void {
         const validatedParams = getUserRecentPagesParamSchema.parse(params);
 
         // Execute operation using SDK
-        const result = await apiv3.getRecentById(validatedParams.id);
+        const result = await apiv3.getRecentByIdForUsers(validatedParams.id);
 
         return JSON.stringify(result);
       } catch (error) {
