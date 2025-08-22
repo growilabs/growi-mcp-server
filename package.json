@@ -27,13 +27,12 @@
   "dependencies": {
     "dotenv-flow": "^4.1.0",
     "fastmcp": "^2.0.0",
-    "ky": "^1.8.1",
     "zod": "^3.25.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@growi/core": "^1.5.0",
-    "@growi/sdk-typescript": "^1.6.0",
+    "@growi/sdk-typescript": "^1.7.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^20.11.30",
     "@vercel/ncc": "^0.38.3",

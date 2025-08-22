@@ -22,11 +22,11 @@ export function registerUpdatePageTool(server: FastMCP): void {
         // Execute update operation using SDK
         const result = await apiv3.putPage(validatedParams);
 
-        if (!result.data?.page) {
+        if (!result?.page) {
           throw new UserError('Failed to retrieve page data after update');
         }
 
-        return JSON.stringify(result.data.page);
+        return JSON.stringify(result.page);
       } catch (error) {
         // Handle validation errors
         if (error instanceof z.ZodError) {
@@ -44,7 +44,9 @@ export function registerUpdatePageTool(server: FastMCP): void {
         }
 
         // Handle unexpected errors
-        throw new UserError('An unexpected error occurred while updating the page. Please try again later.');
+        throw new UserError('The page update operation could not be completed. Please try again later.', {
+          originalError: error instanceof Error ? error.message : String(error),
+        });
       }
     },
   });

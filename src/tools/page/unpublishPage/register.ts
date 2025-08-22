@@ -18,7 +18,7 @@ export function registerUnpublishPageTool(server: FastMCP): void {
       try {
         const validatedParams = unpublishPageParamSchema.parse(params);
 
-        const page = await apiv3.putUnpublishByPageId(validatedParams.pageId);
+        const page = await apiv3.putUnpublishByPageIdForPage(validatedParams.pageId);
 
         return JSON.stringify({
           status: 'success',

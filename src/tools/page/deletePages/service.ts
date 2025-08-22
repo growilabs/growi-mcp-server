@@ -18,8 +18,8 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
       const removePageBody: RemovePageBody = {
         page_id: pageId,
         revision_id: revisionId,
-        completely: params.isCompletely ?? false,
-        recursively: params.isRecursively ?? false,
+        completely: params.isCompletely || undefined,
+        recursively: params.isRecursively || undefined,
       };
 
       const response = await apiv1.removePage(removePageBody);
@@ -34,9 +34,9 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
     // For multiple pages deletion, use v3 API
     const postDeleteBody: PostDeleteForPagesBody = {
       pageIdToRevisionIdMap: params.pageIdToRevisionIdMap,
-      isCompletely: params.isCompletely ?? false,
-      isRecursively: params.isRecursively ?? false,
-      isAnyoneWithTheLink: params.isAnyoneWithTheLink,
+      isCompletely: params.isCompletely || undefined,
+      isRecursively: params.isRecursively || undefined,
+      isAnyoneWithTheLink: params.isAnyoneWithTheLink || undefined,
     };
 
     const response = await apiv3.postDeleteForPages(postDeleteBody);

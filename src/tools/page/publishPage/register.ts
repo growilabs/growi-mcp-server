@@ -18,7 +18,7 @@ export function registerPublishPageTool(server: FastMCP): void {
       try {
         const validatedParams = publishPageParamSchema.parse(params);
 
-        const page = await apiv3.putPublishByPageId(validatedParams.pageId);
+        const page = await apiv3.putPublishByPageIdForPage(validatedParams.pageId);
 
         return JSON.stringify({
           status: 'success',
