@@ -5,6 +5,8 @@
 [![npm version](https://badge.fury.io/js/%40growi%2Fmcp-server.svg)](https://badge.fury.io/js/%40growi%2Fmcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/growilabs/growi-mcp-server)](https://archestra.ai/mcp-catalog/growilabs__growi-mcp-server)
+
 A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses.
 
 ## Key Features
