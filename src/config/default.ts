@@ -3,12 +3,20 @@ import { z } from 'zod';
 import type { Config, GrowiAppConfig } from './types';
 
 // Define schema for environment variables
-const envSchema = z.object({
-  // PORT: z.number().optional().default(8080), // for httpStream transport
-  GROWI_BASE_URLS: z.string(),
-  GROWI_API_TOKENS: z.string(),
-  GROWI_APP_NAMES: z.string(),
-});
+const envSchema = z
+  .object({
+    // PORT: z.number().optional().default(8080), // for httpStream transport
+    GROWI_BASE_URLS: z.string(),
+    GROWI_API_TOKENS: z.string(),
+    GROWI_APP_NAMES: z.string(),
+  })
+  .transform((env) => {
+    return {
+      baseUrls: env.GROWI_BASE_URLS.split(',').map((url: string) => url.trim()),
+      apiTokens: env.GROWI_API_TOKENS.split(',').map((token: string) => token.trim()),
+      appNames: env.GROWI_APP_NAMES.split(',').map((name: string) => name.trim()),
+    };
+  });
 
 // Parse environment variables
 dotenvFlow.config();
@@ -27,12 +35,7 @@ function parseGrowiConfig(): Config['growi'] {
     throw new Error('Environment validation failed');
   }
 
-  const { GROWI_BASE_URLS, GROWI_API_TOKENS, GROWI_APP_NAMES } = parsedEnv.data;
-
-  // Split comma-separated values
-  const baseUrls = GROWI_BASE_URLS.split(',').map((url: string) => url.trim());
-  const apiTokens = GROWI_API_TOKENS.split(',').map((token: string) => token.trim());
-  const appNames = GROWI_APP_NAMES.split(',').map((name: string) => name.trim());
+  const { baseUrls, apiTokens, appNames } = parsedEnv.data;
 
   // Validate array lengths
   if (baseUrls.length !== apiTokens.length) {
