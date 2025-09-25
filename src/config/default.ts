@@ -5,9 +5,9 @@ import type { Config, GrowiAppConfig } from './types';
 // Define schema for environment variables
 const envSchema = z.object({
   // PORT: z.number().optional().default(8080), // for httpStream transport
-  GROWI_BASE_URLS: z.array(z.string().url()),
-  GROWI_API_TOKENS: z.array(z.string()),
-  GROWI_APP_NAMES: z.array(z.string()),
+  GROWI_BASE_URLS: z.string(),
+  GROWI_API_TOKENS: z.string(),
+  GROWI_APP_NAMES: z.string(),
 });
 
 // Parse environment variables
@@ -22,35 +22,66 @@ if (!parsedEnv.success) {
 /**
  * Parse multi-app configuration from environment variables
  */
-const parseGrowiConfig = (): Config['growi'] => {
+function parseGrowiConfig(): Config['growi'] {
   if (!parsedEnv.success || !parsedEnv.data) {
     throw new Error('Environment validation failed');
   }
 
   const { GROWI_BASE_URLS, GROWI_API_TOKENS, GROWI_APP_NAMES } = parsedEnv.data;
 
-  const urlsLength = GROWI_BASE_URLS.length;
-  const tokensLength = GROWI_API_TOKENS.length;
-  const appNamesLength = GROWI_APP_NAMES.length;
+  // Split comma-separated values
+  const baseUrls = GROWI_BASE_URLS.split(',').map((url: string) => url.trim());
+  const apiTokens = GROWI_API_TOKENS.split(',').map((token: string) => token.trim());
+  const appNames = GROWI_APP_NAMES.split(',').map((name: string) => name.trim());
 
   // Validate array lengths
-  if (urlsLength !== tokensLength || urlsLength !== appNamesLength) {
-    throw new Error('Environment variables GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have the same number of entries');
+  if (baseUrls.length !== apiTokens.length) {
+    throw new Error('GROWI_BASE_URL and GROWI_API_TOKEN must have the same number of comma-separated values');
   }
 
-  const result: GrowiAppConfig[] = [];
-  for (let i = 0; i < GROWI_BASE_URLS.length; i++) {
-    result.push({
-      name: GROWI_APP_NAMES[i],
-      baseUrl: GROWI_BASE_URLS[i],
-      apiToken: GROWI_API_TOKENS[i],
-    });
+  if (appNames.length !== baseUrls.length) {
+    throw new Error('GROWI_APP_NAMES must have the same number of comma-separated values as GROWI_BASE_URL');
   }
 
+  // Validate URLs
+  baseUrls.forEach((url: string, index: number) => {
+    try {
+      new URL(url);
+    } catch {
+      throw new Error(`Invalid URL at index ${index}: ${url}`);
+    }
+  });
+
+  // Create app configurations
+  const apps: GrowiAppConfig[] = baseUrls.map((baseUrl: string, index: number) => ({
+    name: appNames[index],
+    baseUrl,
+    apiToken: apiTokens[index],
+  }));
+
+  // Check for duplicate app names
+  const uniqueNames = new Set(apps.map((app) => app.name));
+  if (uniqueNames.size !== apps.length) {
+    throw new Error('Duplicate app names are not allowed');
+  }
+
+  // Return configuration
+  if (apps.length === 1) {
+    // Single app: maintain backward compatibility
+    return {
+      apps,
+      defaultApp: apps[0].name,
+      baseUrl: apps[0].baseUrl,
+      apiToken: apps[0].apiToken,
+    };
+  }
+
+  // Multiple apps
   return {
-    apps: result,
+    apps,
+    defaultApp: apps[0].name, // First app is default
   };
-};
+}
 
 const config: Config = {
   // remoteServer: {
