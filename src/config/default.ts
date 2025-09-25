@@ -16,7 +16,14 @@ const envSchema = z
       apiTokens: env.GROWI_API_TOKENS.split(',').map((token: string) => token.trim()),
       appNames: env.GROWI_APP_NAMES.split(',').map((name: string) => name.trim()),
     };
-  });
+  })
+  .pipe(
+    z.object({
+      baseUrls: z.array(z.string().url().min(1)),
+      apiTokens: z.array(z.string().min(1)),
+      appNames: z.array(z.string().min(1)),
+    }),
+  );
 
 // Parse environment variables
 dotenvFlow.config();
@@ -45,15 +52,6 @@ function parseGrowiConfig(): Config['growi'] {
   if (appNames.length !== baseUrls.length) {
     throw new Error('GROWI_APP_NAMES must have the same number of comma-separated values as GROWI_BASE_URL');
   }
-
-  // Validate URLs
-  baseUrls.forEach((url: string, index: number) => {
-    try {
-      new URL(url);
-    } catch {
-      throw new Error(`Invalid URL at index ${index}: ${url}`);
-    }
-  });
 
   // Create app configurations
   const apps: GrowiAppConfig[] = baseUrls.map((baseUrl: string, index: number) => ({
