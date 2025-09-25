@@ -10,6 +10,7 @@ const envSchema = z
     GROWI_API_TOKENS: z.string(),
     GROWI_APP_NAMES: z.string(),
   })
+  // Split comma-separated values into arrays and trim whitespace
   .transform((env) => {
     return {
       baseUrls: env.GROWI_BASE_URLS.split(',').map((url: string) => url.trim()),
@@ -18,11 +19,46 @@ const envSchema = z
     };
   })
   .pipe(
-    z.object({
-      baseUrls: z.array(z.string().url().min(1)),
-      apiTokens: z.array(z.string().min(1)),
-      appNames: z.array(z.string().min(1)),
-    }),
+    z
+      // Check after comma separation
+      .object({
+        baseUrls: z.array(z.string().url().min(1)),
+        apiTokens: z.array(z.string().min(1)),
+        appNames: z.array(z.string().min(1)),
+      })
+
+      // Check that all arrays have the same length
+      .refine(
+        (data) => {
+          const { baseUrls, apiTokens, appNames } = data;
+          const urlsLength = baseUrls.length;
+          const tokensLength = apiTokens.length;
+          const appNamesLength = appNames.length;
+
+          return urlsLength === tokensLength && urlsLength === appNamesLength;
+        },
+        {
+          message: 'GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have the same number of comma-separated values',
+        },
+      )
+
+      // Check that all values in each array are unique
+      .refine(
+        (data) => {
+          const uniqueUrls = new Set(data.baseUrls);
+          const uniqueTokens = new Set(data.apiTokens);
+          const uniqueNames = new Set(data.appNames);
+
+          const urlsUnique = uniqueUrls.size === data.baseUrls.length;
+          const tokensUnique = uniqueTokens.size === data.apiTokens.length;
+          const namesUnique = uniqueNames.size === data.appNames.length;
+
+          return urlsUnique && tokensUnique && namesUnique;
+        },
+        {
+          message: 'GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have unique values',
+        },
+      ),
   );
 
 // Parse environment variables
@@ -44,27 +80,12 @@ function parseGrowiConfig(): Config['growi'] {
 
   const { baseUrls, apiTokens, appNames } = parsedEnv.data;
 
-  // Validate array lengths
-  if (baseUrls.length !== apiTokens.length) {
-    throw new Error('GROWI_BASE_URL and GROWI_API_TOKEN must have the same number of comma-separated values');
-  }
-
-  if (appNames.length !== baseUrls.length) {
-    throw new Error('GROWI_APP_NAMES must have the same number of comma-separated values as GROWI_BASE_URL');
-  }
-
-  // Create app configurations
+  // Create app configurations (validation is already done in zod schema)
   const apps: GrowiAppConfig[] = baseUrls.map((baseUrl: string, index: number) => ({
     name: appNames[index],
     baseUrl,
     apiToken: apiTokens[index],
   }));
-
-  // Check for duplicate app names
-  const uniqueNames = new Set(apps.map((app) => app.name));
-  if (uniqueNames.size !== apps.length) {
-    throw new Error('Duplicate app names are not allowed');
-  }
 
   // Return configuration
   if (apps.length === 1) {
