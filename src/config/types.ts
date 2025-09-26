@@ -10,7 +10,7 @@ export interface GrowiAppConfig {
 
 export interface GrowiConfig {
   apps: GrowiAppConfig[];
-  defaultApp?: string;
+  defaultApp: string;
 }
 
 export interface Config {
