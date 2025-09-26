@@ -31,13 +31,6 @@ export class GrowiClientManager {
   }
 
   /**
-   * Get list of available app names
-   */
-  getAvailableApps(): string[] {
-    return this.apps.map((app) => app.name);
-  }
-
-  /**
    * Get app configuration by name
    */
   getAppConfig(appName: string): GrowiAppConfig | undefined {
@@ -45,24 +38,10 @@ export class GrowiClientManager {
   }
 
   /**
-   * Get all app configurations
-   */
-  getAllAppConfigs(): GrowiAppConfig[] {
-    return [...this.apps];
-  }
-
-  /**
    * Get default app name
    */
   getDefaultAppName(): string {
     return this.defaultAppName;
-  }
-
-  /**
-   * Check if an app exists
-   */
-  hasApp(appName: string): boolean {
-    return this.apps.some((app) => app.name === appName);
   }
 }
 
