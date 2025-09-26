@@ -9,6 +9,7 @@ const envSchema = z
     GROWI_BASE_URLS: z.string(),
     GROWI_API_TOKENS: z.string(),
     GROWI_APP_NAMES: z.string(),
+    GROWI_APP_DEFAULT_APP_NAME: z.string().optional(),
   })
   // Split comma-separated values into arrays and trim whitespace
   .transform((env) => {
@@ -16,16 +17,31 @@ const envSchema = z
       baseUrls: env.GROWI_BASE_URLS.split(',').map((url: string) => url.trim()),
       apiTokens: env.GROWI_API_TOKENS.split(',').map((token: string) => token.trim()),
       appNames: env.GROWI_APP_NAMES.split(',').map((name: string) => name.trim()),
+      defaultAppName: env.GROWI_APP_DEFAULT_APP_NAME?.trim(),
     };
   })
   .pipe(
     z
-      // Check after comma separation
+      // Check after comma separatio
       .object({
         baseUrls: z.array(z.string().url().min(1)),
         apiTokens: z.array(z.string().min(1)),
         appNames: z.array(z.string().min(1)),
+        defaultAppName: z.string().optional(),
       })
+
+      // Check that defaultAppName, if provided, matches one of the appNames
+      .refine(
+        (data) => {
+          if (data.defaultAppName == null) {
+            return true;
+          }
+          return data.appNames.includes(data.defaultAppName);
+        },
+        {
+          message: 'GROWI_DEFAULT_APP_NAME must match one of the GROWI_APP_NAMES',
+        },
+      )
 
       // Check that all arrays have the same length
       .refine(
@@ -78,30 +94,21 @@ function parseGrowiConfig(): Config['growi'] {
     throw new Error('Environment validation failed');
   }
 
-  const { baseUrls, apiTokens, appNames } = parsedEnv.data;
+  const { baseUrls, apiTokens, appNames, defaultAppName } = parsedEnv.data;
 
   // Create app configurations (validation is already done in zod schema)
-  const apps: GrowiAppConfig[] = baseUrls.map((baseUrl: string, index: number) => ({
-    name: appNames[index],
-    baseUrl,
-    apiToken: apiTokens[index],
-  }));
-
-  // Return configuration
-  if (apps.length === 1) {
-    // Single app: maintain backward compatibility
-    return {
-      apps,
-      defaultApp: apps[0].name,
-      baseUrl: apps[0].baseUrl,
-      apiToken: apps[0].apiToken,
-    };
+  const apps: GrowiAppConfig[] = [];
+  for (let i = 0; i < baseUrls.length; i++) {
+    apps.push({
+      name: appNames[i],
+      baseUrl: baseUrls[i],
+      apiToken: apiTokens[i],
+    });
   }
 
-  // Multiple apps
   return {
     apps,
-    defaultApp: apps[0].name, // First app is default
+    defaultApp: defaultAppName ?? apps[0].name,
   };
 }
 
