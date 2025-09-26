@@ -2,6 +2,7 @@
 
 import { FastMCP } from 'fastmcp';
 
+import { growiClientManager } from './commons/api/growi-client-manager';
 import config from './config/default.js';
 
 const server = new FastMCP({
@@ -10,16 +11,10 @@ const server = new FastMCP({
 });
 
 /**
- * Sets up the default Axios instance for GROWI API requests.
+ * Sets up the GROWI client manager and default Axios instance
  */
-const setupDefaultAxiosInstance = async () => {
-  const { AXIOS_DEFAULT } = await import('@growi/sdk-typescript');
-  AXIOS_DEFAULT.setBaseURL(config.growi.baseUrl);
-  AXIOS_DEFAULT.setAuthorizationHeader(config.growi.apiToken);
-};
-
 async function main(): Promise<void> {
-  await setupDefaultAxiosInstance();
+  await growiClientManager.init(config.growi.apps, config.growi.defaultAppName);
 
   try {
     // Loaders are imported dynamically so that the module will be garbage collected
