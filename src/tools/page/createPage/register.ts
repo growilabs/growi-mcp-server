@@ -1,6 +1,7 @@
 import { type FastMCP, UserError } from 'fastmcp';
 import { ZodError } from 'zod';
 import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { setGrowiClient } from '../../commons/client-utils.js';
 import { createPageParamSchema } from './schema.js';
 import { createPage } from './service.js';
 
@@ -21,7 +22,11 @@ export function registerCreatePageTool(server: FastMCP): void {
         // Validate input using zod schema
         const validatedParams = createPageParamSchema.parse(params);
 
-        const response = await createPage(validatedParams);
+        const { appName, ...serviceParams } = validatedParams;
+
+        await setGrowiClient(appName);
+
+        const response = await createPage(serviceParams);
 
         try {
           return JSON.stringify(response);
