@@ -102,7 +102,7 @@ const config: Config = {
   // },
   growi: {
     apps,
-    defaultApp: defaultAppName ?? apps[0].name,
+    defaultAppName: defaultAppName ?? apps[0].name,
   },
 };
 
