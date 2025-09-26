@@ -1,6 +1,6 @@
 import ky, { HTTPError, TimeoutError } from 'ky';
 import { z } from 'zod';
-import config from '../src/config/default.js';
+import config from '../src/config/default';
 
 const healthcheckResponseSchema = z.object({
   status: z.literal('OK'),
