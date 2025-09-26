@@ -10,9 +10,6 @@ const server = new FastMCP({
   version: '1.0.0',
 });
 
-/**
- * Sets up the GROWI client manager and default Axios instance
- */
 async function main(): Promise<void> {
   await growiClientManager.init(config.growi.apps, config.growi.defaultAppName);
 
