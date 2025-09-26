@@ -1,4 +1,4 @@
-import type { GrowiAppConfig } from '../../config/types.js';
+import type { GrowiAppConfig } from '../../config/types';
 
 /**
  * Manages multiple GROWI API clients for multi-app support

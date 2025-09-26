@@ -1,7 +1,7 @@
 import { type FastMCP, UserError } from 'fastmcp';
 import { ZodError } from 'zod';
 import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
-import { setGrowiClient } from '../../commons/client-utils.js';
+import { setGrowiClient } from '../../commons/client-utils';
 import { createPageParamSchema } from './schema.js';
 import { createPage } from './service.js';
 
