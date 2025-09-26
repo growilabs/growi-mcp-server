@@ -67,8 +67,8 @@ try {
   let hasError = false;
   for (const result of results) {
     const icon = result.errorMessage == null ? '✅' : '❌';
-    const errorMessage = result.errorMessage != null ? ` Error: ${result.errorMessage}` : '';
-    console.log(`${icon} ${result.appName}: ${result.baseUrl}${errorMessage}`);
+    const statusMessage = result.errorMessage == null ? ' - server is available' : ` - Error: ${result.errorMessage}`;
+    console.log(`${icon} ${result.appName}: ${result.baseUrl}${statusMessage}`);
     if (result.errorMessage != null) {
       hasError = true;
     }
