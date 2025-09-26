@@ -22,7 +22,7 @@ const envSchema = z
   })
   .pipe(
     z
-      // Check after comma separatio
+      // Check after comma separation
       .object({
         baseUrls: z.array(z.string().url().min(1)),
         apiTokens: z.array(z.string().min(1)),
