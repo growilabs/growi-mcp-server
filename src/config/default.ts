@@ -9,7 +9,7 @@ const envSchema = z
     GROWI_BASE_URLS: z.string(),
     GROWI_API_TOKENS: z.string(),
     GROWI_APP_NAMES: z.string(),
-    GROWI_APP_DEFAULT_APP_NAME: z.string().optional(),
+    GROWI_DEFAULT_APP_NAME: z.string().optional(),
   })
   // Split comma-separated values into arrays and trim whitespace
   .transform((env) => {
@@ -17,7 +17,7 @@ const envSchema = z
       baseUrls: env.GROWI_BASE_URLS.split(',').map((url: string) => url.trim()),
       apiTokens: env.GROWI_API_TOKENS.split(',').map((token: string) => token.trim()),
       appNames: env.GROWI_APP_NAMES.split(',').map((name: string) => name.trim()),
-      defaultAppName: env.GROWI_APP_DEFAULT_APP_NAME?.trim(),
+      defaultAppName: env.GROWI_DEFAULT_APP_NAME?.trim(),
     };
   })
   .pipe(
