@@ -86,37 +86,24 @@ if (!parsedEnv.success) {
   throw new Error('Invalid environment variables');
 }
 
-/**
- * Parse multi-app configuration from environment variables
- */
-function parseGrowiConfig(): Config['growi'] {
-  if (!parsedEnv.success || !parsedEnv.data) {
-    throw new Error('Environment validation failed');
-  }
-
-  const { baseUrls, apiTokens, appNames, defaultAppName } = parsedEnv.data;
-
-  // Create app configurations (validation is already done in zod schema)
-  const apps: GrowiAppConfig[] = [];
-  for (let i = 0; i < baseUrls.length; i++) {
-    apps.push({
-      name: appNames[i],
-      baseUrl: baseUrls[i],
-      apiToken: apiTokens[i],
-    });
-  }
-
-  return {
-    apps,
-    defaultApp: defaultAppName ?? apps[0].name,
-  };
+const { baseUrls, apiTokens, appNames, defaultAppName } = parsedEnv.data;
+const apps: GrowiAppConfig[] = [];
+for (let i = 0; i < baseUrls.length; i++) {
+  apps.push({
+    name: appNames[i],
+    baseUrl: baseUrls[i],
+    apiToken: apiTokens[i],
+  });
 }
 
 const config: Config = {
   // remoteServer: {
   //   port: parsedEnv.data.PORT,
   // },
-  growi: parseGrowiConfig(),
+  growi: {
+    apps,
+    defaultApp: defaultAppName ?? apps[0].name,
+  },
 };
 
 export default config;
