@@ -11,7 +11,7 @@ const envSchema = z
     GROWI_APP_NAMES: z.string(),
     GROWI_DEFAULT_APP_NAME: z.string().optional(),
   })
-  // Split comma-separated values into arrays and trim whitespace
+  // Transform comma-separated values into arrays
   .transform((env) => {
     return {
       baseUrls: env.GROWI_BASE_URLS.split(',').map((url: string) => url.trim()),
@@ -47,11 +47,7 @@ const envSchema = z
       .refine(
         (data) => {
           const { baseUrls, apiTokens, appNames } = data;
-          const urlsLength = baseUrls.length;
-          const tokensLength = apiTokens.length;
-          const appNamesLength = appNames.length;
-
-          return urlsLength === tokensLength && urlsLength === appNamesLength;
+          return baseUrls.length === apiTokens.length && baseUrls.length === appNames.length;
         },
         {
           message: 'GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have the same number of comma-separated values',
@@ -61,15 +57,7 @@ const envSchema = z
       // Check that all values in each array are unique
       .refine(
         (data) => {
-          const uniqueUrls = new Set(data.baseUrls);
-          const uniqueTokens = new Set(data.apiTokens);
-          const uniqueNames = new Set(data.appNames);
-
-          const urlsUnique = uniqueUrls.size === data.baseUrls.length;
-          const tokensUnique = uniqueTokens.size === data.apiTokens.length;
-          const namesUnique = uniqueNames.size === data.appNames.length;
-
-          return urlsUnique && tokensUnique && namesUnique;
+          return [data.baseUrls, data.apiTokens, data.appNames].every((arr) => new Set(arr).size === arr.length);
         },
         {
           message: 'GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have unique values',
