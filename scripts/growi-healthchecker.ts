@@ -60,7 +60,7 @@ async function checkAppHealth(appName: string, baseUrl: string): Promise<HealthC
 }
 
 const apps = config.growi.apps;
-const healthCheckPromises = apps.map((app) => checkAppHealth(app.name, app.baseUrl));
+const healthCheckPromises = Array.from(apps.values()).map((app) => checkAppHealth(app.name, app.baseUrl));
 
 try {
   const results = await Promise.all(healthCheckPromises);

@@ -5,12 +5,12 @@ import type { GrowiAppConfig } from '../../config/types';
  */
 export class GrowiClientManager {
   private defaultAppName!: string; // definite assignment assertion - will be set in init()
-  private apps: GrowiAppConfig[] = [];
+  private apps: Map<string, GrowiAppConfig> = new Map();
 
   /**
    * Initialize the client manager with app configurations
    */
-  async init(apps: GrowiAppConfig[], defaultAppName: string): Promise<void> {
+  async init(apps: Map<string, GrowiAppConfig>, defaultAppName: string): Promise<void> {
     this.apps = apps;
     this.defaultAppName = defaultAppName;
     await this.setGlobalAxiosClient(this.defaultAppName);
@@ -34,7 +34,7 @@ export class GrowiClientManager {
    * Get app configuration by name
    */
   getAppConfig(appName: string): GrowiAppConfig | undefined {
-    return this.apps.find((app) => app.name === appName);
+    return this.apps.get(appName);
   }
 
   /**

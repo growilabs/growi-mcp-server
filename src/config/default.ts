@@ -75,7 +75,23 @@ const envSchema = z
           message: 'GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have unique values',
         },
       ),
-  );
+  )
+  // Transform into final structured config
+  .transform((data) => {
+    const apps = new Map<string, GrowiAppConfig>();
+    for (let i = 0; i < data.baseUrls.length; i++) {
+      const appConfig: GrowiAppConfig = {
+        name: data.appNames[i],
+        baseUrl: data.baseUrls[i],
+        apiToken: data.apiTokens[i],
+      };
+      apps.set(data.appNames[i], appConfig);
+    }
+    return {
+      apps,
+      defaultAppName: data.defaultAppName ?? data.appNames[0],
+    };
+  });
 
 // Parse environment variables
 dotenvFlow.config();
@@ -86,23 +102,9 @@ if (!parsedEnv.success) {
   throw new Error('Invalid environment variables');
 }
 
-const { baseUrls, apiTokens, appNames, defaultAppName } = parsedEnv.data;
-const apps: GrowiAppConfig[] = [];
-for (let i = 0; i < baseUrls.length; i++) {
-  apps.push({
-    name: appNames[i],
-    baseUrl: baseUrls[i],
-    apiToken: apiTokens[i],
-  });
-}
-
 const config: Config = {
-  // remoteServer: {
-  //   port: parsedEnv.data.PORT,
-  // },
   growi: {
-    apps,
-    defaultAppName: defaultAppName ?? apps[0].name,
+    ...parsedEnv.data,
   },
 };
 
