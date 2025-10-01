@@ -8,8 +8,7 @@ const healthcheckResponseSchema = z.object({
 
 interface HealthCheckResult {
   appName: string;
-  baseUrl: string;
-  errorMessage?: string;
+  hasError?: boolean;
 }
 
 async function checkAppHealth(appName: string, baseUrl: string): Promise<HealthCheckResult> {
@@ -27,34 +26,26 @@ async function checkAppHealth(appName: string, baseUrl: string): Promise<HealthC
     if (result.success) {
       return {
         appName,
-        baseUrl,
       };
     }
 
+    console.error(`❌ ${appName}: Invalid healthcheck response: ${result.error.format()}`);
     return {
       appName,
-      baseUrl,
-      errorMessage: `Invalid healthcheck response: ${result.error.format()}`,
+      hasError: true,
     };
   } catch (err) {
-    let errorMessage = 'GROWI server is not available or request failed.';
-
     if (err instanceof TimeoutError) {
-      errorMessage = 'GROWI server is not available: Request timed out.';
-    }
-
-    if (err instanceof HTTPError) {
-      errorMessage = `GROWI server responded with status code: ${err.response.status}`;
-    }
-
-    if (err instanceof Error) {
-      errorMessage = `GROWI server is not available or request failed: ${err.message}`;
-    }
+      console.error(`❌ ${appName}: GROWI server is not available: Request timed out.`);
+    } else if (err instanceof HTTPError) {
+      console.error(`❌ ${appName}: GROWI server responded with status code: ${err.response.status}`);
+    } else if (err instanceof Error) {
+      console.error(`❌ ${appName}: GROWI server is not available or request failed: ${err.message}`);
+    } else console.error(`❌ ${appName}: An unknown error occurred while checking GROWI server health.`);
 
     return {
       appName,
-      baseUrl,
-      errorMessage,
+      hasError: true,
     };
   }
 }
@@ -66,12 +57,11 @@ try {
   const results = await Promise.all(healthCheckPromises);
   let hasError = false;
   for (const result of results) {
-    const icon = result.errorMessage == null ? '✅' : '❌';
-    const statusMessage = result.errorMessage == null ? ' - server is available' : ` - Error: ${result.errorMessage}`;
-    console.log(`${icon} ${result.appName}: ${result.baseUrl}${statusMessage}`);
-    if (result.errorMessage != null) {
+    if (result.hasError) {
       hasError = true;
+      continue;
     }
+    console.log(`✅ ${result.appName}: GROWI server is available.`);
   }
 
   // Exit with error code if any app is unhealthy
