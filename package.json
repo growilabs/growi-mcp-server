@@ -5,22 +5,13 @@
   "type": "module",
   "license": "MIT",
   "author": "Yuki Takei <yuki@weseek.co.jp>",
-  "keywords": [
-    "mcp",
-    "growi",
-    "llm",
-    "ai"
-  ],
+  "keywords": ["mcp", "growi", "llm", "ai"],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "@growi/mcp-server": "./dist/index.js"
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "pnpm ncc build ./src/index.ts --license ./LICENSE",
     "prebuild": "pnpm run clean",
@@ -41,7 +32,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@growi/core": "^1.5.0",
-    "@growi/sdk-typescript": "^1.7.0",
+    "@growi/sdk-typescript": "^1.8.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^20.11.30",
     "@vercel/ncc": "^0.38.3",
