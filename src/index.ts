@@ -1,17 +1,30 @@
 #!/usr/bin/env node
 
+import { axiosInstanceManager } from '@growi/sdk-typescript';
 import { FastMCP } from 'fastmcp';
-
-import { initAxiosInstance } from './commons/utils/init-axios-instance.js';
 import config from './config/default.js';
+import type { GrowiAppConfig } from './config/types.js';
 
 const server = new FastMCP({
   name: 'growi-mcp-server',
   version: '1.0.0',
 });
 
+/**
+ * Initialize Axios instances for all GROWI apps.
+ */
+const setupAxiosInstance = async (apps: Map<string, GrowiAppConfig>): Promise<void> => {
+  Array.from(apps.values()).map((app) => {
+    axiosInstanceManager.addAxiosInstance({
+      appName: app.name,
+      baseURL: app.baseUrl,
+      token: app.apiToken,
+    });
+  });
+};
+
 async function main(): Promise<void> {
-  initAxiosInstance(config.growi.apps);
+  setupAxiosInstance(config.growi.apps);
 
   try {
     // Loaders are imported dynamically so that the module will be garbage collected
