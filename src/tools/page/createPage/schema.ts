@@ -15,6 +15,8 @@ export const createPageParamSchema = z.object({
     )
     .optional(),
   pageTags: z.array(z.string()).optional(),
+
+  // Name used to identify the GROWI App registered with the MCP Server
   ...appNameSchema.shape,
 }) satisfies z.ZodType<PostPageBody>;
 

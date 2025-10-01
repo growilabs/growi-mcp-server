@@ -1,23 +1,21 @@
-import apiv3 from '@growi/sdk-typescript/v3';
 import type { PostPage201, PostPageBody } from '@growi/sdk-typescript/v3';
+import apiv3 from '@growi/sdk-typescript/v3';
 import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
 
 export type CreatePageParam = PostPageBody;
 export type CreatePageResponse = PostPage201;
 
-export const createPage = async (params: CreatePageParam): Promise<CreatePageResponse> => {
+export const createPage = async (params: CreatePageParam, appName: string): Promise<CreatePageResponse> => {
   try {
     // Check if page exists
-    const existResponse = await apiv3.getExistForPage({
-      path: params.path,
-    });
+    const existResponse = await apiv3.getExistForPage({ path: params.path }, { appName });
 
     if (existResponse.isExist) {
       throw new GrowiApiError('Page with this path already exists', 409, { path: params.path });
     }
 
     // Create page using SDK
-    const response = await apiv3.postPage(params);
+    const response = await apiv3.postPage(params, { appName });
 
     if (!response?.page) {
       throw new GrowiApiError('Invalid response received from page creation API', 500, { response });
