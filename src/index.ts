@@ -2,8 +2,8 @@
 
 import { FastMCP } from 'fastmcp';
 
+import { initAxiosInstance } from './commons/utils/init-axios-instance.js';
 import config from './config/default.js';
-import { initAxiosInstance } from './utils/init-axios-instance.js';
 
 const server = new FastMCP({
   name: 'growi-mcp-server',

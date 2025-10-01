@@ -1,4 +1,4 @@
-import config from '../config/default.js';
+import config from '../../config/default.js';
 
 /**
  * Resolves the app name based on the provided input.
