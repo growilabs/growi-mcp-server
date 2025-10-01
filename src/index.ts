@@ -2,8 +2,8 @@
 
 import { FastMCP } from 'fastmcp';
 
-import { growiClientManager } from './commons/api/growi-client-manager';
 import config from './config/default.js';
+import { initAxiosInstance } from './utils/init-axios-instance.js';
 
 const server = new FastMCP({
   name: 'growi-mcp-server',
@@ -11,7 +11,7 @@ const server = new FastMCP({
 });
 
 async function main(): Promise<void> {
-  await growiClientManager.init(config.growi.apps, config.growi.defaultAppName);
+  initAxiosInstance(config.growi.apps);
 
   try {
     // Loaders are imported dynamically so that the module will be garbage collected
