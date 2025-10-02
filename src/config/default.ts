@@ -23,7 +23,7 @@ const envSchema = z
       // https://regex101.com/r/4mnng4/1
       const regExp = /^GROWI_APP_NAME_(\d+)$/;
       const suffixNum = key.match(new RegExp(regExp));
-      if (suffixNum) {
+      if (suffixNum != null) {
         appNumbers.add(suffixNum[1]);
       }
     }
