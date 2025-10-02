@@ -2,82 +2,126 @@ import dotenvFlow from 'dotenv-flow';
 import { z } from 'zod';
 import type { Config, GrowiAppConfig } from './types';
 
+const GROWI_APP_NAME_PREFIX = 'GROWI_APP_NAME_';
+const GROWI_BASE_URL_PREFIX = 'GROWI_BASE_URL_';
+const GROWI_API_TOKEN_PREFIX = 'GROWI_API_TOKEN_';
+
 // Define schema for environment variables
 const envSchema = z
   .object({
-    // PORT: z.number().optional().default(8080), // for httpStream transport
-    GROWI_BASE_URLS: z.string(),
-    GROWI_API_TOKENS: z.string(),
-    GROWI_APP_NAMES: z.string(),
     GROWI_DEFAULT_APP_NAME: z.string().optional(),
   })
-  // Transform comma-separated values into arrays
+  // Add unknown keys to handle numbered environment variables
+  .passthrough()
   .transform((env) => {
+    // Extract numbered app configurations
+    const appConfigs: GrowiAppConfig[] = [];
+    const appNumbers = new Set<string>();
+
+    // Find all app numbers from environment variables
+    for (const key of Object.keys(env)) {
+      // https://regex101.com/r/4mnng4/1
+      const regExp = /^GROWI_APP_NAME_(\d+)$/;
+      const suffixNum = key.match(new RegExp(regExp));
+      if (suffixNum) {
+        appNumbers.add(suffixNum[1]);
+      }
+    }
+
+    // Process each app number
+    for (const num of Array.from(appNumbers).sort()) {
+      const nameKey = `${GROWI_APP_NAME_PREFIX}${num}`;
+      const urlKey = `${GROWI_BASE_URL_PREFIX}${num}`;
+      const tokenKey = `${GROWI_API_TOKEN_PREFIX}${num}`;
+
+      const name = env[nameKey];
+      const baseUrl = env[urlKey];
+      const apiToken = env[tokenKey];
+
+      if (name != null && baseUrl != null && apiToken != null) {
+        appConfigs.push({
+          name: String(name).trim(),
+          baseUrl: String(baseUrl).trim(),
+          apiToken: String(apiToken).trim(),
+        });
+      }
+    }
+
     return {
-      baseUrls: env.GROWI_BASE_URLS.split(',').map((url: string) => url.trim()),
-      apiTokens: env.GROWI_API_TOKENS.split(',').map((token: string) => token.trim()),
-      appNames: env.GROWI_APP_NAMES.split(',').map((name: string) => name.trim()),
-      defaultAppName: env.GROWI_DEFAULT_APP_NAME?.trim(),
+      appConfigs,
+      defaultAppName: env.GROWI_DEFAULT_APP_NAME?.toString().trim(),
     };
   })
   .pipe(
     z
-      // Check after comma separation
       .object({
-        baseUrls: z.array(z.string().url().min(1)),
-        apiTokens: z.array(z.string().min(1)),
-        appNames: z.array(z.string().min(1)),
+        appConfigs: z
+          .array(
+            z.object({
+              name: z.string().min(1),
+              baseUrl: z.string().url().min(1),
+              apiToken: z.string().min(1),
+            }),
+          )
+          .min(1, 'At least one GROWI app configuration is required'),
         defaultAppName: z.string().optional(),
       })
 
-      // Check that defaultAppName, if provided, matches one of the appNames
+      // Check that app names are unique
+      .refine(
+        (data) => {
+          const names = data.appConfigs.map((app) => app.name);
+          return new Set(names).size === names.length;
+        },
+        {
+          message: 'GROWI app names must be unique',
+        },
+      )
+
+      // Check that base URLs are unique
+      .refine(
+        (data) => {
+          const urls = data.appConfigs.map((app) => app.baseUrl);
+          return new Set(urls).size === urls.length;
+        },
+        {
+          message: 'GROWI base URLs must be unique',
+        },
+      )
+
+      // Check that API tokens are unique
+      .refine(
+        (data) => {
+          const tokens = data.appConfigs.map((app) => app.apiToken);
+          return new Set(tokens).size === tokens.length;
+        },
+        {
+          message: 'GROWI API tokens must be unique',
+        },
+      )
+
+      // Check that defaultAppName, if provided, matches one of the app names
       .refine(
         (data) => {
           if (data.defaultAppName == null) {
             return true;
           }
-          return data.appNames.includes(data.defaultAppName);
+          return data.appConfigs.some((app) => app.name === data.defaultAppName);
         },
         {
-          message: 'GROWI_DEFAULT_APP_NAME must match one of the GROWI_APP_NAMES',
-        },
-      )
-
-      // Check that all arrays have the same length
-      .refine(
-        (data) => {
-          const { baseUrls, apiTokens, appNames } = data;
-          return baseUrls.length === apiTokens.length && baseUrls.length === appNames.length;
-        },
-        {
-          message: 'GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have the same number of comma-separated values',
-        },
-      )
-
-      // Check that all values in each array are unique
-      .refine(
-        (data) => {
-          return [data.baseUrls, data.apiTokens, data.appNames].every((arr) => new Set(arr).size === arr.length);
-        },
-        {
-          message: 'GROWI_BASE_URLS, GROWI_API_TOKENS, and GROWI_APP_NAMES must have unique values',
+          message: 'GROWI_DEFAULT_APP_NAME must match one of the configured app names',
         },
       ),
   )
   // Transform into final structured config
   .transform((data) => {
     const apps = new Map<string, GrowiAppConfig>();
-    for (let i = 0; i < data.baseUrls.length; i++) {
-      const appConfig: GrowiAppConfig = {
-        name: data.appNames[i],
-        baseUrl: data.baseUrls[i],
-        apiToken: data.apiTokens[i],
-      };
-      apps.set(data.appNames[i], appConfig);
+    for (const appConfig of data.appConfigs) {
+      apps.set(appConfig.name, appConfig);
     }
     return {
       apps,
-      defaultAppName: data.defaultAppName ?? data.appNames[0],
+      defaultAppName: data.defaultAppName ?? data.appConfigs[0].name,
     };
   });
 
