@@ -1,5 +1,6 @@
 import type { PostPageBody } from '@growi/sdk-typescript/v3';
 import { z } from 'zod';
+import { appNameSchema } from '../../commons/app-name-schemas';
 
 export const createPageParamSchema = z.object({
   path: z.string(),
@@ -14,6 +15,9 @@ export const createPageParamSchema = z.object({
     )
     .optional(),
   pageTags: z.array(z.string()).optional(),
+
+  // Name used to identify the GROWI App registered with the MCP Server
+  ...appNameSchema.shape,
 }) satisfies z.ZodType<PostPageBody>;
 
 export type ValidatedParams = z.infer<typeof createPageParamSchema>;
