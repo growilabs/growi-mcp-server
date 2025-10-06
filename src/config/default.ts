@@ -38,13 +38,15 @@ const envSchema = z
       const baseUrl = env[urlKey];
       const apiToken = env[tokenKey];
 
-      if (name != null && baseUrl != null && apiToken != null) {
-        appConfigs.push({
-          name: String(name).trim(),
-          baseUrl: String(baseUrl).trim(),
-          apiToken: String(apiToken).trim(),
-        });
+      if (name == null || baseUrl == null || apiToken == null) {
+        throw new Error(`Incomplete GROWI app configuration for app ${num}.`);
       }
+
+      appConfigs.push({
+        name: String(name).trim(),
+        baseUrl: String(baseUrl).trim(),
+        apiToken: String(apiToken).trim(),
+      });
     }
 
     return {
