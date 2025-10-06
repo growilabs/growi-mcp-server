@@ -19,10 +19,10 @@ const envSchema = z
     const appNumbers = new Set<string>();
 
     // Find all app numbers from environment variables
+    // https://regex101.com/r/4mnng4/1
+    const appNameRegExp = new RegExp(`^${GROWI_APP_NAME_PREFIX}(\\d+)$`);
     for (const key of Object.keys(env)) {
-      // https://regex101.com/r/4mnng4/1
-      const regExp = new RegExp(`^${GROWI_APP_NAME_PREFIX}(\\d+)$`);
-      const suffixNum = key.match(regExp);
+      const suffixNum = key.match(appNameRegExp);
       if (suffixNum != null) {
         appNumbers.add(suffixNum[1]);
       }
