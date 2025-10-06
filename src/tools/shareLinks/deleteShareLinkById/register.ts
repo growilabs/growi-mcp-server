@@ -2,6 +2,7 @@ import apiv3 from '@growi/sdk-typescript/v3';
 import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { deleteShareLinkByIdParamSchema } from './schema.js';
 
 export function registerDeleteShareLinkByIdTool(server: FastMCP): void {
@@ -19,10 +20,11 @@ export function registerDeleteShareLinkByIdTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = deleteShareLinkByIdParamSchema.parse(params);
+        const { appName, ...deleteShareLinkByIdParams } = deleteShareLinkByIdParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.deleteShareLinksById(validatedParams.id);
+        const result = await apiv3.deleteShareLinksById(deleteShareLinkByIdParams.id, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

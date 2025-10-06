@@ -1,5 +1,6 @@
 import apiv3 from '@growi/sdk-typescript/v3';
 import { type FastMCP, UserError } from 'fastmcp';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { unpublishPageParamSchema } from './schema';
 
 export function registerUnpublishPageTool(server: FastMCP): void {
@@ -16,9 +17,10 @@ export function registerUnpublishPageTool(server: FastMCP): void {
     },
     execute: async (params) => {
       try {
-        const validatedParams = unpublishPageParamSchema.parse(params);
+        const { appName, ...unpublishPageParams } = unpublishPageParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
-        const page = await apiv3.putUnpublishByPageIdForPage(validatedParams.pageId);
+        const page = await apiv3.putUnpublishByPageIdForPage(unpublishPageParams.pageId, { appName: resolvedAppName });
 
         return JSON.stringify({
           status: 'success',

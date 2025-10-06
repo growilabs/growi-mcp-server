@@ -1,5 +1,6 @@
 import type { PutPageBody } from '@growi/sdk-typescript/v3';
 import { z } from 'zod';
+import { appNameSchema } from '../../commons/app-name-schemas';
 
 export const updatePageParamSchema = z.object({
   pageId: z.string().describe('ID of the page to update'),
@@ -17,6 +18,9 @@ export const updatePageParamSchema = z.object({
     .describe('IDs of the user groups to grant access to'),
   overwriteScopesOfDescendants: z.boolean().optional().describe('Whether to overwrite grant settings of descendant pages'),
   wip: z.boolean().optional().describe('Whether the page is work in progress'),
+
+  // Name used to identify the GROWI App registered with the MCP Server
+  ...appNameSchema.shape,
 } satisfies { [K in keyof PutPageBody]: z.ZodType<PutPageBody[K]> });
 
 export type UpdatePageParam = z.infer<typeof updatePageParamSchema>;

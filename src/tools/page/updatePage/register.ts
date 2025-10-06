@@ -3,6 +3,7 @@ import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { updatePageParamSchema } from './schema.js';
 
 export function registerUpdatePageTool(server: FastMCP): void {
@@ -17,10 +18,11 @@ export function registerUpdatePageTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = updatePageParamSchema.parse(params);
+        const { appName, ...updatePageParams } = updatePageParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute update operation using SDK
-        const result = await apiv3.putPage(validatedParams);
+        const result = await apiv3.putPage(updatePageParams, { appName: resolvedAppName });
 
         if (!result?.page) {
           throw new UserError('Failed to retrieve page data after update');

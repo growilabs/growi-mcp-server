@@ -2,6 +2,7 @@ import apiv1 from '@growi/sdk-typescript/v1';
 import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { searchTagsParamSchema } from './schema.js';
 
 export function registerSearchTagsTool(server: FastMCP): void {
@@ -19,13 +20,14 @@ export function registerSearchTagsTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = searchTagsParamSchema.parse(params);
+        const { appName, ...searchTagsParams } = searchTagsParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Prepare API parameters
-        const apiParams = validatedParams.q ? { q: validatedParams.q } : undefined;
+        const apiParams = searchTagsParams.q ? { q: searchTagsParams.q } : undefined;
 
         // Execute operation using SDK
-        const result = await apiv1.searchTags(apiParams);
+        const result = await apiv1.searchTags(apiParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

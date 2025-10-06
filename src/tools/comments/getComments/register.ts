@@ -2,6 +2,7 @@ import apiv1 from '@growi/sdk-typescript/v1';
 import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { getCommentsParamSchema } from './schema.js';
 
 export function registerGetCommentsTool(server: FastMCP): void {
@@ -19,16 +20,17 @@ export function registerGetCommentsTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = getCommentsParamSchema.parse(params);
+        const { appName, ...getCommentsParams } = getCommentsParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Prepare API parameters
         const apiParams = {
-          page_id: validatedParams.pageId,
-          ...(validatedParams.revisionId && { revision_id: validatedParams.revisionId }),
+          page_id: getCommentsParams.pageId,
+          ...(getCommentsParams.revisionId && { revision_id: getCommentsParams.revisionId }),
         };
 
         // Execute operation using SDK
-        const result = await apiv1.getComments(apiParams);
+        const result = await apiv1.getComments(apiParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

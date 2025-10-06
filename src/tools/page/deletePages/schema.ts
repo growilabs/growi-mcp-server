@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { appNameSchema } from '../../commons/app-name-schemas';
 
 const deleteOptionsSchema = z.object({
   isCompletely: z.boolean(),
@@ -13,6 +14,9 @@ export const deletePagesParamSchema = z.object({
   isCompletely: z.boolean().optional().describe('Whether to completely delete the pages'),
   isRecursively: z.boolean().optional().describe('Whether to delete child pages recursively'),
   isAnyoneWithTheLink: z.boolean().optional().describe('Whether to delete pages accessible by anyone with the link'),
+
+  // Name used to identify the GROWI App registered with the MCP Server
+  ...appNameSchema.shape,
 });
 
 export type DeletePagesParam = z.infer<typeof deletePagesParamSchema>;
