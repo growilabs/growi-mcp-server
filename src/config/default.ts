@@ -69,6 +69,19 @@ const envSchema = z
         defaultAppName: z.string().optional(),
       })
 
+      // Check that defaultAppName, if provided, matches one of the app names
+      .refine(
+        (data) => {
+          if (data.defaultAppName == null) {
+            return true;
+          }
+          return data.appConfigs.some((app) => app.name === data.defaultAppName);
+        },
+        {
+          message: 'GROWI_DEFAULT_APP_NAME must match one of the configured app names',
+        },
+      )
+
       // Check that app names are unique
       .refine(
         (data) => {
@@ -99,19 +112,6 @@ const envSchema = z
         },
         {
           message: 'GROWI API tokens must be unique',
-        },
-      )
-
-      // Check that defaultAppName, if provided, matches one of the app names
-      .refine(
-        (data) => {
-          if (data.defaultAppName == null) {
-            return true;
-          }
-          return data.appConfigs.some((app) => app.name === data.defaultAppName);
-        },
-        {
-          message: 'GROWI_DEFAULT_APP_NAME must match one of the configured app names',
         },
       ),
   )
