@@ -1,7 +1,7 @@
 import apiv3 from '@growi/sdk-typescript/v3';
 import { type FastMCP, UserError } from 'fastmcp';
 import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
-import { publishPageParamSchema } from './schema';
+import { publishPageParamSchema } from './schema.js';
 
 export function registerPublishPageTool(server: FastMCP): void {
   server.addTool({
