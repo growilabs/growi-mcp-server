@@ -21,8 +21,8 @@ const envSchema = z
     // Find all app numbers from environment variables
     for (const key of Object.keys(env)) {
       // https://regex101.com/r/4mnng4/1
-      const regExp = /^GROWI_APP_NAME_(\d+)$/;
-      const suffixNum = key.match(new RegExp(regExp));
+      const regExp = new RegExp(`^${GROWI_APP_NAME_PREFIX}(\\d+)$`);
+      const suffixNum = key.match(regExp);
       if (suffixNum != null) {
         appNumbers.add(suffixNum[1]);
       }
