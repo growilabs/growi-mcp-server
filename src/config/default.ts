@@ -38,8 +38,12 @@ const envSchema = z
       const baseUrl = env[urlKey];
       const apiToken = env[tokenKey];
 
-      if (name == null || baseUrl == null || apiToken == null) {
-        throw new Error(`Incomplete GROWI app configuration for app ${num}.`);
+      const missingVars = [];
+      if (name == null) missingVars.push(nameKey);
+      if (baseUrl == null) missingVars.push(urlKey);
+      if (apiToken == null) missingVars.push(tokenKey);
+      if (missingVars.length > 0) {
+        throw new Error(`Incomplete GROWI app configuration for app ${num}. Missing: ${missingVars.join(', ')}`);
       }
 
       appConfigs.push({
