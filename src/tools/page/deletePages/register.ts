@@ -2,6 +2,7 @@ import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { deletePagesParamSchema } from './schema.js';
 import { deletePages } from './service.js';
 
@@ -17,10 +18,11 @@ export function registerDeletePagesTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = deletePagesParamSchema.parse(params);
+        const { appName, ...deletePagesParams } = deletePagesParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute service operation with validated parameters
-        const response = await deletePages(validatedParams);
+        const response = await deletePages(deletePagesParams, resolvedAppName);
         return JSON.stringify(response);
       } catch (error) {
         // Handle validation errors

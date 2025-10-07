@@ -2,6 +2,7 @@ import apiv3 from '@growi/sdk-typescript/v3';
 import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { pageListingInfoParamSchema } from './schema.js';
 
 export function registerPageListingInfoTool(server: FastMCP): void {
@@ -19,10 +20,11 @@ export function registerPageListingInfoTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = pageListingInfoParamSchema.parse(params);
+        const { appName, ...pageListingInfoParams } = pageListingInfoParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getInfoForPageListing(validatedParams);
+        const result = await apiv3.getInfoForPageListing(pageListingInfoParams, { appName: resolvedAppName });
         return JSON.stringify(result);
       } catch (error) {
         // Handle validation errors

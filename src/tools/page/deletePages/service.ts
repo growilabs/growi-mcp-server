@@ -5,7 +5,7 @@ import type { PostDeleteForPagesBody } from '@growi/sdk-typescript/v3';
 import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
 import type { DeletePagesParam, DeletePagesResponse } from './schema.js';
 
-export const deletePages = async (params: DeletePagesParam): Promise<DeletePagesResponse> => {
+export const deletePages = async (params: DeletePagesParam, appName: string): Promise<DeletePagesResponse> => {
   try {
     // Get the number of pages to delete
     const pageCount = Object.keys(params.pageIdToRevisionIdMap).length;
@@ -22,7 +22,7 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
         recursively: params.isRecursively || undefined,
       };
 
-      const response = await apiv1.removePage(removePageBody);
+      const response = await apiv1.removePage(removePageBody, { appName });
 
       return {
         paths: [response.path],
@@ -39,7 +39,7 @@ export const deletePages = async (params: DeletePagesParam): Promise<DeletePages
       isAnyoneWithTheLink: params.isAnyoneWithTheLink || undefined,
     };
 
-    const response = await apiv3.postDeleteForPages(postDeleteBody);
+    const response = await apiv3.postDeleteForPages(postDeleteBody, { appName });
 
     if (!response.paths) {
       throw new GrowiApiError('The API response is missing required data', 500);

@@ -1,6 +1,7 @@
 import { type FastMCP, UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { renamePageParamSchema } from './schema.js';
 import { renamePage } from './service.js';
 
@@ -12,10 +13,11 @@ export function registerRenamePageTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = renamePageParamSchema.parse(params);
+        const { appName, ...renamePageParams } = renamePageParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Call service
-        const page = await renamePage(validatedParams);
+        const page = await renamePage(renamePageParams, resolvedAppName);
         return JSON.stringify(page);
       } catch (error) {
         // Handle Zod validation errors
