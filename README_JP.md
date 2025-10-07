@@ -133,6 +133,12 @@ pnpm build
 # リント
 pnpm lint
 
+# テスト
+pnpm test
+
+# テストカバレッジ
+pnpm test:coverage
+
 # 本番環境での実行
 pnpm start
 ```
