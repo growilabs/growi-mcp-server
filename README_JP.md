@@ -18,8 +18,7 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 ## サポートするGROWIバージョン
 
 - GROWI v7.3.x 以上を推奨
-    - ※GROWI v7.3.x は 2025Q2 にリリース予定
-- 一部機能については GROWI v7.2 系以下でも利用可能
+- 一部機能については GROWI v7.2.5 系以上からでも利用可能
 ｰ [GROWI API](https://docs.growi.org/en/api/)
 
 

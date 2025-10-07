@@ -18,8 +18,7 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 ## Supported GROWI Versions
 
 - GROWI v7.3.x or higher recommended
-    - *GROWI v7.3.x is scheduled for release in 2025Q2
-- Some features are available on GROWI v7.2.x and below
+- Some features are also available starting from GROWI v7.2.5 and later
 - [GROWI API](https://docs.growi.org/en/api/)
 
 
