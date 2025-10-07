@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/%40growi%2Fmcp-server.svg)](https://badge.fury.io/js/%40growi%2Fmcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (MCP) サーバーです。組織のナレッジベースから情報を検索・取得し、正確でコンテキストに配慮したレスポンスをLLMが提供できるようにします。
+GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (MCP) サーバーです。組織のナレッジベースから情報を検索・取得し、正確でコンテキストに配慮したレスポンスをLLMが提供できるようにします。複数のGROWIアプリへの接続をサポートしています。
 
 ## 主な機能
 
@@ -25,6 +25,9 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 
 ## MCPサーバーの設定
 
+複数のGROWIアプリへの同時接続をサポートしています。各アプリには番号付きの環境変数で設定を行います。
+
+### 単一アプリの設定例
 ```json
 {
   "mcpServers": {
@@ -32,8 +35,36 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
       "command": "npx",
       "args": ["@growi/mcp-server"],
       "env": {
-        "GROWI_BASE_URL": "https://your-growi-instance.com",
-        "GROWI_API_TOKEN": "your_growi_api_token"
+        "GROWI_APP_NAME_1": "main",
+        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN_1": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+### 複数アプリの設定例
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "npx",
+      "args": ["@growi/mcp-server"],
+      "env": {
+        "GROWI_DEFAULT_APP_NAME": "staging",
+
+        "GROWI_APP_NAME_1": "production",
+        "GROWI_BASE_URL_1": "https://wiki.example.com",
+        "GROWI_API_TOKEN_1": "token_for_production",
+
+        "GROWI_APP_NAME_2": "staging",
+        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
+        "GROWI_API_TOKEN_2": "token_for_staging",
+        
+        "GROWI_APP_NAME_3": "development",
+        "GROWI_BASE_URL_3": "https://wiki-dev.example.com",
+        "GROWI_API_TOKEN_3": "token_for_development"
       }
     }
   }
@@ -86,8 +117,17 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 
 | 変数名 | 必須 | 説明 | デフォルト値 |
 |--------|------|------|-------------|
-| `GROWI_BASE_URL` | ✅ | GROWIインスタンスのベースURL | - |
-| `GROWI_API_TOKEN` | ✅ | GROWI APIアクセストークン | - |
+| `GROWI_APP_NAME_{N}` | ✅ | GROWIアプリの識別名（N は整数値） | - |
+| `GROWI_BASE_URL_{N}` | ✅ | GROWIインスタンスのベースURL（N は整数値） | - |
+| `GROWI_API_TOKEN_{N}` | ✅ | GROWI APIアクセストークン（N は整数値） | - |
+| `GROWI_DEFAULT_APP_NAME` | ❌ | デフォルトで使用するアプリ名 | 最初に設定されたアプリ |
+
+### 複数アプリ設定の注意点
+- 各アプリの設定には整数値（1, 2, 3...）を使用します (連番である必要はありません)
+- `GROWI_APP_NAME_N`、`GROWI_BASE_URL_N`、`GROWI_API_TOKEN_N` の組み合わせが必要です
+- アプリ名、ベースURL、APIトークンはそれぞれ一意である必要があります
+- `GROWI_DEFAULT_APP_NAME` を省略した場合、最初に設定されたアプリがデフォルトになります
+- `GROWI_DEFAULT_APP_NAME` に指定されたアプリは LLM に対して明示的にアプリ名をプロンプトに含めない場合にデフォルトで使用されるアプリとなります
 
 
 ## 開発者向け情報
@@ -150,7 +190,7 @@ pnpm start
 pnpm build
 ```
 
-3. MCPサーバー設定
+2. MCPサーバー設定（単一アプリの場合）
 ```json
 {
   "mcpServers": {
@@ -158,8 +198,32 @@ pnpm build
       "command": "node",
       "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
       "env": {
-        "GROWI_BASE_URL": "https://your-growi-instance.com",
-        "GROWI_API_TOKEN": "your_growi_api_token"
+        "GROWI_APP_NAME_1": "main",
+        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN_1": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+3. MCPサーバー設定（複数アプリの場合）
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "node",
+      "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
+      "env": {
+        "GROWI_DEFAULT_APP_NAME": "production",
+
+        "GROWI_APP_NAME_1": "production",
+        "GROWI_BASE_URL_1": "https://wiki.example.com",
+        "GROWI_API_TOKEN_1": "production_token",
+
+        "GROWI_APP_NAME_2": "staging",
+        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
+        "GROWI_API_TOKEN_2": "staging_token"
       }
     }
   }
