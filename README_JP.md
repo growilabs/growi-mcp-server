@@ -247,7 +247,6 @@ pnpm build
         ```bash
         docker network connect growi_devcontainer_default growi-mcp-server-dev
         ```
-        ```
 
 
 ### コントリビューション
