@@ -133,6 +133,12 @@ pnpm build
 # Lint
 pnpm lint
 
+# Run tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
 # Run in production
 pnpm start
 ```
