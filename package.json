@@ -1,17 +1,26 @@
 {
   "name": "@growi/mcp-server",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses.",
   "type": "module",
   "license": "MIT",
   "author": "Yuki Takei <yuki@weseek.co.jp>",
-  "keywords": ["mcp", "growi", "llm", "ai"],
+  "keywords": [
+    "mcp",
+    "growi",
+    "llm",
+    "ai"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "@growi/mcp-server": "./dist/index.js"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "pnpm ncc build ./src/index.ts --license ./LICENSE",
     "prebuild": "pnpm run clean",
