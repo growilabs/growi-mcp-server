@@ -2,6 +2,7 @@ import { type FastMCP, UserError } from 'fastmcp';
 import { ZodError } from 'zod';
 
 import { GrowiApiError } from '../../../commons/api/growi-api-error';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { duplicatePageSchema } from './schema';
 import { duplicatePage } from './service';
 
@@ -20,10 +21,11 @@ export const registerDuplicatePageTool = (server: FastMCP): void => {
     execute: async (params) => {
       try {
         // Validate params using zod schema
-        const validatedParams = duplicatePageSchema.parse(params);
+        const { appName, ...duplicatePageParams } = duplicatePageSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute duplication
-        const duplicatedPage = await duplicatePage(validatedParams);
+        const duplicatedPage = await duplicatePage(duplicatePageParams, resolvedAppName);
 
         return JSON.stringify({
           status: 'success',

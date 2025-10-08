@@ -3,14 +3,17 @@ import type { PutRenameForPages200 } from '@growi/sdk-typescript/v3';
 import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
 import type { RenamePageParam } from './schema.js';
 
-export async function renamePage(params: RenamePageParam): Promise<PutRenameForPages200> {
+export async function renamePage(params: RenamePageParam, appName: string): Promise<PutRenameForPages200> {
   try {
     // Check if pages exist at the new path using SDK only if both paths are provided
     if (params.path && params.newPagePath) {
-      const existPathsResult = await apiv3.getExistPathsForPage({
-        fromPath: params.path,
-        toPath: params.newPagePath,
-      });
+      const existPathsResult = await apiv3.getExistPathsForPage(
+        {
+          fromPath: params.path,
+          toPath: params.newPagePath,
+        },
+        { appName },
+      );
 
       if (existPathsResult.existPaths?.[params.newPagePath]) {
         throw new GrowiApiError('Page already exists at the target path', 409, {
@@ -20,14 +23,17 @@ export async function renamePage(params: RenamePageParam): Promise<PutRenameForP
     }
 
     // Proceed with renaming using SDK
-    const renameResult = await apiv3.putRenameForPages({
-      pageId: params.pageId,
-      revisionId: params.revisionId,
-      ...(params.newPagePath && { newPagePath: params.newPagePath }),
-      ...(params.isRenameRedirect !== undefined && { isRenameRedirect: params.isRenameRedirect }),
-      ...(params.isRecursively !== undefined && { isRecursively: params.isRecursively }),
-      ...(params.updateMetadata !== undefined && { updateMetadata: params.updateMetadata }),
-    });
+    const renameResult = await apiv3.putRenameForPages(
+      {
+        pageId: params.pageId,
+        revisionId: params.revisionId,
+        ...(params.newPagePath && { newPagePath: params.newPagePath }),
+        ...(params.isRenameRedirect !== undefined && { isRenameRedirect: params.isRenameRedirect }),
+        ...(params.isRecursively !== undefined && { isRecursively: params.isRecursively }),
+        ...(params.updateMetadata !== undefined && { updateMetadata: params.updateMetadata }),
+      },
+      { appName },
+    );
 
     if (!renameResult.page) {
       throw new GrowiApiError('Invalid response received from page rename API', 500, { response: renameResult });

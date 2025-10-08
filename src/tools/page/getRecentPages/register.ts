@@ -2,6 +2,7 @@ import apiv3 from '@growi/sdk-typescript/v3';
 import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { getRecentPagesParamSchema } from './schema.js';
 
 export function registerGetRecentPagesTool(server: FastMCP): void {
@@ -19,10 +20,11 @@ export function registerGetRecentPagesTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = getRecentPagesParamSchema.parse(params);
+        const { appName, ...getRecentPagesParams } = getRecentPagesParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getRecentForPages(validatedParams);
+        const result = await apiv3.getRecentForPages(getRecentPagesParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

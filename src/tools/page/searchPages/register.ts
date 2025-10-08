@@ -2,6 +2,7 @@ import apiv1 from '@growi/sdk-typescript/v1';
 import { type FastMCP, UserError } from 'fastmcp';
 import { ZodError } from 'zod';
 import { GrowiApiError, isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { searchPagesParamSchema } from './schema.js';
 
 export function registerSearchPagesTool(server: FastMCP): void {
@@ -19,10 +20,11 @@ export function registerSearchPagesTool(server: FastMCP): void {
     execute: async (params, context) => {
       try {
         // Validate input using zod schema
-        const validatedParams = searchPagesParamSchema.parse(params);
+        const { appName, ...searchPagesParams } = searchPagesParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute search using SDK
-        const response = await apiv1.searchPages(validatedParams);
+        const response = await apiv1.searchPages(searchPagesParams, { appName: resolvedAppName });
 
         if (!response.data) {
           throw new GrowiApiError('Invalid response received from search API', 500, { response });

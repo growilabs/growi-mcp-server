@@ -3,14 +3,17 @@ import type { Page } from '@growi/sdk-typescript/v3';
 import { GrowiApiError } from '../../../commons/api/growi-api-error';
 import type { DuplicatePageParams } from './schema';
 
-export const duplicatePage = async (params: DuplicatePageParams): Promise<Page> => {
+export const duplicatePage = async (params: DuplicatePageParams, appName: string): Promise<Page> => {
   try {
     // Check if target path exists
     if (params.pageNameInput) {
       // Check if page exists
-      const existResponse = await apiv3.getExistForPage({
-        path: params.pageNameInput,
-      });
+      const existResponse = await apiv3.getExistForPage(
+        {
+          path: params.pageNameInput,
+        },
+        { appName },
+      );
 
       // If path exists, throw error
       if (existResponse.isExist) {
@@ -19,12 +22,15 @@ export const duplicatePage = async (params: DuplicatePageParams): Promise<Page> 
     }
 
     // Execute duplicate operation
-    const result = await apiv3.postDuplicateForPages({
-      pageId: params.pageId,
-      pageNameInput: params.pageNameInput,
-      isRecursively: params.isRecursively,
-      onlyDuplicateUserRelatedResources: params.onlyDuplicateUserRelatedResources,
-    });
+    const result = await apiv3.postDuplicateForPages(
+      {
+        pageId: params.pageId,
+        pageNameInput: params.pageNameInput,
+        isRecursively: params.isRecursively,
+        onlyDuplicateUserRelatedResources: params.onlyDuplicateUserRelatedResources,
+      },
+      { appName },
+    );
 
     if (!result.page) {
       throw new GrowiApiError('Failed to duplicate page: Response data is invalid', 500);

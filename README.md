@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/%40growi%2Fmcp-server.svg)](https://badge.fury.io/js/%40growi%2Fmcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses.
+A Model Context Protocol (MCP) server that connects AI models to GROWI wiki content. Enables LLMs to search and retrieve information from your organization's knowledge base for accurate, context-aware responses. Supports connections to multiple GROWI apps.
 
 ## Key Features
 
@@ -18,13 +18,15 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 ## Supported GROWI Versions
 
 - GROWI v7.3.x or higher recommended
-    - *GROWI v7.3.x is scheduled for release in 2025Q2
-- Some features are available on GROWI v7.2.x and below
+- Some features are also available starting from GROWI v7.2.5 and later
 - [GROWI API](https://docs.growi.org/en/api/)
 
 
 ## MCP Server Configuration
 
+Supports simultaneous connections to multiple GROWI apps. Each app is configured using numbered environment variables.
+
+### Single App Configuration Example
 ```json
 {
   "mcpServers": {
@@ -32,8 +34,36 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
       "command": "npx",
       "args": ["@growi/mcp-server"],
       "env": {
-        "GROWI_BASE_URL": "https://your-growi-instance.com",
-        "GROWI_API_TOKEN": "your_growi_api_token"
+        "GROWI_APP_NAME_1": "main",
+        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN_1": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+### Multiple Apps Configuration Example
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "npx",
+      "args": ["@growi/mcp-server"],
+      "env": {
+        "GROWI_DEFAULT_APP_NAME": "staging",
+
+        "GROWI_APP_NAME_1": "production",
+        "GROWI_BASE_URL_1": "https://wiki.example.com",
+        "GROWI_API_TOKEN_1": "token_for_production",
+
+        "GROWI_APP_NAME_2": "staging",
+        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
+        "GROWI_API_TOKEN_2": "token_for_staging",
+        
+        "GROWI_APP_NAME_3": "development",
+        "GROWI_BASE_URL_3": "https://wiki-dev.example.com",
+        "GROWI_API_TOKEN_3": "token_for_development"
       }
     }
   }
@@ -86,8 +116,17 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 
 | Variable Name | Required | Description | Default Value |
 |---------------|----------|-------------|---------------|
-| `GROWI_BASE_URL` | ✅ | Base URL of GROWI instance | - |
-| `GROWI_API_TOKEN` | ✅ | GROWI API access token | - |
+| `GROWI_APP_NAME_{N}` | ✅ | GROWI app identifier name (N is an integer) | - |
+| `GROWI_BASE_URL_{N}` | ✅ | Base URL of GROWI instance (N is an integer) | - |
+| `GROWI_API_TOKEN_{N}` | ✅ | GROWI API access token (N is an integer) | - |
+| `GROWI_DEFAULT_APP_NAME` | ❌ | Default app name to use | First configured app |
+
+### Multiple Apps Configuration Notes
+- Use integer values (1, 2, 3...) for each app configuration (sequential numbering is not required)
+- Combination of `GROWI_APP_NAME_N`, `GROWI_BASE_URL_N`, and `GROWI_API_TOKEN_N` is required
+- App names, base URLs, and API tokens must each be unique
+- If `GROWI_DEFAULT_APP_NAME` is omitted, the first configured app becomes the default
+- The app specified in `GROWI_DEFAULT_APP_NAME` will be used as the default app when the LLM does not explicitly include an app name in the prompt
 
 
 ## Developer Information
@@ -133,6 +172,12 @@ pnpm build
 # Lint
 pnpm lint
 
+# Run tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
 # Run in production
 pnpm start
 ```
@@ -144,7 +189,7 @@ pnpm start
 pnpm build
 ```
 
-2. MCP Server Configuration
+2. MCP Server Configuration (Single App)
 ```json
 {
   "mcpServers": {
@@ -152,8 +197,32 @@ pnpm build
       "command": "node",
       "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
       "env": {
-        "GROWI_BASE_URL": "https://your-growi-instance.com",
-        "GROWI_API_TOKEN": "your_growi_api_token"
+        "GROWI_APP_NAME_1": "main",
+        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN_1": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+3. MCP Server Configuration (Multiple Apps)
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "node",
+      "args": ["/Users/username/projects/growi-mcp-server/dist/index.js"],
+      "env": {
+        "GROWI_DEFAULT_APP_NAME": "production",
+
+        "GROWI_APP_NAME_1": "production",
+        "GROWI_BASE_URL_1": "https://wiki.example.com",
+        "GROWI_API_TOKEN_1": "production_token",
+
+        "GROWI_APP_NAME_2": "staging",
+        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
+        "GROWI_API_TOKEN_2": "staging_token"
       }
     }
   }

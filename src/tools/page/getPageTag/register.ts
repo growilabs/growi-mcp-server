@@ -2,6 +2,7 @@ import apiv1 from '@growi/sdk-typescript/v1';
 import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { getPageTagParamSchema } from './schema.js';
 
 export function registerGetPageTagTool(server: FastMCP): void {
@@ -19,10 +20,11 @@ export function registerGetPageTagTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = getPageTagParamSchema.parse(params);
+        const { appName, ...getPageTagParams } = getPageTagParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv1.getPageTag(validatedParams);
+        const result = await apiv1.getPageTag(getPageTagParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

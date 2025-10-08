@@ -3,6 +3,7 @@ import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { listRevisionsParamSchema } from './schema.js';
 
 export function registerListRevisionsTool(server: FastMCP): void {
@@ -20,10 +21,11 @@ export function registerListRevisionsTool(server: FastMCP): void {
     execute: async (params) => {
       try {
         // Validate parameters
-        const validatedParams = listRevisionsParamSchema.parse(params);
+        const { appName, ...listRevisionsParams } = listRevisionsParamSchema.parse(params);
+        const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getListForRevisions(validatedParams);
+        const result = await apiv3.getListForRevisions(listRevisionsParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {
