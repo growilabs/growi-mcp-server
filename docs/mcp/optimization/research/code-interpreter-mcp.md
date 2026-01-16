@@ -17,8 +17,10 @@ GROWI MCP のトークン消費削減のため、分離型アプローチで使�
 
 | 候補 | M1: コード実行 | M2: 他MCP呼出 | M3: サンドボックス | M4: 出力制御 |
 | ---- | -------------- | ------------- | ------------------ | ------------ |
+| **mcpcodeserver** | ○ | ○ | △ | ○ |
+| **Meta-MCP** | ○ | ○ | ○ | ○ |
 | **E2B** | ○ | ○ | ○ | ○ |
-| **MCPProxy** | ○ | ○ | ○ | ○ |
+| MCPProxy | ○ | ○ | ○ | ○ |
 | Lootbox | ○ | ○ | ○ | ○ |
 | Codemode-MCP | ○ | ○ | ○ | ○ |
 | Riza | ○ | △ | ○ | ○ |
@@ -31,9 +33,11 @@ GROWI MCP のトークン消費削減のため、分離型アプローチで使�
 
 | 候補 | S1: JS/TS | S2: 低レイテンシ | S3: Claude Desktop | S4: メンテナンス |
 | ---- | --------- | ---------------- | ------------------ | ---------------- |
+| **mcpcodeserver** | ○（TypeScript） | ○（ローカル） | ○ | ○ |
+| **Meta-MCP** | ○（TypeScript） | ○（ローカル） | ○ | ○ |
 | **E2B** | ○ | △（クラウド） | ○ | ○ |
-| **MCPProxy** | ○ | ○（ローカル） | ○ | ○ |
-| Lootbox | ○ | ○（ローカル） | ×（非対応） | ○ |
+| MCPProxy | △（ES5.1のみ） | ○（ローカル） | ○ | ○ |
+| Lootbox | ○（TypeScript） | ○（ローカル） | ×（非対応） | ○ |
 | Codemode-MCP | ○ | ○（ローカル） | ○ | ×（中止） |
 | Riza | ○ | △（クラウド） | ○ | ○ |
 | Node Code Sandbox | ○ | ○（ローカル） | ○ | ○ |
@@ -42,7 +46,117 @@ GROWI MCP のトークン消費削減のため、分離型アプローチで使�
 
 ## 有力候補の詳細
 
-### 1. E2B Code Interpreter MCP
+### 1. mcpcodeserver（TypeScript 対応・推奨）
+
+GitHub: [zbowling/mcpcodeserver](https://github.com/zbowling/mcpcodeserver)
+
+| 項目 | 内容 |
+| ---- | ---- |
+| M2 実現方式 | TypeScript コードで `await toolname.function()` として呼び出し |
+| 実行環境 | ローカル VM サンドボックス |
+| 言語 | TypeScript |
+| 料金 | 無料（OSS） |
+
+**メリット:**
+
+- **TypeScript フル対応**（ES5.1 制限なし）
+- 複数 MCP サーバーを TypeScript コードで直接呼び出し可能
+- `Promise.all()` で並列処理も可能
+- Claude Desktop 対応（npx で簡単インストール）
+- 子 MCP サーバーのツール変更を自動検知
+
+**デメリット:**
+
+- サンドボックスは「完全にセキュア」ではないと明記（信頼できるコードのみ実行）
+- Node.js モジュール不可（MCP ツール経由のみ）
+
+**Claude Desktop 設定例:**
+
+```json
+{
+  "mcpServers": {
+    "mcpcodeserver": {
+      "command": "npx",
+      "args": ["-y", "mcpcodeserver", "--config", "/path/to/mcp.json"]
+    }
+  }
+}
+```
+
+**子 MCP サーバー設定（mcp.json）:**
+
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "npx",
+      "args": ["-y", "growi-mcp-server"]
+    }
+  }
+}
+```
+
+**MCP ツール呼び出し例:**
+
+```typescript
+// 複数の MCP ツールを並列実行
+const [pages, users] = await Promise.all([
+  growi_search_pages({ query: "keyword" }),
+  growi_get_users({})
+]);
+console.log(JSON.stringify({ pages, users }, null, 2));
+```
+
+**セキュリティ制限:**
+
+- 最大実行時間: 30秒（設定で最大5分）
+- ファイルシステム直接アクセス不可
+- MCP ツール経由以外のネットワークアクセス不可
+- console メソッド（log, error, warn, info）利用可能
+
+---
+
+### 2. Meta-MCP Server（TypeScript 対応）
+
+npm: [@justanothermldude/meta-mcp-server](https://www.npmjs.com/package/@justanothermldude/meta-mcp-server)
+
+| 項目 | 内容 |
+| ---- | ---- |
+| M2 実現方式 | 型付きラッパーで MCP ツール呼び出し（mcp-exec） |
+| 実行環境 | サンドボックス |
+| 言語 | TypeScript |
+| 料金 | 無料（OSS） |
+
+**メリット:**
+
+- **TypeScript フル対応**
+- Lazy loading で **87-91% トークン削減**
+- 型付きラッパーで安全な MCP ツール呼び出し
+- Claude Desktop 対応
+
+**デメリット:**
+
+- 比較的新しいプロジェクト
+
+**Claude Desktop 設定例:**
+
+```json
+{
+  "mcpServers": {
+    "meta-mcp": {
+      "command": "npx",
+      "args": ["-y", "@justanothermldude/meta-mcp-server"],
+      "env": {
+        "SERVERS_CONFIG": "~/.meta-mcp/servers.json"
+      }
+    }
+  }
+}
+```
+
+---
+
+### 3. E2B Code Interpreter MCP（クラウド）
 
 GitHub: [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server)
 
@@ -83,7 +197,7 @@ GitHub: [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server)
 
 ---
 
-### 2. MCPProxy
+### 4. MCPProxy（JavaScript のみ）
 
 GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpproxy-go)
 
@@ -130,7 +244,7 @@ GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpprox
 
 ---
 
-### 3. Lootbox
+### 5. Lootbox（Claude Desktop 非対応）
 
 GitHub: [jx-codes/lootbox](https://github.com/jx-codes/lootbox)
 
@@ -192,7 +306,7 @@ console.log(JSON.stringify(result, null, 2));
 
 ---
 
-### 4. Codemode-MCP（参考）
+### 6. Codemode-MCP（参考・メンテナンス中止）
 
 GitHub: [jx-codes/codemode-mcp](https://github.com/jx-codes/codemode-mcp)
 
@@ -232,19 +346,21 @@ GitHub: [jx-codes/codemode-mcp](https://github.com/jx-codes/codemode-mcp)
 
 ## 推奨
 
-| 優先度 | 候補     | 理由                                                       |
-| ------ | -------- | ---------------------------------------------------------- |
-| 1      | MCPProxy | M2 要件を満たし、ローカル実行で低コスト・低レイテンシ      |
-| 2      | E2B      | M2 要件を満たし、成熟したクラウド環境。コスト許容なら有力  |
+| 優先度 | 候補          | 言語       | 理由                                                   |
+| ------ | ------------- | ---------- | ------------------------------------------------------ |
+| 1      | mcpcodeserver | TypeScript | TypeScript フル対応、ローカル実行、MCP 連携が直感的    |
+| 2      | Meta-MCP      | TypeScript | TypeScript 対応、Lazy loading でトークン削減           |
+| 3      | E2B           | JS/TS      | 成熟したクラウド環境。セキュリティ重視・コスト許容なら |
 
-**MCPProxy を第一候補として検証を推奨。**
-ただし、サンドボックス制限（ES5.1+ のみ）が GROWI MCP 連携で問題になる場合は **E2B** を検討。
+**mcpcodeserver を第一候補として検証を推奨。**
+TypeScript フル対応で、GROWI MCP との連携も直感的に記述可能。
 
-### 参考: Claude Desktop 非対応の候補
+### 参考: 条件付きの候補
 
-| 候補    | 備考                                                                 |
-| ------- | -------------------------------------------------------------------- |
-| Lootbox | Claude Code 専用。TypeScript フル機能で MCP 連携が直感的だが非対応   |
+| 候補     | 条件                                                                        |
+| -------- | --------------------------------------------------------------------------- |
+| MCPProxy | JavaScript（ES5.1）で十分な場合は検討可。TypeScript 不可                    |
+| Lootbox  | Claude Code 専用。TypeScript フル機能で MCP 連携が直感的だが Desktop 非対応 |
 
 ---
 
@@ -252,8 +368,9 @@ GitHub: [jx-codes/codemode-mcp](https://github.com/jx-codes/codemode-mcp)
 
 - [Code execution with MCP - Anthropic](https://www.anthropic.com/engineering/code-execution-with-mcp)
 - [Code Mode: the better way to use MCP - Cloudflare](https://blog.cloudflare.com/code-mode/)
+- [mcpcodeserver - GitHub](https://github.com/zbowling/mcpcodeserver)
+- [Meta-MCP Server - Glama](https://glama.ai/mcp/servers/@blueman82/meta-mcp-server)
 - [MCPProxy Discussion #627](https://github.com/orgs/modelcontextprotocol/discussions/627)
 - [Lootbox - GitHub](https://github.com/jx-codes/lootbox)
-- [MCP servers have issues, so I built 'lootbox' - DEV Community](https://dev.to/jm-codes/mcp-servers-have-issues-so-i-built-lootbox-inspired-by-cloudflares-code-mode-16gb)
 - [E2B Pricing](https://e2b.dev/pricing)
 - [Docker & E2B MCP Partnership](https://e2b.dev/blog/docker-e2b-partner-to-introduce-mcp-support-in-e2b-sandbox)
