@@ -15,12 +15,13 @@ GROWI MCP のトークン消費削減のため、分離型アプローチで使�
 
 | 優先度 | 候補          | 言語       | 理由                                                   |
 | ------ | ------------- | ---------- | ------------------------------------------------------ |
-| 1      | mcpcodeserver | TypeScript | TypeScript フル対応、ローカル実行、MCP 連携が直感的    |
-| 2      | E2B           | JS/TS      | 成熟したクラウド環境。セキュリティ重視・コスト許容なら |
-| 3      | MCPProxy      | JavaScript | ローカル実行、Web UI でデバッグ可能。ES5.1 制限あり    |
+| 1      | MCPProxy      | JavaScript | 開発が最も活発、無料、スター数も多い。ES5.1 制限あり   |
+| 2      | mcpcodeserver | TypeScript | TypeScript フル対応、MCP 連携が直感的。更新停滞が懸念  |
+| 3      | E2B           | JS/TS      | 成熟したクラウド環境。セキュリティ重視・コスト許容なら |
 
-**mcpcodeserver を第一候補として検証を推奨。**
-TypeScript フル対応で、GROWI MCP との連携も直感的に記述可能。
+**MCPProxy を第一候補として検証を推奨。**
+月平均リリース数・直近コミット数ともに最も活発で、継続的なメンテナンスが期待できる。
+ただし JavaScript（ES5.1）のみ対応で TypeScript は使用不可。
 
 ---
 
@@ -28,12 +29,12 @@ TypeScript フル対応で、GROWI MCP との連携も直感的に記述可能�
 
 | 候補          | Stars | 最終リリース          | ライセンス | 費用                      |
 | ------------- | ----: | --------------------- | ---------- | ------------------------- |
+| MCPProxy      |   112 | v0.15.1（2026/01/18） | MIT        | 無料（OSS）               |
 | mcpcodeserver |    13 | v1.0.14（2025/10/13） | MIT        | 無料（OSS）               |
 | E2B           |   369 | v0.1.1（2025/12/31）  | Apache-2.0 | 無料枠 $100 → Pro $150/月 |
-| MCPProxy      |   112 | v0.15.1（2026/01/18） | MIT        | 無料（OSS）               |
 
 **結論**: 有力候補はすべて MIT または Apache-2.0 ライセンスで利用しやすい。
-mcpcodeserver を第一候補として推奨。E2B は無料枠で検証可能だが、本番運用では月額費用が発生する。
+MCPProxy を第一候補として推奨。mcpcodeserver は TypeScript 対応だが更新停滞が懸念。E2B は本番運用で月額費用が発生する。
 
 ---
 
@@ -115,7 +116,58 @@ mcpcodeserver を第一候補として推奨。E2B は無料枠で検証可能�
 
 ## 有力候補の詳細
 
-### 1. mcpcodeserver（TypeScript 対応・推奨）
+### 1. MCPProxy（JavaScript のみ・推奨）
+
+GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpproxy-go)
+
+| 項目 | 内容 |
+| ---- | ---- |
+| M2 実現方式 | `code_execution` ツール + `call_tool()` 関数 |
+| 実行環境 | ローカル JavaScript サンドボックス（ES5.1+） |
+| 言語 | JavaScript（ES5.1+ built-ins のみ） |
+| 料金 | 無料（OSS） |
+| ライセンス | MIT |
+| GitHub Stars | 112 |
+| 最終リリース | v0.15.1（2026年1月18日） |
+
+**メリット:**
+
+- **開発が最も活発**（月平均50リリース、毎日のようにコミット）
+- ローカル実行で低レイテンシ
+- 無料・セルフホスト可能
+- Web UI で監視・デバッグ可能
+- Windows / macOS インストーラーあり
+
+**デメリット:**
+
+- JavaScript（ES5.1）のみ対応、TypeScript は使用不可
+- サンドボックス制限が厳しい（Node.js モジュール不可）
+
+**Claude Desktop 設定例:**
+
+```json
+{
+  "mcpServers": {
+    "mcpproxy": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:8080/mcp"]
+    }
+  }
+}
+```
+
+**セキュリティ制限:**
+
+- ファイルシステムアクセス不可
+- ネットワークアクセス不可
+- Node.js モジュール不可
+- タイマー不可
+- 環境変数アクセス不可
+- `call_tool()` のみで外部連携
+
+---
+
+### 2. mcpcodeserver（TypeScript 対応）
 
 GitHub: [zbowling/mcpcodeserver](https://github.com/zbowling/mcpcodeserver)
 
@@ -139,6 +191,7 @@ GitHub: [zbowling/mcpcodeserver](https://github.com/zbowling/mcpcodeserver)
 
 **デメリット:**
 
+- **約3ヶ月間更新なし**（継続的なメンテナンスが不明確）
 - サンドボックスは「完全にセキュア」ではないと明記（信頼できるコードのみ実行）
 - Node.js モジュール不可（MCP ツール経由のみ）
 
@@ -188,7 +241,7 @@ console.log(JSON.stringify({ pages, users }, null, 2));
 
 ---
 
-### 2. E2B Code Interpreter MCP（クラウド）
+### 3. E2B Code Interpreter MCP（クラウド）
 
 GitHub: [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server)
 
@@ -243,56 +296,6 @@ GitHub: [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server)
   }
 }
 ```
-
----
-
-### 3. MCPProxy（JavaScript のみ）
-
-GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpproxy-go)
-
-| 項目 | 内容 |
-| ---- | ---- |
-| M2 実現方式 | `code_execution` ツール + `call_tool()` 関数 |
-| 実行環境 | ローカル JavaScript サンドボックス（ES5.1+） |
-| 言語 | JavaScript（ES5.1+ built-ins のみ） |
-| 料金 | 無料（OSS） |
-| ライセンス | MIT |
-| GitHub Stars | 112 |
-| 最終リリース | v0.15.1（2026年1月18日） |
-
-**メリット:**
-
-- ローカル実行で低レイテンシ
-- 無料・セルフホスト可能
-- Web UI で監視・デバッグ可能
-- Windows / macOS インストーラーあり
-
-**デメリット:**
-
-- サンドボックス制限が厳しい（Node.js モジュール不可）
-- 比較的新しい実装（成熟度）
-
-**Claude Desktop 設定例:**
-
-```json
-{
-  "mcpServers": {
-    "mcpproxy": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "http://localhost:8080/mcp"]
-    }
-  }
-}
-```
-
-**セキュリティ制限:**
-
-- ファイルシステムアクセス不可
-- ネットワークアクセス不可
-- Node.js モジュール不可
-- タイマー不可
-- 環境変数アクセス不可
-- `call_tool()` のみで外部連携
 
 ---
 
