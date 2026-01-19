@@ -56,6 +56,9 @@ GitHub: [zbowling/mcpcodeserver](https://github.com/zbowling/mcpcodeserver)
 | 実行環境 | ローカル VM サンドボックス |
 | 言語 | TypeScript |
 | 料金 | 無料（OSS） |
+| ライセンス | MIT |
+| GitHub Stars | 13 |
+| 最終リリース | v1.0.14（2025年10月13日） |
 
 **メリット:**
 
@@ -116,47 +119,7 @@ console.log(JSON.stringify({ pages, users }, null, 2));
 
 ---
 
-### 2. Meta-MCP Server（TypeScript 対応）
-
-npm: [@justanothermldude/meta-mcp-server](https://www.npmjs.com/package/@justanothermldude/meta-mcp-server)
-
-| 項目 | 内容 |
-| ---- | ---- |
-| M2 実現方式 | 型付きラッパーで MCP ツール呼び出し（mcp-exec） |
-| 実行環境 | サンドボックス |
-| 言語 | TypeScript |
-| 料金 | 無料（OSS） |
-
-**メリット:**
-
-- **TypeScript フル対応**
-- Lazy loading で **87-91% トークン削減**
-- 型付きラッパーで安全な MCP ツール呼び出し
-- Claude Desktop 対応
-
-**デメリット:**
-
-- 比較的新しいプロジェクト
-
-**Claude Desktop 設定例:**
-
-```json
-{
-  "mcpServers": {
-    "meta-mcp": {
-      "command": "npx",
-      "args": ["-y", "@justanothermldude/meta-mcp-server"],
-      "env": {
-        "SERVERS_CONFIG": "~/.meta-mcp/servers.json"
-      }
-    }
-  }
-}
-```
-
----
-
-### 3. E2B Code Interpreter MCP（クラウド）
+### 2. E2B Code Interpreter MCP（クラウド）
 
 GitHub: [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server)
 
@@ -166,6 +129,9 @@ GitHub: [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server)
 | 実行環境 | クラウドサンドボックス（~150ms 起動） |
 | 言語 | Python, JavaScript |
 | 料金 | 下記参照 |
+| ライセンス | Apache-2.0 |
+| GitHub Stars | 369 |
+| 最終リリース | v0.1.1（2025年12月31日） |
 
 **料金プラン:**
 
@@ -211,7 +177,7 @@ GitHub: [e2b-dev/mcp-server](https://github.com/e2b-dev/mcp-server)
 
 ---
 
-### 4. MCPProxy（JavaScript のみ）
+### 3. MCPProxy（JavaScript のみ）
 
 GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpproxy-go)
 
@@ -220,7 +186,10 @@ GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpprox
 | M2 実現方式 | `code_execution` ツール + `call_tool()` 関数 |
 | 実行環境 | ローカル JavaScript サンドボックス（ES5.1+） |
 | 言語 | JavaScript（ES5.1+ built-ins のみ） |
-| 料金 | 無料（OSS、Apache-2.0） |
+| 料金 | 無料（OSS） |
+| ライセンス | MIT |
+| GitHub Stars | 112 |
+| 最終リリース | v0.15.1（2026年1月18日） |
 
 **メリット:**
 
@@ -258,81 +227,52 @@ GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpprox
 
 ---
 
-### 5. Lootbox（Claude Desktop 非対応）
+## Claude Desktop 非対応のため除外
 
-GitHub: [jx-codes/lootbox](https://github.com/jx-codes/lootbox)
+以下は Claude Desktop に対応していないため除外。Claude Code 専用であれば利用可能。
 
-| 項目 | 内容 |
-| ---- | ---- |
-| M2 実現方式 | `tools.mcp_{servername}.function()` で MCP ツール呼び出し |
-| 実行環境 | Deno サンドボックス（TypeScript） |
-| 言語 | TypeScript |
-| 料金 | 無料（OSS） |
+### Lootbox
 
-**メリット:**
-
-- TypeScript でフル機能のコード記述が可能
-- MCP サーバーが `mcp_` prefix で自動公開される
-- カスタムツール（.ts ファイル）を追加可能
-- YAML ベースのワークフロー機能あり
-- Codemode-MCP の後継としてアクティブにメンテナンス
-
-**デメリット:**
-
-- **Claude Desktop 非対応**（WebSocket RPC 方式のため、MCP stdio 非対応）
-- Claude Code 専用設計
-- インストールが curl スクリプト or ソースビルド
-
-**注意:** 同じ作者の [mcp-rpc](https://github.com/jx-codes/mcp-rpc) には Claude Desktop 用の bridge があるが、Lootbox とは別プロジェクト。
-
-**インストール:**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/jx-codes/lootbox/main/install.sh | bash
-```
-
-**MCP サーバー設定例（lootbox.config.json）:**
-
-```json
-{
-  "mcpServers": {
-    "growi": {
-      "command": "npx",
-      "args": ["-y", "growi-mcp-server"]
-    }
-  }
-}
-```
-
-**MCP ツール呼び出し例:**
-
-```typescript
-// GROWI MCP のツールを呼び出す
-const result = await tools.mcp_growi.search_pages({ query: "keyword" });
-console.log(JSON.stringify(result, null, 2));
-```
-
-**セキュリティ制限:**
-
-- ユーザースクリプト: `--allow-net` のみ（ネットワークアクセスのみ許可）
-- 10秒のタイムアウトで自動終了
-- カスタムツール: `--allow-all`（信頼できるコードのみ含める必要）
+- GitHub: [jx-codes/lootbox](https://github.com/jx-codes/lootbox)
+- GitHub Stars: 116
+- 最終リリース: リリースなし（開発中）
+- ライセンス: MIT
+- 特徴: TypeScript 対応、Deno サンドボックス、MCP ツール呼び出し可能
+- 問題: **Claude Desktop 非対応**（WebSocket RPC 方式のため、MCP stdio 非対応）
+- 備考: Claude Code 専用設計。機能的には有力だが、Desktop 非対応のため除外
 
 ---
 
-### 6. Codemode-MCP（参考・メンテナンス中止）
+## ライセンス不明のため除外
 
-GitHub: [jx-codes/codemode-mcp](https://github.com/jx-codes/codemode-mcp)
+以下はライセンスが明記されていないため、利用前に作者への確認が必要。
 
-| 項目 | 内容 |
-|------|------|
-| M2 実現方式 | HTTP プロキシ経由（localhost:3001/mcp/*） |
-| 実行環境 | Deno サンドボックス |
-| 言語 | TypeScript/JavaScript |
-| 料金 | 無料（OSS） |
+### Meta-MCP Server
 
-**注意:** 著者がメンテナンスを中止し、別プロジェクト（lootbox）に移行。
-本番利用は非推奨だが、アーキテクチャの参考になる。
+- GitHub: [blueman82/meta-mcp-server](https://github.com/blueman82/meta-mcp-server)
+- npm: [@justanothermldude/meta-mcp-server](https://www.npmjs.com/package/@justanothermldude/meta-mcp-server)
+- GitHub Stars: 0
+- 最終リリース: リリースなし（npm v0.1.8 公開中）
+- ライセンス: 不明（GitHub/npm にライセンス記載なし）
+- 特徴: TypeScript 対応、Lazy loading で 87-91% トークン削減
+- 備考: 機能的には有力だが、ライセンス未記載のため本番利用は推奨しない
+
+### Codemode-MCP
+
+- GitHub: [jx-codes/codemode-mcp](https://github.com/jx-codes/codemode-mcp)
+- GitHub Stars: 105
+- 最終リリース: リリースなし
+- ライセンス: 不明（GitHub にライセンス記載なし）
+- 特徴: Deno サンドボックス、TypeScript/JavaScript 対応
+- 備考: 著者がメンテナンスを中止し、lootbox に移行済み
+
+### Riza Code Interpreter
+
+- GitHub: [riza-io/riza-mcp](https://github.com/riza-io/riza-mcp)
+- GitHub Stars: 12
+- 最終リリース: リリースなし
+- ライセンス: 不明（GitHub にライセンス記載なし）
+- 備考: **⚠️ サービス終了予定**（2025年10月1日）
 
 ---
 
@@ -340,75 +280,75 @@ GitHub: [jx-codes/codemode-mcp](https://github.com/jx-codes/codemode-mcp)
 
 以下は M2（他 MCP サーバー呼び出し）要件を満たさない、または不明確なため除外。
 
-### Riza Code Interpreter
-
-- GitHub: [riza-io/riza-mcp](https://github.com/riza-io/riza-mcp)
-- 問題: 他 MCP サーバーとの連携機能が確認できない
-- 用途: 単独のコード実行には適しているが、GROWI MCP 連携には不向き
-- **⚠️ サービス終了**: 2025年10月1日にサービス終了予定（選定対象外）
-
 ### Node Code Sandbox MCP
 
 - GitHub: [alfonsograziano/node-code-sandbox-mcp](https://github.com/alfonsograziano/node-code-sandbox-mcp)
+- GitHub Stars: 140
+- 最終リリース: リリースなし（5 tags あり）
+- ライセンス: MIT
 - 問題: 他 MCP サーバーとの連携機能なし
 - 用途: 独立した JavaScript 実行環境としては優秀
 
 ### Python Interpreter MCP
 
+- ライセンス: 不明（具体的なリポジトリ未記載）
 - 問題: Python 専用、他 MCP 連携なし、サンドボックスが限定的
 
 ---
 
-## 費用比較
+## 候補比較一覧
 
-| 候補          | 費用                                  | 備考                                           |
-| ------------- | ------------------------------------- | ---------------------------------------------- |
-| mcpcodeserver | 無料（OSS）                           | ローカル実行、インフラ費用なし                 |
-| Meta-MCP      | 無料（OSS）                           | ローカル実行、インフラ費用なし                 |
-| E2B           | 無料枠 $100 → Pro $150/月             | クラウド、従量課金あり（約 $0.05/時間）        |
-| MCPProxy      | 無料（OSS）                           | ローカル実行、インフラ費用なし                 |
-| Lootbox       | 無料（OSS）                           | ローカル実行、インフラ費用なし                 |
-| Riza          | ~~無料枠 10万リクエスト/月~~ 終了予定 | **2025年10月サービス終了**                     |
+| 候補          | Stars | 最終リリース          | ライセンス | 費用                      |
+| ------------- | ----: | --------------------- | ---------- | ------------------------- |
+| mcpcodeserver |    13 | v1.0.14（2025/10/13） | MIT        | 無料（OSS）               |
+| E2B           |   369 | v0.1.1（2025/12/31）  | Apache-2.0 | 無料枠 $100 → Pro $150/月 |
+| MCPProxy      |   112 | v0.15.1（2026/01/18） | MIT        | 無料（OSS）               |
 
-**結論**: 推奨候補（mcpcodeserver, Meta-MCP）はすべて無料の OSS。
-E2B は無料枠で検証可能だが、本番運用では月額費用が発生する。
+**結論**: 有力候補はすべて MIT または Apache-2.0 ライセンスで利用しやすい。
+mcpcodeserver を第一候補として推奨。E2B は無料枠で検証可能だが、本番運用では月額費用が発生する。
 
 ---
 
 ## プロジェクト成熟度の比較
 
-有力候補 2 つについて、プロジェクトの成熟度を調査した（2026年1月時点）。
+有力候補について、複合指標でプロジェクトの成熟度を調査した（2026年1月19日時点）。
 
-### mcpcodeserver
+### 複合指標一覧
 
-| 指標 | 値 |
-| ---- | ---- |
-| GitHub Stars | 13 |
-| 最終リリース日 | 2025年10月13日（v1.0.14） |
-| リリース頻度 | 14リリース（初回リリース日に集中） |
-| コントリビューター数 | 2人 |
-| 総コミット数 | 56 |
-| リポジトリ作成日 | 2025年10月12日（約3ヶ月前） |
+| 指標 | mcpcodeserver | E2B | MCPProxy |
+| ---- | ------------: | --: | -------: |
+| 総リリース数 | 14 | 4 | 約100 |
+| 活動期間 | 約3ヶ月 | 約3ヶ月 | 約2ヶ月 |
+| 月平均リリース数 | 4.7 | 1.3 | 約50 |
+| 最終リリースからの経過日数 | 98日 | 19日 | 1日 |
+| 直近3ヶ月のコミット数 | 35 | 16 | 100以上 |
+| 最終コミットからの経過日数 | 98日 | 12日 | 1日 |
 
-### Meta-MCP
+### 各プロジェクトの詳細
 
-| 指標 | 値 |
-| ---- | ---- |
-| GitHub Stars | 0 |
-| 最終リリース日 | GitHub リリースなし / npm v0.1.8（約1ヶ月前） |
-| リリース頻度 | 不明（GitHub リリース未使用、npm で公開） |
-| コントリビューター数 | 2人 |
-| 総コミット数 | 89 |
-| リポジトリ作成日 | 2025年12月14日（約1ヶ月前） |
+#### mcpcodeserver
+
+- **リリース傾向**: 14リリースすべてが初日（2025/10/13）に集中。その後のリリースなし
+- **開発状況**: 初期開発フェーズで集中的にリリース、その後は安定期
+- **懸念点**: 約3ヶ月間リリースがなく、継続的なメンテナンスが不明確
+
+#### E2B
+
+- **リリース傾向**: 2ヶ月間で4リリース。依存関係の更新が中心
+- **開発状況**: 安定したペースで継続的にメンテナンス
+- **強み**: 商用サービスとして継続的なサポートが期待できる
+
+#### MCPProxy
+
+- **リリース傾向**: 約2ヶ月で約100リリース（月平均50）。非常に活発
+- **開発状況**: 積極的な機能追加とバグ修正。OAuth、設定管理、Web UI 等
+- **強み**: 最も活発な開発。ただし JavaScript（ES5.1）制限あり
 
 ### 所感
 
-両プロジェクトとも **非常に新しい**（3ヶ月以内）ため、成熟度の観点では判断が難しい。
-
-- **mcpcodeserver**: 約3ヶ月前に作成。Star 数は少ないが存在する（13）
-- **Meta-MCP**: 約1ヶ月前に作成。Star 数 0 でまだ認知されていない段階
-
-Star 数の変遷については、両プロジェクトとも期間が短すぎて有意なデータが取れなかった。
+- **最も活発**: MCPProxy（2ヶ月で約100リリース、毎日のようにコミット）
+- **安定運用向け**: E2B（商用サービス、継続的なメンテナンス）
+- **mcpcodeserver**: 初期集中リリース後は更新なし。機能的には有力だが、継続性に懸念
 
 ---
 
@@ -417,18 +357,11 @@ Star 数の変遷については、両プロジェクトとも期間が短すぎ
 | 優先度 | 候補          | 言語       | 理由                                                   |
 | ------ | ------------- | ---------- | ------------------------------------------------------ |
 | 1      | mcpcodeserver | TypeScript | TypeScript フル対応、ローカル実行、MCP 連携が直感的    |
-| 2      | Meta-MCP      | TypeScript | TypeScript 対応、Lazy loading でトークン削減           |
-| 3      | E2B           | JS/TS      | 成熟したクラウド環境。セキュリティ重視・コスト許容なら |
+| 2      | E2B           | JS/TS      | 成熟したクラウド環境。セキュリティ重視・コスト許容なら |
+| 3      | MCPProxy      | JavaScript | ローカル実行、Web UI でデバッグ可能。ES5.1 制限あり    |
 
 **mcpcodeserver を第一候補として検証を推奨。**
 TypeScript フル対応で、GROWI MCP との連携も直感的に記述可能。
-
-### 参考: 条件付きの候補
-
-| 候補     | 条件                                                                        |
-| -------- | --------------------------------------------------------------------------- |
-| MCPProxy | JavaScript（ES5.1）で十分な場合は検討可。TypeScript 不可                    |
-| Lootbox  | Claude Code 専用。TypeScript フル機能で MCP 連携が直感的だが Desktop 非対応 |
 
 ---
 
