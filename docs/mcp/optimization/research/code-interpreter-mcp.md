@@ -143,6 +143,23 @@ GitHub: [smart-mcp-proxy/mcpproxy-go](https://github.com/smart-mcp-proxy/mcpprox
 - JavaScript（ES5.1）のみ対応、TypeScript は使用不可
 - サンドボックス制限が厳しい（Node.js モジュール不可）
 
+**デメリットの詳細説明:**
+
+「言語」とは、AI（LLM）が `code_execution` ツールで動的に生成・実行するコードの言語を指す。MCPProxy では AI がユーザーの依頼に応じて JavaScript コードを生成し、サンドボックス内で実行する。これにより複数の MCP ツールを統合呼び出しし、トークン消費を削減できる。
+
+「サンドボックス制限が厳しい」とは、以下の機能が利用不可であることを意味する:
+
+| 制限 | 影響 |
+| ---- | ---- |
+| Node.js モジュール不可 | `fs`, `http`, `path` 等が使えない |
+| ファイルシステム不可 | ローカルファイルの読み書きができない |
+| ネットワーク不可 | HTTP リクエスト、外部 API 呼び出しができない |
+| タイマー不可 | `setTimeout`, `setInterval` が使えない |
+| 環境変数不可 | `process.env` にアクセスできない |
+| ES5.1 制限 | `async/await`, `Promise`, クラス構文等が使えない可能性 |
+
+**唯一できること:** `call_tool()` 関数で他の MCP サーバーのツールを呼び出すこと。直接ファイル操作や外部 API 呼び出しはできないが、これはセキュリティのための意図的な制限である。
+
 **Claude Desktop 設定例:**
 
 ```json
