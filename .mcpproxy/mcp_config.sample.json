@@ -1,0 +1,26 @@
+{
+  "listen": "127.0.0.1:8080",
+  "data_dir": "~/.mcpproxy",
+  "enable_tray": true,
+  "top_k": 5,
+  "tools_limit": 15,
+  "tool_response_limit": 20000,
+  "tls": {
+    "enabled": false
+  },
+  "mcpServers": [
+    {
+      "name": "growi",
+      "command": "node",
+      "args": ["/path/to/growi-mcp-server/dist/index.js"],
+      "protocol": "stdio",
+      "enabled": true,
+      "env": {
+        "GROWI_DEFAULT_APP_NAME": "my-growi",
+        "GROWI_APP_NAME_1": "my-growi",
+        "GROWI_API_TOKEN_1": "<YOUR_API_TOKEN>",
+        "GROWI_BASE_URL_1": "http://localhost:3000/"
+      }
+    }
+  ]
+}
