@@ -56,5 +56,8 @@ node_modules/
 .env.production.local
 .env.local
 
+# MCPProxy config (contains API tokens)
+.mcpproxy/mcp_config.json
+
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
