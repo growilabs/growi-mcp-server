@@ -80,14 +80,14 @@ pnpm build
 
 ### 3. 設定ファイルの作成
 
-`~/.mcpproxy/mcp_config.json` を作成。
+リポジトリ内の `.mcpproxy/mcp_config.json` を作成。
 
-> **サンプル**: リポジトリの `.mcpproxy/mcp_config.sample.json` を使用可能：
-> ```bash
-> mkdir -p ~/.mcpproxy
-> cp .mcpproxy/mcp_config.sample.json ~/.mcpproxy/mcp_config.json
-> # ~/.mcpproxy/mcp_config.json を編集
-> ```
+> **注意**: このファイルは API トークンを含むため `.gitignore` に登録済み。誤ってコミットしないこと。
+
+```bash
+cp .mcpproxy/mcp_config.sample.json .mcpproxy/mcp_config.json
+# .mcpproxy/mcp_config.json を編集
+```
 
 #### ローカルビルドを使用する場合（推奨）
 
@@ -172,7 +172,7 @@ pnpm build
 
 ### 4. MCPProxy の起動
 
-#### 方法1: トレイアプリから起動（推奨・Windows）
+#### 方法1: トレイアプリから起動（Windows）
 
 スタートメニューから「MCPProxy」を検索して起動、または：
 
@@ -182,13 +182,18 @@ pnpm build
 
 トレイアプリが自動的にサーバーも起動し、システムトレイにアイコンが表示される。
 
+> **注意**: トレイアプリはデフォルトで `~/.mcpproxy/mcp_config.json` を読み込む。
+> リポジトリ内の設定ファイルを使用する場合は、方法2（コマンドライン）を推奨。
+
 #### 方法2: コマンドラインから起動
 
 ```bash
-mcpproxy serve
+# リポジトリのルートディレクトリで実行
+mcpproxy serve -c .mcpproxy/mcp_config.json
 ```
 
-> **注意**: ターミナルから `mcpproxy serve` を実行した場合、システムトレイアイコンは表示されない。
+> **注意**: `-c` オプションで設定ファイルのパスを明示的に指定する必要がある。
+> ターミナルから実行した場合、システムトレイアイコンは表示されない。
 > トレイアイコンが必要な場合は、別途 `mcpproxy-tray.exe` を起動するか、方法1を使用する。
 
 起動すると：
