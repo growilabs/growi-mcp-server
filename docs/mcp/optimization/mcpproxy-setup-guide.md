@@ -80,7 +80,14 @@ pnpm build
 
 ### 3. 設定ファイルの作成
 
-`~/.mcpproxy/mcp_config.json` を作成：
+`~/.mcpproxy/mcp_config.json` を作成。
+
+> **サンプル**: リポジトリの `.mcpproxy/mcp_config.sample.json` を使用可能：
+> ```bash
+> mkdir -p ~/.mcpproxy
+> cp .mcpproxy/mcp_config.sample.json ~/.mcpproxy/mcp_config.json
+> # ~/.mcpproxy/mcp_config.json を編集
+> ```
 
 #### ローカルビルドを使用する場合（推奨）
 
