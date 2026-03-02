@@ -1,0 +1,13 @@
+{
+  "name": "growi-mcp-tools",
+  "owner": {
+    "name": "GROWI"
+  },
+  "plugins": [
+    {
+      "name": "mcp-client-skills",
+      "source": "./plugins/mcp-client-skills",
+      "description": "Skills for MCP clients to interact with GROWI. Includes smart-save workflow and more."
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "name": "mcp-client-skills",
+  "description": "Skills for MCP clients to interact with GROWI. Includes smart-save workflow and more.",
+  "version": "1.0.0"
+}
