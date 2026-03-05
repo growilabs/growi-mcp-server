@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "mcp-client-skills",
-      "source": ".",
+      "source": "./",
       "description": "Skills for MCP clients to interact with GROWI. Includes smart-save workflow and more."
     }
   ]
