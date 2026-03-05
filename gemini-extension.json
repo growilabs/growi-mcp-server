@@ -1,0 +1,35 @@
+{
+  "name": "growi-mcp-server",
+  "version": "1.2.0",
+  "description": "MCP server that connects AI models to GROWI wiki content. Enables searching, reading, and creating pages in your GROWI knowledge base.",
+  "settings": [
+    {
+      "name": "Default App Name",
+      "description": "The default GROWI app name to use",
+      "envVar": "GROWI_DEFAULT_APP_NAME"
+    },
+    {
+      "name": "App Name",
+      "description": "Name identifier for the GROWI app",
+      "envVar": "GROWI_APP_NAME_1"
+    },
+    {
+      "name": "API Token",
+      "description": "API token for authenticating with GROWI",
+      "envVar": "GROWI_API_TOKEN_1",
+      "sensitive": true
+    },
+    {
+      "name": "Base URL",
+      "description": "Base URL of the GROWI instance (e.g. https://your-growi.example.com)",
+      "envVar": "GROWI_BASE_URL_1"
+    }
+  ],
+  "mcpServers": {
+    "growi": {
+      "command": "node",
+      "args": ["${extensionPath}${/}dist${/}index.js"],
+      "cwd": "${extensionPath}"
+    }
+  }
+}
