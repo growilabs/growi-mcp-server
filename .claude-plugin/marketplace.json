@@ -7,7 +7,7 @@
     {
       "name": "mcp-client-skills",
       "source": "./",
-      "description": "Skills for MCP clients to interact with GROWI. Includes smart-save workflow and more."
+      "description": "Skills for MCP clients to interact with GROWI. Includes growi-smart-save workflow and more."
     }
   ]
 }

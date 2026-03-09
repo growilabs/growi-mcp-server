@@ -76,7 +76,7 @@ This repository also provides [Agent Skills](https://skills.sh/) — reusable wo
 
 ### Available Skills
 
-- **smart-save** — Save content to GROWI with intelligent path suggestions. The agent calls the `suggest-path` tool, presents destination candidates, and guides the user through page naming and visibility settings.
+- **growi-smart-save** — Save content to GROWI with intelligent path suggestions. The agent calls the `suggest-path` tool, presents destination candidates, and guides the user through page naming and visibility settings.
 
 ### Installing Skills
 
@@ -133,11 +133,11 @@ npx skills update
 
 Download the skill directly from the repository and place it in your agent's skills directory:
 
-1. Copy `skills/smart-save/SKILL.md` from this repository
+1. Copy `skills/growi-smart-save/SKILL.md` from this repository
 2. Place it in your agent's skills directory:
-   - Claude Code: `.claude/skills/smart-save/SKILL.md`
-   - Gemini CLI: `.gemini/skills/smart-save/SKILL.md`
-   - Other agents: `.agents/skills/smart-save/SKILL.md`
+   - Claude Code: `.claude/skills/growi-smart-save/SKILL.md`
+   - Gemini CLI: `.gemini/skills/growi-smart-save/SKILL.md`
+   - Other agents: `.agents/skills/growi-smart-save/SKILL.md`
 
 
 ## Available Tools (Features)

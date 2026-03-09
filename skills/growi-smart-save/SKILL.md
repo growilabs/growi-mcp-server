@@ -1,5 +1,5 @@
 ---
-name: smart-save
+name: growi-smart-save
 description: |
   Save content to GROWI wiki with intelligent path suggestions. Use this skill when the user asks to save, store, or archive content to GROWI. Triggers on: "save to GROWI", "store this in the wiki", "save this page", or any request to persist content in GROWI. Also use when the user uploads a document and wants it stored in GROWI, or after a conversation session the user wants to capture as a wiki page.
 ---

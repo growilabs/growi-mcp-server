@@ -76,7 +76,7 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 
 ### 利用可能なスキル
 
-- **smart-save** — コンテンツをGROWIにインテリジェントなパス提案付きで保存します。エージェントが `suggest-path` ツールを呼び出し、保存先の候補を提示し、ページ名と公開範囲の設定をガイドします。
+- **growi-smart-save** — コンテンツをGROWIにインテリジェントなパス提案付きで保存します。エージェントが `suggest-path` ツールを呼び出し、保存先の候補を提示し、ページ名と公開範囲の設定をガイドします。
 
 ### スキルのインストール
 
@@ -133,11 +133,11 @@ npx skills update
 
 リポジトリからスキルを直接ダウンロードして、お使いのエージェントのスキルディレクトリに配置します：
 
-1. このリポジトリの `skills/smart-save/SKILL.md` をコピー
+1. このリポジトリの `skills/growi-smart-save/SKILL.md` をコピー
 2. エージェントのスキルディレクトリに配置：
-   - Claude Code: `.claude/skills/smart-save/SKILL.md`
-   - Gemini CLI: `.gemini/skills/smart-save/SKILL.md`
-   - その他のエージェント: `.agents/skills/smart-save/SKILL.md`
+   - Claude Code: `.claude/skills/growi-smart-save/SKILL.md`
+   - Gemini CLI: `.gemini/skills/growi-smart-save/SKILL.md`
+   - その他のエージェント: `.agents/skills/growi-smart-save/SKILL.md`
 
 
 ## 利用可能なツール（機能）
