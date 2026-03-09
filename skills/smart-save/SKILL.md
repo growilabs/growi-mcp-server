@@ -1,7 +1,7 @@
 ---
 name: smart-save
 description: |
-  Save content to GROWI wiki with intelligent path suggestions. Use this skill when the user asks to save, store, or archive content to GROWI. Triggers on: "save to GROWI", "GROWIに保存して", "store this in the wiki", "save this page", or any request to persist content in GROWI. Also use when the user uploads a document and wants it stored in GROWI, or after a conversation session the user wants to capture as a wiki page.
+  Save content to GROWI wiki with intelligent path suggestions. Use this skill when the user asks to save, store, or archive content to GROWI. Triggers on: "save to GROWI", "store this in the wiki", "save this page", or any request to persist content in GROWI. Also use when the user uploads a document and wants it stored in GROWI, or after a conversation session the user wants to capture as a wiki page.
 ---
 
 # Smart Save: GROWI Content Save Workflow
@@ -24,9 +24,9 @@ Show all suggestions from the response. Always add a **"specify path manually"**
 For each suggestion, show the `label` and `description` to help the user decide. Example presentation:
 
 ```
-1. メモとして保存 — 個人メモエリアに保存します
-2. 関連ページの近くに保存 — この付近に「Reactフックの使い方」など関連ページがあります
-3. 自分でパスを入力する
+1. Save as memo — Save to your personal memo area
+2. Save near related pages — Related pages like "How to use React Hooks" exist nearby
+3. Specify path manually
 ```
 
 ### Step 3: Decide on a page name
@@ -36,7 +36,7 @@ After the user selects a destination:
 1. Propose a page name based on the content
 2. Let the user confirm or modify
 3. Combine directory path + page name into the final path
-   - Example: `/技術メモ/React/` + `JotaiとReduxの比較` → `/技術メモ/React/JotaiとReduxの比較`
+   - Example: `/Tech Notes/React/` + `Jotai vs Redux` → `/Tech Notes/React/Jotai vs Redux`
 
 The `path` from suggestions is always a directory (ends with `/`). You are responsible for proposing the page name portion.
 
@@ -44,17 +44,17 @@ The `path` from suggestions is always a directory (ends with `/`). You are respo
 
 Before saving, confirm the page's visibility with the user. Present up to 3 simple options based on the destination's grant upper limit:
 
-1. **親ページの公開範囲を踏襲する** — use the `grant` value from the API response as-is
-2. **自分のみ** — grant 4 (Only-me)
-3. **リンクを知っている全員** — grant 2 (Anyone-with-the-link)
+1. **Inherit from parent page** — use the `grant` value from the API response as-is
+2. **Only me** — grant 4 (Only-me)
+3. **Anyone with the link** — grant 2 (Anyone-with-the-link)
 
 **Which options to show depends on the grant upper limit:**
 
 | Grant upper limit | Options to show |
 |-------------------|-----------------|
-| 1 (Public)        | All three: 親ページの踏襲 / 自分のみ / リンクを知っている全員 |
-| 2 (Anyone-with-link) | All three: 親ページの踏襲 / 自分のみ / リンクを知っている全員 |
-| 5 (Group-only)    | Two only: 親ページの踏襲 / 自分のみ (omit "リンクを知っている全員" — it would exceed the upper limit) |
+| 1 (Public)        | All three: Inherit from parent / Only me / Anyone with the link |
+| 2 (Anyone-with-link) | All three: Inherit from parent / Only me / Anyone with the link |
+| 5 (Group-only)    | Two only: Inherit from parent / Only me (omit "Anyone with the link" — it would exceed the upper limit) |
 | 4 (Only-me)       | No confirmation needed — Only-me is the only option |
 
 The user must never select a grant that exceeds the upper limit from the API.
@@ -62,10 +62,10 @@ The user must never select a grant that exceeds the upper limit from the API.
 Example (when grant upper limit is 1):
 
 ```
-公開範囲はどうする？
-1. 親ページの公開範囲を踏襲する（Public）
-2. 自分のみ
-3. リンクを知っている全員
+How should the page visibility be set?
+1. Inherit from parent page (Public)
+2. Only me
+3. Anyone with the link
 ```
 
 Do NOT silently default to the upper limit. Always ask unless the only option is Only-me.
