@@ -131,13 +131,13 @@ npx skills update
 
 #### Manual Installation
 
-Download the skill directly from the repository and place it in your agent's skills directory:
+Download skills directly from the repository and place them in your agent's skills directory:
 
-1. Copy `skills/growi-smart-save/SKILL.md` from this repository
+1. Copy the desired skill directory from `skills/` in this repository
 2. Place it in your agent's skills directory:
-   - Claude Code: `.claude/skills/growi-smart-save/SKILL.md`
-   - Gemini CLI: `.gemini/skills/growi-smart-save/SKILL.md`
-   - Other agents: `.agents/skills/growi-smart-save/SKILL.md`
+   - Claude Code: `.claude/skills/<skill-name>/SKILL.md`
+   - Gemini CLI: `.gemini/skills/<skill-name>/SKILL.md`
+   - Other agents: `.agents/skills/<skill-name>/SKILL.md`
 
 
 ## Available Tools (Features)

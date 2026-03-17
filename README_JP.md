@@ -133,11 +133,11 @@ npx skills update
 
 リポジトリからスキルを直接ダウンロードして、お使いのエージェントのスキルディレクトリに配置します：
 
-1. このリポジトリの `skills/growi-smart-save/SKILL.md` をコピー
+1. このリポジトリの `skills/` から使いたいスキルのディレクトリをコピー
 2. エージェントのスキルディレクトリに配置：
-   - Claude Code: `.claude/skills/growi-smart-save/SKILL.md`
-   - Gemini CLI: `.gemini/skills/growi-smart-save/SKILL.md`
-   - その他のエージェント: `.agents/skills/growi-smart-save/SKILL.md`
+   - Claude Code: `.claude/skills/<skill-name>/SKILL.md`
+   - Gemini CLI: `.gemini/skills/<skill-name>/SKILL.md`
+   - その他のエージェント: `.agents/skills/<skill-name>/SKILL.md`
 
 
 ## 利用可能なツール（機能）
