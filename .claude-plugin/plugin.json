@@ -1,0 +1,8 @@
+{
+  "name": "mcp-client-skills",
+  "description": "Skills for MCP clients to interact with GROWI.",
+  "version": "1.0.0",
+  "author": {
+    "name": "GROWI Labs"
+  }
+}

@@ -70,6 +70,76 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 }
 ```
 
+## エージェントスキル
+
+このリポジトリは [Agent Skills](https://skills.sh/) も提供しています。AI コーディングエージェントが GROWI とより効率的にやりとりするための再利用可能なワークフロー定義です。
+
+### 利用可能なスキル
+
+- **growi-smart-save** — コンテンツをGROWIにインテリジェントなパス提案付きで保存します。エージェントが `suggest-path` ツールを呼び出し、保存先の候補を提示し、ページ名と公開範囲の設定をガイドします。
+
+### スキルのインストール
+
+#### Claude Desktop (Cowork)
+
+1. **カスタマイズ** > **個人用プラグイン**（+ アイコンをクリック）
+2. **プラグインを参照** > **個人用**タブを選択
+3. **ローカルアップロード**横の + アイコンをクリック
+4. **GitHub からマーケットプレイスを追加**を選択
+5. URL 欄にリポジトリ URL を入力して**同期**をクリック：
+
+```
+https://github.com/growilabs/growi-mcp-server
+```
+
+#### Claude Code
+
+このリポジトリをプラグインマーケットプレイスとして追加し、プラグインをインストールします：
+
+```
+/plugin marketplace add growilabs/growi-mcp-server
+/plugin install mcp-client-skills
+```
+
+#### Gemini CLI
+
+Gemini CLI の Extension としてインストール（MCP ツールとスキルの両方が含まれます）：
+
+```bash
+gemini extensions install https://github.com/growilabs/growi-mcp-server
+```
+
+更新：
+
+```bash
+gemini extensions update growi-mcp-server
+```
+
+#### Skills.sh (Vercel)
+
+Claude Code、Gemini CLI、Cursor、Codex、GitHub Copilot など[多数のエージェント](https://skills.sh/)で利用可能：
+
+```bash
+npx skills add growilabs/growi-mcp-server
+```
+
+更新：
+
+```bash
+npx skills update
+```
+
+#### 手動インストール
+
+リポジトリからスキルを直接ダウンロードして、お使いのエージェントのスキルディレクトリに配置します：
+
+1. このリポジトリの `skills/` から使いたいスキルのディレクトリをコピー
+2. エージェントのスキルディレクトリに配置：
+   - Claude Code: `.claude/skills/<skill-name>/SKILL.md`
+   - Gemini CLI: `.gemini/skills/<skill-name>/SKILL.md`
+   - その他のエージェント: `.agents/skills/<skill-name>/SKILL.md`
+
+
 ## 利用可能なツール（機能）
 
 ### ページ管理

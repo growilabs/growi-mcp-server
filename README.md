@@ -70,6 +70,76 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 }
 ```
 
+## Agent Skills
+
+This repository also provides [Agent Skills](https://skills.sh/) — reusable workflow definitions that AI coding agents can load to interact with GROWI more effectively.
+
+### Available Skills
+
+- **growi-smart-save** — Save content to GROWI with intelligent path suggestions. The agent calls the `suggest-path` tool, presents destination candidates, and guides the user through page naming and visibility settings.
+
+### Installing Skills
+
+#### Claude Desktop (Cowork)
+
+1. Go to **Customize** > **Personal Plugins** (click the + icon)
+2. Click **Browse Plugins** > select the **Personal** tab
+3. Click the + icon next to **Local Upload**
+4. Select **Add marketplace from GitHub**
+5. Enter the repository URL and click **Sync**:
+
+```
+https://github.com/growilabs/growi-mcp-server
+```
+
+#### Claude Code
+
+Add this repository as a plugin marketplace, then install the plugin:
+
+```
+/plugin marketplace add growilabs/growi-mcp-server
+/plugin install mcp-client-skills
+```
+
+#### Gemini CLI
+
+Install as a Gemini CLI extension (includes both MCP tools and skills):
+
+```bash
+gemini extensions install https://github.com/growilabs/growi-mcp-server
+```
+
+Update with:
+
+```bash
+gemini extensions update growi-mcp-server
+```
+
+#### Skills.sh (Vercel)
+
+Works with Claude Code, Gemini CLI, Cursor, Codex, GitHub Copilot, and [many other agents](https://skills.sh/):
+
+```bash
+npx skills add growilabs/growi-mcp-server
+```
+
+Update with:
+
+```bash
+npx skills update
+```
+
+#### Manual Installation
+
+Download skills directly from the repository and place them in your agent's skills directory:
+
+1. Copy the desired skill directory from `skills/` in this repository
+2. Place it in your agent's skills directory:
+   - Claude Code: `.claude/skills/<skill-name>/SKILL.md`
+   - Gemini CLI: `.gemini/skills/<skill-name>/SKILL.md`
+   - Other agents: `.agents/skills/<skill-name>/SKILL.md`
+
+
 ## Available Tools (Features)
 
 ### Page Management
