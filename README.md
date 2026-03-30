@@ -352,3 +352,8 @@ This project is released under the [MIT License](./LICENSE).
 **Notice**
 
 This MCP server is under development. APIs may change without notice. Please test thoroughly before using in production environments.
+
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/growilabs-growi-mcp-server).
+
