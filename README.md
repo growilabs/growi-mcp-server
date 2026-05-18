@@ -22,63 +22,22 @@ A Model Context Protocol (MCP) server that connects AI models to GROWI wiki cont
 - [GROWI API](https://docs.growi.org/en/api/)
 
 
-## MCP Server Configuration
-
-Supports simultaneous connections to multiple GROWI apps. Each app is configured using numbered environment variables.
-
-### Single App Configuration Example
-```json
-{
-  "mcpServers": {
-    "growi": {
-      "command": "npx",
-      "args": ["@growi/mcp-server"],
-      "env": {
-        "GROWI_APP_NAME_1": "main",
-        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
-        "GROWI_API_TOKEN_1": "your_growi_api_token"
-      }
-    }
-  }
-}
-```
-
-### Multiple Apps Configuration Example
-```json
-{
-  "mcpServers": {
-    "growi": {
-      "command": "npx",
-      "args": ["@growi/mcp-server"],
-      "env": {
-        "GROWI_DEFAULT_APP_NAME": "staging",
-
-        "GROWI_APP_NAME_1": "production",
-        "GROWI_BASE_URL_1": "https://wiki.example.com",
-        "GROWI_API_TOKEN_1": "token_for_production",
-
-        "GROWI_APP_NAME_2": "staging",
-        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
-        "GROWI_API_TOKEN_2": "token_for_staging",
-        
-        "GROWI_APP_NAME_3": "development",
-        "GROWI_BASE_URL_3": "https://wiki-dev.example.com",
-        "GROWI_API_TOKEN_3": "token_for_development"
-      }
-    }
-  }
-}
-```
-
 ## Agent Skills
 
 This repository also provides [Agent Skills](https://skills.sh/) — reusable workflow definitions that AI coding agents can load to interact with GROWI more effectively.
 
 ### Available Skills
 
+- **growi-mcp-setup** — Walks you through setting up the GROWI MCP server. After the skill is installed, it guides you from configuring UTCP Code-Mode through verifying the connection.
 - **growi-smart-save** — Save content to GROWI with intelligent path suggestions. The agent calls the `suggest-path` tool, presents destination candidates, and guides the user through page naming and visibility settings.
 
-### Installing Skills
+## Quick Start (Recommended)
+
+The fastest way to start using GROWI. Once you install the skill, the rest of the setup (connecting the MCP server, configuring UTCP Code-Mode, verifying connectivity) is guided by the AI agent.
+
+### 1. Install the Skill
+
+Install the skill for your agent.
 
 #### Claude Desktop (Cowork)
 
@@ -138,6 +97,70 @@ Download skills directly from the repository and place them in your agent's skil
    - Claude Code: `.claude/skills/<skill-name>/SKILL.md`
    - Gemini CLI: `.gemini/skills/<skill-name>/SKILL.md`
    - Other agents: `.agents/skills/<skill-name>/SKILL.md`
+
+### 2. Restart Your Agent
+
+After installation, restart (or reload) your agent so the skill is recognized.
+
+### 3. Ask the AI to Set Up
+
+Tell your agent "set up GROWI", and the `growi-mcp-setup` skill will start and guide you from the MCP server connection settings through verifying connectivity.
+
+> [!NOTE]
+> If you want to configure the MCP server directly without the skill, see [Use the MCP Server Directly](#use-the-mcp-server-directly).
+
+## Use the MCP Server Directly
+
+You can also register the MCP server directly with your agent instead of using the skill. Use this for a minimal setup, or as a fallback when skill-based setup is not available.
+
+Supports simultaneous connections to multiple GROWI apps. Each app is configured using numbered environment variables.
+
+### Single App Configuration Example
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "npx",
+      "args": ["@growi/mcp-server"],
+      "env": {
+        "GROWI_APP_NAME_1": "main",
+        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN_1": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+### Multiple Apps Configuration Example
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "npx",
+      "args": ["@growi/mcp-server"],
+      "env": {
+        "GROWI_DEFAULT_APP_NAME": "staging",
+
+        "GROWI_APP_NAME_1": "production",
+        "GROWI_BASE_URL_1": "https://wiki.example.com",
+        "GROWI_API_TOKEN_1": "token_for_production",
+
+        "GROWI_APP_NAME_2": "staging",
+        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
+        "GROWI_API_TOKEN_2": "token_for_staging",
+
+        "GROWI_APP_NAME_3": "development",
+        "GROWI_BASE_URL_3": "https://wiki-dev.example.com",
+        "GROWI_API_TOKEN_3": "token_for_development"
+      }
+    }
+  }
+}
+```
+
+> [!TIP]
+> For skill-based setup (recommended), see [Quick Start](#quick-start-recommended).
 
 
 ## Available Tools (Features)

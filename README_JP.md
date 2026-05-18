@@ -22,63 +22,22 @@ GROWI wiki コンテンツにAIモデルを接続するModel Context Protocol (M
 ｰ [GROWI API](https://docs.growi.org/en/api/)
 
 
-## MCPサーバーの設定
-
-複数のGROWIアプリへの同時接続をサポートしています。各アプリには番号付きの環境変数で設定を行います。
-
-### 単一アプリの設定例
-```json
-{
-  "mcpServers": {
-    "growi": {
-      "command": "npx",
-      "args": ["@growi/mcp-server"],
-      "env": {
-        "GROWI_APP_NAME_1": "main",
-        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
-        "GROWI_API_TOKEN_1": "your_growi_api_token"
-      }
-    }
-  }
-}
-```
-
-### 複数アプリの設定例
-```json
-{
-  "mcpServers": {
-    "growi": {
-      "command": "npx",
-      "args": ["@growi/mcp-server"],
-      "env": {
-        "GROWI_DEFAULT_APP_NAME": "staging",
-
-        "GROWI_APP_NAME_1": "production",
-        "GROWI_BASE_URL_1": "https://wiki.example.com",
-        "GROWI_API_TOKEN_1": "token_for_production",
-
-        "GROWI_APP_NAME_2": "staging",
-        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
-        "GROWI_API_TOKEN_2": "token_for_staging",
-        
-        "GROWI_APP_NAME_3": "development",
-        "GROWI_BASE_URL_3": "https://wiki-dev.example.com",
-        "GROWI_API_TOKEN_3": "token_for_development"
-      }
-    }
-  }
-}
-```
-
 ## エージェントスキル
 
 このリポジトリは [Agent Skills](https://skills.sh/) も提供しています。AI コーディングエージェントが GROWI とより効率的にやりとりするための再利用可能なワークフロー定義です。
 
 ### 利用可能なスキル
 
+- **growi-mcp-setup** — GROWI MCP サーバーのセットアップを伴走します。スキルのインストール後、UTCP Code-Mode の設定から接続確認までをガイドします。
 - **growi-smart-save** — コンテンツをGROWIにインテリジェントなパス提案付きで保存します。エージェントが `suggest-path` ツールを呼び出し、保存先の候補を提示し、ページ名と公開範囲の設定をガイドします。
 
-### スキルのインストール
+## クイックスタート（推奨）
+
+最短で GROWI を使い始める手順です。スキルをインストールすれば、その後のセットアップ（MCP サーバーの接続、UTCP Code-Mode の設定、疎通確認）は AI エージェントが伴走します。
+
+### 1. スキルをインストール
+
+お使いのエージェントに合わせてスキルをインストールします。
 
 #### Claude Desktop (Cowork)
 
@@ -138,6 +97,70 @@ npx skills update
    - Claude Code: `.claude/skills/<skill-name>/SKILL.md`
    - Gemini CLI: `.gemini/skills/<skill-name>/SKILL.md`
    - その他のエージェント: `.agents/skills/<skill-name>/SKILL.md`
+
+### 2. エージェントを再起動
+
+インストール後、エージェントを再起動（またはリロード）して、スキルが認識されるようにします。
+
+### 3. AI にセットアップを頼む
+
+エージェントに「GROWI をセットアップして」と伝えると、`growi-mcp-setup` スキルが起動し、MCP サーバーの接続設定から疎通確認まで案内します。
+
+> [!NOTE]
+> スキルを使わず MCP サーバーを直接設定したい場合は、[MCPサーバーを直接使う](#mcpサーバーを直接使う) を参照してください。
+
+## MCPサーバーを直接使う
+
+スキルを使わず、MCP サーバーをエージェントに直接登録することもできます。最小構成で試したいときや、スキル経由のセットアップが使えないときのフォールバックとして利用してください。
+
+複数のGROWIアプリへの同時接続をサポートしています。各アプリには番号付きの環境変数で設定を行います。
+
+### 単一アプリの設定例
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "npx",
+      "args": ["@growi/mcp-server"],
+      "env": {
+        "GROWI_APP_NAME_1": "main",
+        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
+        "GROWI_API_TOKEN_1": "your_growi_api_token"
+      }
+    }
+  }
+}
+```
+
+### 複数アプリの設定例
+```json
+{
+  "mcpServers": {
+    "growi": {
+      "command": "npx",
+      "args": ["@growi/mcp-server"],
+      "env": {
+        "GROWI_DEFAULT_APP_NAME": "staging",
+
+        "GROWI_APP_NAME_1": "production",
+        "GROWI_BASE_URL_1": "https://wiki.example.com",
+        "GROWI_API_TOKEN_1": "token_for_production",
+
+        "GROWI_APP_NAME_2": "staging",
+        "GROWI_BASE_URL_2": "https://wiki-staging.example.com",
+        "GROWI_API_TOKEN_2": "token_for_staging",
+
+        "GROWI_APP_NAME_3": "development",
+        "GROWI_BASE_URL_3": "https://wiki-dev.example.com",
+        "GROWI_API_TOKEN_3": "token_for_development"
+      }
+    }
+  }
+}
+```
+
+> [!TIP]
+> スキル経由のセットアップ（推奨）は [クイックスタート](#クイックスタート推奨) を参照してください。
 
 
 ## 利用可能なツール（機能）
