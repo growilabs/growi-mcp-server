@@ -20,12 +20,8 @@ export type SuggestPathResponse = {
 export const suggestPath = async (params: SuggestPathParam, appName: string): Promise<SuggestPathResponse> => {
   try {
     const instance = axiosInstanceManager.getAxiosInstance(appName);
-    const baseURL = instance.defaults.baseURL ?? '';
 
-    const response = await instance.post<SuggestPathResponse>(
-      `${baseURL}/_api/v3/ai-tools/suggest-path`,
-      { body: params.body },
-    );
+    const response = await instance.post<SuggestPathResponse>('/_api/v3/ai-tools/suggest-path', { body: params.body });
 
     if (!response.data?.suggestions) {
       throw new GrowiApiError('Invalid response received from suggest-path API', 500, { response: response.data });
