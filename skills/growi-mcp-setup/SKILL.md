@@ -6,19 +6,19 @@ description: |
 
 # GROWI MCP Setup: Connection Bootstrap Workflow
 
-Guide the user from "the skill is installed" to "GROWI tools actually work", by setting up UTCP Code-Mode and verifying the connection.
+Guide the user from "the skill is installed" to "GROWI tools actually work" — setting up **UTCP Code-Mode from scratch**, wiring in the GROWI MCP server, and verifying the connection. This is the shortest supported path: the user should not need to configure UTCP by hand beforehand; this skill walks them through it.
 
 ## Scope
 
-This skill covers the gap **after** the user has installed the GROWI plugin/skill (and restarted their agent) and **before** GROWI tools are usable.
+This skill takes over **once it is loaded** (i.e. the GROWI plugin/skill is already installed) and drives everything up to "GROWI tools work" — including UTCP Code-Mode setup, which earlier docs assumed was done in advance.
 
-Installation itself (adding the marketplace, installing the plugin, restarting the agent) is the user's responsibility — it cannot be automated, because the agent cannot act until the skill is recognized. Assume the user has already done that when this skill runs.
+What this skill does **not** cover: installing the plugin/skill itself (adding the marketplace, installing, restarting the agent). That step cannot be automated — the agent cannot act until the skill is recognized — so it lives in the GROWI documentation, not here. See the install instructions in the GROWI docs **"AI ツール（スキル）を使う" / "AI Tools (Skills)"** page (`/guide/features/ai-tools`). Assume the user has finished that when this skill runs.
 
 ## Why UTCP Code-Mode
 
 The GROWI MCP server exposes ~20 tools. Loading every tool schema into the client context is heavy on tokens. UTCP Code-Mode sits between the client and the GROWI MCP server and lets the agent call tools through a single code-execution interface, which keeps context small.
 
-The recommended path is **UTCP Code-Mode**. A direct MCP connection also works (all tools function), but is only suggested as a fallback or for light use — see the last section.
+UTCP Code-Mode is the **default path** this skill sets up — do not assume it is already present; the workflow below installs and wires it. A direct MCP connection also works (all tools function) and is offered only as a fallback or for light use — see the last section.
 
 ## Workflow
 
@@ -30,9 +30,15 @@ Ask the user for:
 - **API token** — issued from GROWI: User Settings → API Token
 - **App name** — a short identifier the user picks (e.g. `main`)
 
-### Step 2: Check / install UTCP Code-Mode
+### Step 2: Prepare UTCP Code-Mode
 
-UTCP Code-Mode runs via `npx`, so no separate install is required. It is registered as an MCP server in the client config.
+Assume UTCP Code-Mode is **not yet set up** — this skill installs it now. There is no global install step: UTCP Code-Mode runs on demand via `npx @utcp/code-mode-mcp`, fetched the first time the client launches it. What you set up is the wiring — registering it as an MCP server (Step 3) and giving it a config file (Step 4).
+
+Confirm the prerequisite the on-demand `npx` launch depends on:
+
+- **Node.js 18+** and network access (so `npx` can fetch `@utcp/code-mode-mcp` and `@growi/mcp-server` on first run). Check with `node --version`.
+
+If a `code-mode` MCP server is *already* registered in the client config, you do not need to add it again — reuse it and only ensure its `UTCP_CONFIG_FILE` includes GROWI (Step 4).
 
 ### Step 3: Register UTCP Code-Mode in the client config
 
@@ -97,6 +103,8 @@ Create `.utcp_config.json` at the path referenced by `UTCP_CONFIG_FILE`, registe
 
 - `${VAR}` references an environment variable — prefer this over writing the token inline.
 - The values collected in Step 1 fill `GROWI_APP_NAME_1` / `GROWI_BASE_URL_1` / `GROWI_API_TOKEN_1`.
+- The `_1` suffix groups one app's settings. **All three (`GROWI_APP_NAME_n`, `GROWI_BASE_URL_n`, `GROWI_API_TOKEN_n`) must be present for that app to be recognized** — if any one is missing, the GROWI MCP server fails to start with `Invalid environment variables` ("At least one GROWI app configuration is required"). To connect multiple GROWI instances, repeat the trio with `_2`, `_3`, etc.
+- `GROWI_BASE_URL_n` must be a full, valid URL (e.g. `https://wiki.example.com`), not just a hostname.
 
 ### Step 5: Restart the agent and verify
 
@@ -104,7 +112,7 @@ Create `.utcp_config.json` at the path referenced by `UTCP_CONFIG_FILE`, registe
 2. After restart, confirm that GROWI tools are visible (e.g. `suggestPath`, `searchPages`).
 3. Run a lightweight read-only call (such as listing recent pages) to confirm the connection works end to end.
 
-If tools are visible and a call succeeds, setup is complete — the user can now use workflows like `growi-smart-save`.
+If tools are visible and a call succeeds, setup is complete — the user can now use workflows like `growi-smart-save`. For feature-level usage (what the tools can do, Smart Save, etc.), point them back to the GROWI docs "AI ツール（スキル）を使う" / "AI Tools (Skills)" page.
 
 ## Fallback: connecting MCP directly (without UTCP)
 
@@ -131,5 +139,6 @@ All GROWI tools work this way, but every tool schema stays resident in the clien
 ## Troubleshooting
 
 - **Tools still not visible after restart** — re-check the `UTCP_CONFIG_FILE` path is absolute and the JSON is valid.
+- **`Invalid environment variables` / "At least one GROWI app configuration is required"** — a `GROWI_*_n` trio is incomplete. Each app needs all three of `GROWI_APP_NAME_n`, `GROWI_BASE_URL_n`, `GROWI_API_TOKEN_n` set together (see Step 4).
 - **Auth errors on a call** — verify the API token and Base URL; confirm the token has not been revoked in GROWI.
 - **`npx` cannot find the package** — ensure Node.js 18+ is installed and the machine has network access.
