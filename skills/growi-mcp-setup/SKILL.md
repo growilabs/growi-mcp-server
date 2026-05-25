@@ -126,13 +126,16 @@ If UTCP Code-Mode cannot be used, register the GROWI MCP server directly in the 
       "args": ["@growi/mcp-server"],
       "env": {
         "GROWI_APP_NAME_1": "main",
-        "GROWI_BASE_URL_1": "https://your-growi-instance.com",
-        "GROWI_API_TOKEN_1": "your_growi_api_token"
+        "GROWI_BASE_URL_1": "${GROWI_BASE_URL_1}",
+        "GROWI_API_TOKEN_1": "${GROWI_API_TOKEN_1}"
       }
     }
   }
 }
 ```
+
+> [!WARNING]
+> Do not write the API token inline in this file. Use `${GROWI_API_TOKEN_1}` to read it from an environment variable, the same as in Step 4. Configs are easy to share or commit by accident.
 
 All GROWI tools work this way, but every tool schema stays resident in the client context. This is fine for light use; for regular use, prefer the UTCP path above.
 
