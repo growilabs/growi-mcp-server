@@ -44,10 +44,11 @@ If a `code-mode` MCP server is *already* registered in the client config, you do
 
 Register a `code-mode` MCP server in the client's MCP config. How to do this depends on the client.
 
-**Claude Code** — edit the config file, or use the `claude mcp add` CLI:
+**Claude Code** — edit the config file, or use the `claude mcp add` CLI. There are three scopes:
 
-- User / Local scope: `~/.claude.json`
-- Project scope: `.mcp.json` at the project root (supports `${VAR}` expansion)
+- `local` (per-project, private) — stored in `~/.claude.json` under `projects[<cwd>].mcpServers`
+- `user` (global, all projects) — stored in `~/.claude.json` under the top-level `mcpServers`
+- `project` (shared via VCS) — stored in `.mcp.json` at the project root (supports `${VAR}` expansion)
 
 `claude mcp add` can register stdio servers; run `claude mcp add --help` to check the exact flags for scope and for passing an env var like `UTCP_CONFIG_FILE`.
 
