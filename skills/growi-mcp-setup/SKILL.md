@@ -16,7 +16,7 @@ What this skill does **not** cover: installing the plugin/skill itself (adding t
 
 ## Why UTCP Code-Mode
 
-The GROWI MCP server exposes ~20 tools. Loading every tool schema into the client context is heavy on tokens. UTCP Code-Mode sits between the client and the GROWI MCP server and lets the agent call tools through a single code-execution interface, which keeps context small.
+The GROWI MCP server exposes nearly 30 tools (27 as of this writing). Loading every tool schema into the client context is heavy on tokens. UTCP Code-Mode sits between the client and the GROWI MCP server and lets the agent call tools through a single code-execution interface, which keeps context small.
 
 UTCP Code-Mode is the **default path** this skill sets up — do not assume it is already present; the workflow below installs and wires it. A direct MCP connection also works (all tools function) and is offered only as a fallback or for light use — see the last section.
 
