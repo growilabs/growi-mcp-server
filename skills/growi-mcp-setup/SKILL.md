@@ -48,9 +48,13 @@ Assume UTCP Code-Mode is **not yet set up** — this skill installs it now. Ther
 
 Confirm the prerequisite the on-demand `npx` launch depends on:
 
-- **Node.js 18+** and network access (so `npx` can fetch `@utcp/code-mode-mcp` and `@growi/mcp-server` on first run). Check with `node --version`.
+- **Node.js LTS (20 or 22 recommended)** and network access (so `npx` can fetch `@utcp/code-mode-mcp` and `@growi/mcp-server` on first run). Check with `node --version`.
+  - **`18+` is necessary but not sufficient.** Code-mode depends on `isolated-vm`, a native addon that only ships prebuilt binaries for LTS lines. On an odd-numbered (current) release — e.g. Node 23 — no prebuild exists and code-mode crashes at startup with `No native build was found for ... node=23.x.x ... isolated-vm`. Prefer an LTS line; if the user is on a current release, point them to install an LTS (`nvm install --lts`, `brew install node@22`, etc.).
+  - When launched via `npx`, the Node used is whichever `node` is first on the client's `PATH`. If multiple Node versions are installed, the client may pick a non-LTS one even when an LTS is available — pin the LTS on the code-mode entry's `PATH` if in doubt (Step 3 `env`).
 
 If a `code-mode` MCP server is *already* registered in the client config, you do not need to add it again — reuse it: ensure its `UTCP_CONFIG_FILE` includes GROWI (Step 4) and that the GROWI variables are present in its `env` block (Step 3).
+
+In offline or restricted environments where `npx` cannot fetch the packages (some devcontainers, air-gapped setups), you will instead build the packages locally and point the config at the built files — see the last Troubleshooting item before starting.
 
 ### Step 3: Register UTCP Code-Mode in the client config
 
@@ -174,6 +178,17 @@ GROWI_API_TOKEN_1=<API token from Step 1>
 2. After restart, confirm that GROWI tools are visible (e.g. `suggestPath`, `searchPages`).
 3. Run a lightweight read-only call (such as listing recent pages) to confirm the connection works end to end.
 
+Under UTCP Code-Mode the GROWI tools are not called directly; they are invoked from TypeScript passed to code-mode's `call_tool_chain`, named `<manual>.<manual>_<tool>`. A minimal "it works" check:
+
+```ts
+// via code-mode's call_tool_chain
+const pages = await growi.growi_getRecentPages({});
+// or:
+const hits = await growi.growi_searchPages({ q: "test" });
+```
+
+A `success: true` result with real data confirms the full code-mode → UTCP → GROWI path, not just that the tools registered.
+
 Step 3 is not optional: tool discovery succeeds **even if the Base URL is wrong or unreachable** — the GROWI MCP server does not contact GROWI at startup. Seeing the tools proves the UTCP wiring; only a real call validates the Base URL and token.
 
 If tools are visible and a call succeeds, setup is complete — the user can now use workflows like `growi-smart-save`. For feature-level usage (what the tools can do, Smart Save, etc.), point them back to the GROWI docs "AI ツール（スキル）を使う" / "AI Tools (Skills)" page.
@@ -214,4 +229,5 @@ All GROWI tools work this way, but every tool schema stays resident in the clien
 - **Tools still not visible after restart** — re-check the `UTCP_CONFIG_FILE` path is absolute and the JSON is valid.
 - **`Invalid environment variables` / "At least one GROWI app configuration is required"** — a `GROWI_*_n` trio is incomplete. Each app needs all three of `GROWI_APP_NAME_n`, `GROWI_BASE_URL_n`, `GROWI_API_TOKEN_n` set together (see Step 4).
 - **Tools listed but every call fails (auth/network)** — discovery does not contact GROWI (Step 5), so this is the first moment a bad Base URL or token shows up. Verify the URL is reachable from the machine running code-mode (container hostname issues — Step 1) and the token has not been revoked in GROWI.
-- **`npx` cannot find the package / no registry access** — ensure Node.js 18+ and network access. In offline or restricted environments, install/build the packages locally and replace `"command": "npx", "args": ["@growi/mcp-server"]` with `"command": "node", "args": ["/path/to/growi-mcp-server/dist/index.js"]` (same for code-mode).
+- **`No native build was found for ... isolated-vm` (code-mode crashes at startup)** — the active Node is an odd-numbered (current) release with no `isolated-vm` prebuild (Step 2). Switch the code-mode launch to a Node LTS line (20 / 22): install one (`nvm install --lts`, `brew install node@22`, …) and ensure it is the `node` code-mode uses — pin it on the code-mode entry's `PATH` (Step 3 `env`) if multiple Node versions are installed.
+- **`npx` cannot find the package / no registry access** — ensure Node.js LTS (20 / 22) and network access. In offline or restricted environments (some devcontainers), install/build the packages locally and replace `"command": "npx", "args": ["@growi/mcp-server"]` with `"command": "node", "args": ["/path/to/growi-mcp-server/dist/index.js"]` (same for code-mode).
