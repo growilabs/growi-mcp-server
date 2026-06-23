@@ -22,11 +22,11 @@ importers:
         specifier: ^1.9.4
         version: 1.9.4
       '@growi/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: ^2.3.2
+        version: 2.3.2
       '@growi/sdk-typescript':
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.10.0
+        version: 1.10.0
       '@tsconfig/node22':
         specifier: ^22.0.2
         version: 22.0.2
@@ -297,11 +297,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@growi/core@1.5.0':
-    resolution: {integrity: sha512-c1Rrui9efxX/7f1r0brb8IVjsY45tGUnuJNbXHWCR5hVkDkXuz63MJ3CgLco8x0A744Vn7W67a/FKgAEvPts1A==}
+  '@growi/core@2.3.2':
+    resolution: {integrity: sha512-6XkUu3i1qDuf/HEajSo/XBbPO4ZliGE87x+T3HATiBq9qvaXrMN9cl4V+MoSJ8xsF+cC8qTeHk/Hp/yGOUvgUg==}
 
-  '@growi/sdk-typescript@1.8.0':
-    resolution: {integrity: sha512-EjAd5sPBEm9TVln5CjQxUk+Xppgx+7EAsvXdoFmaIPrP9648ijCVlTkiAG15aKy3KAWMXygQhnTOp1js2zwYPg==}
+  '@growi/sdk-typescript@1.10.0':
+    resolution: {integrity: sha512-bE2HFyUr4qowNOryWl5FH/EwupCW+mrclibVa5Uucny+r1+1E2t4TwOXTfSUJUwTdDKu+TM3tW+8nV1+cYAGfA==}
     engines: {node: '>=18.0.0'}
 
   '@isaacs/cliui@8.0.2':
@@ -735,10 +735,6 @@ packages:
 
   escape-html@1.0.3:
     resolution: {integrity: sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow==}
-
-  escape-string-regexp@4.0.0:
-    resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
-    engines: {node: '>=10'}
 
   estree-walker@3.0.3:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
@@ -1672,12 +1668,11 @@ snapshots:
   '@esbuild/win32-x64@0.25.9':
     optional: true
 
-  '@growi/core@1.5.0':
+  '@growi/core@2.3.2':
     dependencies:
       bson-objectid: 2.0.4
-      escape-string-regexp: 4.0.0
 
-  '@growi/sdk-typescript@1.8.0':
+  '@growi/sdk-typescript@1.10.0':
     dependencies:
       axios: 1.9.0
     transitivePeerDependencies:
@@ -2126,8 +2121,6 @@ snapshots:
   escalade@3.2.0: {}
 
   escape-html@1.0.3: {}
-
-  escape-string-regexp@4.0.0: {}
 
   estree-walker@3.0.3:
     dependencies:

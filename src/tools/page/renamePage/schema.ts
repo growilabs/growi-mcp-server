@@ -4,7 +4,7 @@ import { appNameSchema } from '../../commons/app-name-schemas';
 
 export const renamePageParamSchema = z.object({
   pageId: z.string().describe('ID of the page to rename'),
-  revisionId: z.string().describe('Revision ID of the page'),
+  revisionId: z.string().optional().describe('Revision ID of the page (optional, deprecated)'),
   path: z.string().optional().describe('Current path of the page (optional)'),
   newPagePath: z.string().optional().describe('New path for the page (optional)'),
   isRenameRedirect: z.boolean().optional().default(false).describe('Whether to create a redirect from the old path'),
