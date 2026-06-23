@@ -188,6 +188,8 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 
 ### Comments & Discussions
 - `getComments` - Get comments of a page
+- `addComment` - Add a comment to a page
+- `removeComment` - Remove a comment from a page
 
 ### Revision Management
 - `listRevisions` - Get page edit history

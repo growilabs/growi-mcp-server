@@ -13,7 +13,8 @@ export function registerRemoveCommentTool(server: FastMCP): void {
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
-      idempotentHint: true,
+      // Removing an already-deleted comment errors instead of being a no-op, so it is not idempotent.
+      idempotentHint: false,
       openWorldHint: true,
       title: 'Remove Comment',
     },

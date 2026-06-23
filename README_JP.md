@@ -188,6 +188,8 @@ npx skills update
 
 ### コメント・ディスカッション
 - `getComments` - ページのコメントを取得
+- `addComment` - ページにコメントを追加
+- `removeComment` - ページのコメントを削除
 
 ### リビジョン管理
 - `listRevisions` - ページの編集履歴を取得
