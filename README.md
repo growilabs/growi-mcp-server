@@ -214,6 +214,8 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 | `GROWI_APP_NAME_{N}` | ✅ | GROWI app identifier name (N is an integer) | - |
 | `GROWI_BASE_URL_{N}` | ✅ | Base URL of GROWI instance (N is an integer) | - |
 | `GROWI_API_TOKEN_{N}` | ✅ | GROWI API access token (N is an integer) | - |
+| `GROWI_HTTP_AUTH_USERNAME_{N}` | ❌ | Username for HTTP auth (Basic) in front of GROWI, e.g. a reverse proxy. Required together with the password. | - |
+| `GROWI_HTTP_AUTH_PASSWORD_{N}` | ❌ | Password for HTTP auth (Basic) in front of GROWI. Required together with the username. | - |
 | `GROWI_DEFAULT_APP_NAME` | ❌ | Default app name to use | First configured app |
 
 ### Multiple Apps Configuration Notes
@@ -222,6 +224,13 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 - App names, base URLs, and API tokens must each be unique
 - If `GROWI_DEFAULT_APP_NAME` is omitted, the first configured app becomes the default
 - The app specified in `GROWI_DEFAULT_APP_NAME` will be used as the default app when the LLM does not explicitly include an app name in the prompt
+
+### HTTP Auth (Basic) for Proxied GROWI
+When a GROWI instance sits behind HTTP authentication (e.g. a reverse proxy enforcing Basic auth), set both `GROWI_HTTP_AUTH_USERNAME_{N}` and `GROWI_HTTP_AUTH_PASSWORD_{N}` for that app. You only provide a username and password; the `Basic` `Authorization` header is built for you.
+
+- Set both or neither — providing only one fails fast with a clear error.
+- When configured, the proxy credentials go in the `Authorization` header and the GROWI API token (`GROWI_API_TOKEN_{N}`) is sent via the `X-GROWI-ACCESS-TOKEN` header instead. Without it, the default `Bearer` token scheme is unchanged.
+- Only Basic auth is supported for now; Digest support is planned. The variable names are scheme-agnostic so they can be reused when Digest lands.
 
 
 ## Developer Information
