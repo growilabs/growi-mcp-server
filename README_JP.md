@@ -214,9 +214,9 @@ npx skills update
 | `GROWI_APP_NAME_{N}` | ✅ | GROWIアプリの識別名（N は整数値） | - |
 | `GROWI_BASE_URL_{N}` | ✅ | GROWIインスタンスのベースURL（N は整数値） | - |
 | `GROWI_API_TOKEN_{N}` | ✅ | GROWI APIアクセストークン（N は整数値） | - |
-| `GROWI_HTTP_AUTH_USERNAME_{N}` | ❌ | GROWI 前段の HTTP 認証（Basic）のユーザー名（例: リバースプロキシ）。パスワードとセットで指定する。 | - |
-| `GROWI_HTTP_AUTH_PASSWORD_{N}` | ❌ | GROWI 前段の HTTP 認証（Basic）のパスワード。ユーザー名とセットで指定する。 | - |
-| `GROWI_DEFAULT_APP_NAME` | ❌ | デフォルトで使用するアプリ名 | 最初に設定されたアプリ |
+| `GROWI_HTTP_AUTH_USERNAME_{N}` | | GROWI 前段の HTTP 認証（Basic）のユーザー名（例: リバースプロキシ）。パスワードとセットで指定する。 | - |
+| `GROWI_HTTP_AUTH_PASSWORD_{N}` | | GROWI 前段の HTTP 認証（Basic）のパスワード。ユーザー名とセットで指定する。 | - |
+| `GROWI_DEFAULT_APP_NAME` | | デフォルトで使用するアプリ名 | 最初に設定されたアプリ |
 
 ### 複数アプリ設定の注意点
 - 各アプリの設定には整数値（1, 2, 3...）を使用します (連番である必要はありません)

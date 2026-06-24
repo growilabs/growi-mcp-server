@@ -214,9 +214,9 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 | `GROWI_APP_NAME_{N}` | ✅ | GROWI app identifier name (N is an integer) | - |
 | `GROWI_BASE_URL_{N}` | ✅ | Base URL of GROWI instance (N is an integer) | - |
 | `GROWI_API_TOKEN_{N}` | ✅ | GROWI API access token (N is an integer) | - |
-| `GROWI_HTTP_AUTH_USERNAME_{N}` | ❌ | Username for HTTP auth (Basic) in front of GROWI, e.g. a reverse proxy. Required together with the password. | - |
-| `GROWI_HTTP_AUTH_PASSWORD_{N}` | ❌ | Password for HTTP auth (Basic) in front of GROWI. Required together with the username. | - |
-| `GROWI_DEFAULT_APP_NAME` | ❌ | Default app name to use | First configured app |
+| `GROWI_HTTP_AUTH_USERNAME_{N}` | | Username for HTTP auth (Basic) in front of GROWI, e.g. a reverse proxy. Required together with the password. | - |
+| `GROWI_HTTP_AUTH_PASSWORD_{N}` | | Password for HTTP auth (Basic) in front of GROWI. Required together with the username. | - |
+| `GROWI_DEFAULT_APP_NAME` | | Default app name to use | First configured app |
 
 ### Multiple Apps Configuration Notes
 - Use integer values (1, 2, 3...) for each app configuration (sequential numbering is not required)
