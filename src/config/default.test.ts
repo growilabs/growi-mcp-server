@@ -133,6 +133,138 @@ describe('config/default.ts', () => {
     });
   });
 
+  describe('HTTP auth configuration', () => {
+    it('should parse HTTP auth credentials when username and password are both provided', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_HTTP_AUTH_USERNAME_1: 'proxy-user',
+        GROWI_HTTP_AUTH_PASSWORD_1: 'proxy-pass',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('test-app')).toEqual({
+        name: 'test-app',
+        baseUrl: 'https://example.com',
+        apiToken: 'token123',
+        httpAuth: { username: 'proxy-user', password: 'proxy-pass' },
+      });
+    });
+
+    it('should omit httpAuth when neither username nor password is provided', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('test-app')?.httpAuth).toBeUndefined();
+    });
+
+    it('should trim whitespace from HTTP auth credentials', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_HTTP_AUTH_USERNAME_1: '  proxy-user  ',
+        GROWI_HTTP_AUTH_PASSWORD_1: '  proxy-pass  ',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('test-app')?.httpAuth).toEqual({
+        username: 'proxy-user',
+        password: 'proxy-pass',
+      });
+    });
+
+    it('should configure HTTP auth per app independently', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'app1',
+        GROWI_BASE_URL_1: 'https://app1.com',
+        GROWI_API_TOKEN_1: 'token1',
+        GROWI_HTTP_AUTH_USERNAME_1: 'user1',
+        GROWI_HTTP_AUTH_PASSWORD_1: 'pass1',
+        GROWI_APP_NAME_2: 'app2',
+        GROWI_BASE_URL_2: 'https://app2.com',
+        GROWI_API_TOKEN_2: 'token2',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('app1')?.httpAuth).toEqual({ username: 'user1', password: 'pass1' });
+      expect(config.default.growi.apps.get('app2')?.httpAuth).toBeUndefined();
+    });
+
+    it('should throw error when only HTTP auth username is provided', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_HTTP_AUTH_USERNAME_1: 'proxy-user',
+      };
+
+      // Act & Assert
+      await expect(async () => {
+        await import('./default');
+      }).rejects.toThrow(
+        'Incomplete GROWI HTTP auth configuration for app 1. Username and password are required together. Missing: GROWI_HTTP_AUTH_PASSWORD_1',
+      );
+    });
+
+    it('should throw error when only HTTP auth password is provided', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_HTTP_AUTH_PASSWORD_1: 'proxy-pass',
+      };
+
+      // Act & Assert
+      await expect(async () => {
+        await import('./default');
+      }).rejects.toThrow(
+        'Incomplete GROWI HTTP auth configuration for app 1. Username and password are required together. Missing: GROWI_HTTP_AUTH_USERNAME_1',
+      );
+    });
+
+    it('should treat a whitespace-only HTTP auth value as not provided (incomplete pair)', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_HTTP_AUTH_USERNAME_1: 'proxy-user',
+        GROWI_HTTP_AUTH_PASSWORD_1: '   ',
+      };
+
+      // Act & Assert
+      await expect(async () => {
+        await import('./default');
+      }).rejects.toThrow(
+        'Incomplete GROWI HTTP auth configuration for app 1. Username and password are required together. Missing: GROWI_HTTP_AUTH_PASSWORD_1',
+      );
+    });
+  });
+
   describe('Invalid configurations', () => {
     it('should throw error when no app configuration is provided', async () => {
       // Arrange

@@ -214,7 +214,9 @@ npx skills update
 | `GROWI_APP_NAME_{N}` | ✅ | GROWIアプリの識別名（N は整数値） | - |
 | `GROWI_BASE_URL_{N}` | ✅ | GROWIインスタンスのベースURL（N は整数値） | - |
 | `GROWI_API_TOKEN_{N}` | ✅ | GROWI APIアクセストークン（N は整数値） | - |
-| `GROWI_DEFAULT_APP_NAME` | ❌ | デフォルトで使用するアプリ名 | 最初に設定されたアプリ |
+| `GROWI_HTTP_AUTH_USERNAME_{N}` | | GROWI 前段の HTTP 認証（Basic）のユーザー名（例: リバースプロキシ）。パスワードとセットで指定する。 | - |
+| `GROWI_HTTP_AUTH_PASSWORD_{N}` | | GROWI 前段の HTTP 認証（Basic）のパスワード。ユーザー名とセットで指定する。 | - |
+| `GROWI_DEFAULT_APP_NAME` | | デフォルトで使用するアプリ名 | 最初に設定されたアプリ |
 
 ### 複数アプリ設定の注意点
 - 各アプリの設定には整数値（1, 2, 3...）を使用します (連番である必要はありません)
@@ -222,6 +224,13 @@ npx skills update
 - アプリ名、ベースURL、APIトークンはそれぞれ一意である必要があります
 - `GROWI_DEFAULT_APP_NAME` を省略した場合、最初に設定されたアプリがデフォルトになります
 - `GROWI_DEFAULT_APP_NAME` に指定されたアプリは LLM に対して明示的にアプリ名をプロンプトに含めない場合にデフォルトで使用されるアプリとなります
+
+### プロキシ配下の GROWI への HTTP 認証（Basic）
+GROWI が HTTP 認証（例: リバースプロキシによる Basic 認証）の背後にある場合、そのアプリに対して `GROWI_HTTP_AUTH_USERNAME_{N}` と `GROWI_HTTP_AUTH_PASSWORD_{N}` の両方を設定します。指定するのはユーザー名とパスワードだけで、`Basic` の `Authorization` ヘッダーは自動で組み立てられます。
+
+- 両方を設定するか、どちらも設定しないかのいずれかです。片方だけの設定は、分かりやすいエラーで即座に停止します。
+- 設定すると、プロキシの資格情報が `Authorization` ヘッダーに入り、GROWI の API トークン（`GROWI_API_TOKEN_{N}`）は代わりに `X-GROWI-ACCESS-TOKEN` ヘッダーで送られます。未設定の場合は従来どおり `Bearer` トークン方式のままです。
+- 現時点では Basic 認証のみ対応です（Digest 認証は将来対応予定）。変数名はスキームに依存しない形にしてあるため、Digest 対応時にもそのまま流用できます。
 
 
 ## 開発者向け情報

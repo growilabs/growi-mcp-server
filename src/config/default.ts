@@ -1,10 +1,14 @@
 import dotenvFlow from 'dotenv-flow';
 import { z } from 'zod';
-import type { Config, GrowiAppConfig } from './types';
+import type { Config, GrowiAppConfig, GrowiHttpAuthConfig } from './types';
 
 const GROWI_APP_NAME_PREFIX = 'GROWI_APP_NAME_';
 const GROWI_BASE_URL_PREFIX = 'GROWI_BASE_URL_';
 const GROWI_API_TOKEN_PREFIX = 'GROWI_API_TOKEN_';
+// Optional HTTP auth (Basic) credentials for GROWI instances behind a reverse proxy.
+// Scheme-agnostic names so Digest can reuse them later.
+const GROWI_HTTP_AUTH_USERNAME_PREFIX = 'GROWI_HTTP_AUTH_USERNAME_';
+const GROWI_HTTP_AUTH_PASSWORD_PREFIX = 'GROWI_HTTP_AUTH_PASSWORD_';
 
 // Define schema for environment variables
 const envSchema = z
@@ -33,6 +37,8 @@ const envSchema = z
       const nameKey = `${GROWI_APP_NAME_PREFIX}${num}`;
       const urlKey = `${GROWI_BASE_URL_PREFIX}${num}`;
       const tokenKey = `${GROWI_API_TOKEN_PREFIX}${num}`;
+      const httpAuthUsernameKey = `${GROWI_HTTP_AUTH_USERNAME_PREFIX}${num}`;
+      const httpAuthPasswordKey = `${GROWI_HTTP_AUTH_PASSWORD_PREFIX}${num}`;
 
       const name = env[nameKey];
       const baseUrl = env[urlKey];
@@ -46,10 +52,35 @@ const envSchema = z
         throw new Error(`Incomplete GROWI app configuration for app ${num}. Missing: ${missingVars.join(', ')}`);
       }
 
+      // HTTP auth is optional, but username and password only make sense together: a half-set pair
+      // is a misconfiguration we surface loudly (with key names, never values) rather than guessing.
+      // Whitespace is trimmed for parity with the trio above, so a blank value counts as "not provided".
+      const httpAuthUsername = env[httpAuthUsernameKey];
+      const httpAuthPassword = env[httpAuthPasswordKey];
+      const hasHttpAuthUsername = httpAuthUsername != null && String(httpAuthUsername).trim().length > 0;
+      const hasHttpAuthPassword = httpAuthPassword != null && String(httpAuthPassword).trim().length > 0;
+
+      let httpAuth: GrowiHttpAuthConfig | undefined;
+      if (hasHttpAuthUsername || hasHttpAuthPassword) {
+        const missingHttpAuthVars = [];
+        if (!hasHttpAuthUsername) missingHttpAuthVars.push(httpAuthUsernameKey);
+        if (!hasHttpAuthPassword) missingHttpAuthVars.push(httpAuthPasswordKey);
+        if (missingHttpAuthVars.length > 0) {
+          throw new Error(
+            `Incomplete GROWI HTTP auth configuration for app ${num}. Username and password are required together. Missing: ${missingHttpAuthVars.join(', ')}`,
+          );
+        }
+        httpAuth = {
+          username: String(httpAuthUsername).trim(),
+          password: String(httpAuthPassword).trim(),
+        };
+      }
+
       appConfigs.push({
         name: String(name).trim(),
         baseUrl: String(baseUrl).trim(),
         apiToken: String(apiToken).trim(),
+        ...(httpAuth != null ? { httpAuth } : {}),
       });
     }
 
@@ -67,6 +98,12 @@ const envSchema = z
               name: z.string().min(1),
               baseUrl: z.string().url().min(1),
               apiToken: z.string().min(1),
+              httpAuth: z
+                .object({
+                  username: z.string().min(1),
+                  password: z.string().min(1),
+                })
+                .optional(),
             }),
           )
           .min(1, 'At least one GROWI app configuration is required'),
