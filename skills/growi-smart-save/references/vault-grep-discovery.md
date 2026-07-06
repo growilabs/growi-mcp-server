@@ -1,11 +1,12 @@
 # Vault local-grep path discovery
 
-This is the **preferred** way to find save-path candidates when a GROWI Vault clone is
-available. Instead of asking the server's suggest-path tool (a smaller model that searches
-Elasticsearch indirectly), **you** — the client model — search a local git clone of the wiki
-directly with `grep`/`ls`/`read`. You are a stronger reasoner than the server agent, and a real
-`grep` over raw Markdown hits exact tokens (slugs, dates, IDs) that an indexed search only
-approximates. That combination is why local discovery finds the right shelf more reliably.
+This is the **high-accuracy, opt-in** way to find save-path candidates — used when the user asked
+for it and a GROWI Vault clone is available (see Step 1b of the main workflow). Instead of asking
+the server's suggest-path tool (a smaller model that searches Elasticsearch indirectly), **you** —
+the client model — search a local git clone of the wiki directly with `grep`/`ls`/`read`. You are
+a stronger reasoner than the server agent, and a real `grep` over raw Markdown hits exact tokens
+(slugs, dates, IDs) that an indexed search only approximates. That combination is why local
+discovery finds the right shelf more reliably — at the cost of taking a minute or two.
 
 Keep one thing front of mind throughout: **you are placing a NEW document.** It does not yet
 exist in the wiki, so you will not find a copy of it. You find its home through **sibling

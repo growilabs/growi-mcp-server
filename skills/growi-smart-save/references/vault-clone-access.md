@@ -7,8 +7,10 @@ a document belongs* lives in `vault-grep-discovery.md`.
 
 ## Is a Vault clone usable? (the branch condition)
 
-Use Vault local-grep discovery when **all** of these hold; otherwise fall back to the server
-suggest-path tool. Falling back is always safe — it is the original behavior.
+Vault local-grep discovery is **opt-in** — the main workflow reaches for it only when the user
+asked for higher-accuracy placement (see Step 1b there). Once requested, proceed when **all** of
+these hold; otherwise fall back to the server suggest-path tool, which is the default path anyway.
+Falling back is always safe.
 
 1. **You can reach the GROWI instance and its API token.** These are the same base URL and token
    the GROWI MCP server is configured with (`GROWI_BASE_URL_n` / `GROWI_API_TOKEN_n` — see the
@@ -20,8 +22,9 @@ suggest-path tool. Falling back is always safe — it is the original behavior.
 3. **You can run `git` locally.** The client environment must have `git` and a writable working
    directory. If not, fall back.
 
-If any check fails, say nothing dramatic — just use the server suggest-path tool (Step 1b of the
-main workflow). The user still gets candidates.
+If any check fails, say nothing dramatic — mention briefly that Vault is not usable (the user did
+ask for it) and use the server suggest-path tool (Step 1a of the main workflow). The user still
+gets candidates.
 
 ## The git endpoint
 

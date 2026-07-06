@@ -1,7 +1,7 @@
 ---
 name: growi-smart-save
 description: |
-  Save content to GROWI wiki with intelligent path suggestions. Use this skill when the user asks to save, store, or archive content to GROWI. Triggers on: "save to GROWI", "store this in the wiki", "save this page", or any request to persist content in GROWI. Also use when the user uploads a document and wants it stored in GROWI, or after a conversation session the user wants to capture as a wiki page. Finding the destination uses a local GROWI Vault clone (grep-based discovery) when one is reachable, and falls back to the server-side suggest-path tool otherwise — either way the user ends up choosing and saving.
+  Save content to GROWI wiki with intelligent path suggestions. Use this skill when the user asks to save, store, or archive content to GROWI. Triggers on: "save to GROWI", "store this in the wiki", "save this page", or any request to persist content in GROWI. Also use when the user uploads a document and wants it stored in GROWI, or after a conversation session the user wants to capture as a wiki page. Finding the destination uses the server-side suggest-path tool by default; when the user explicitly asks for higher-accuracy placement and a GROWI Vault clone is reachable, a slower local Vault grep discovery mode is used instead — either way the user ends up choosing and saving.
 ---
 
 # Smart Save: GROWI Content Save Workflow
@@ -13,31 +13,35 @@ Save content to GROWI by finding the best destination, confirming with the user,
 ### Step 1: Get destination candidates
 
 Produce a small set of candidate destination directories for the document. There are two ways to
-get them; **prefer the first when it is available**, because discovering the home yourself from
-the wiki's real content finds the right shelf more reliably than the server's indexed search.
+get them. **The default is the server's suggest-path tool (Step 1a).** The Vault local-grep mode
+(Step 1b) is strictly **opt-in**: it is noticeably slower (typically 1–2 minutes of grepping and
+reading) but more accurate, so use it only when the user asked for it.
 
-**Step 1a — Vault local-grep discovery (preferred).** If a GROWI Vault clone is reachable, find
-the candidates by grepping the local clone of the wiki yourself. This is the better path: you are
-a stronger reasoner than the server's path agent, and a real `grep` over raw Markdown hits the
-exact tokens (slugs, dates, IDs) that decide the right shelf. To do it:
-
-1. Check whether Vault is usable and get/refresh a clone — see
-   `references/vault-clone-access.md` (detect, `git clone`/`fetch` via the user's GROWI token,
-   where to cache it). If Vault is not usable for any reason, fall through to Step 1b.
-2. Discover candidate shelves by grepping the clone — see `references/vault-grep-discovery.md`
-   (the method: grep the document's concrete tokens, follow where hits cluster, confirm by
-   reading sibling pages, converge on 1–3 parent directories). Judge content fit, not
-   path-string similarity.
-
-The output is 1–3 candidate directory paths (each ending in `/`), the same shape Step 1b would
-return. Carry them into Step 2.
-
-**Step 1b — Server suggest-path (fallback).** If no Vault clone is reachable (Vault disabled,
-not bootstrapped, no local `git`, or any clone/fetch failure), call the **suggest-path** tool
-instead.
+**Step 1a — Server suggest-path (default).** Call the **suggest-path** tool.
 
 - **Input**: The full content body (the text to be saved)
 - **Output**: An array of destination suggestions (see "Understanding the server response" below)
+
+**Step 1b — Vault local-grep discovery (opt-in).** Find the candidates by grepping a local clone
+of the wiki yourself. Use this instead of Step 1a only when **both** hold:
+
+1. **The user asked for it.** They explicitly want higher-accuracy placement and accept that it
+   takes longer — e.g. "use the Vault", "take your time and find the right place", "accuracy over
+   speed". Do not switch to this mode on your own judgement; the server path stays the default
+   even when a Vault clone is available.
+2. **A GROWI Vault clone is reachable.** Check and get/refresh a clone — see
+   `references/vault-clone-access.md` (detect, `git clone`/`fetch` via the user's GROWI token,
+   where to cache it). If Vault turns out not to be usable, tell the user briefly and use
+   Step 1a instead.
+
+Before starting, let the user know this takes a minute or two. Then discover candidate shelves by
+grepping the clone — see `references/vault-grep-discovery.md` (the method: grep the document's
+concrete tokens, follow where hits cluster, confirm by reading sibling pages, converge on 1–3
+parent directories). Judge content fit, not path-string similarity. This mode is worth the wait
+because you are a stronger reasoner than the server's path agent, and a real `grep` over raw
+Markdown hits the exact tokens (slugs, dates, IDs) that decide the right shelf.
+
+The output is 1–3 candidate directory paths (each ending in `/`), the same shape Step 1a returns.
 
 Whichever path produced the candidates, the rest of the workflow is identical.
 
@@ -46,8 +50,8 @@ Whichever path produced the candidates, the rest of the workflow is identical.
 Show the candidate destinations from Step 1. Always add a **"specify path manually"** option —
 this is your responsibility, not part of any tool response.
 
-- **From Step 1b (server)**, each candidate has a `label` and `description` — show them as-is.
-- **From Step 1a (Vault grep)**, you found the candidates yourself, so write a one-line reason for
+- **From Step 1a (server)**, each candidate has a `label` and `description` — show them as-is.
+- **From Step 1b (Vault grep)**, you found the candidates yourself, so write a one-line reason for
   each (why this shelf fits — the sibling pages that confirm it), playing the role `description`
   plays for server results. Lead with the shelf you judged best.
 
@@ -63,7 +67,7 @@ Example presentation:
 
 After the user selects a destination:
 
-1. Propose a page name based on the content. **If Step 1a discovery showed a naming convention at
+1. Propose a page name based on the content. **If Step 1b discovery showed a naming convention at
    the chosen shelf, follow it** — when the sibling pages use a fixed label (e.g. every feature
    folder's spec is named `仕様-Specification-`) or a consistent pattern, match it rather than
    inventing a content-derived title. The destination's existing names are the strongest hint for
@@ -73,7 +77,7 @@ After the user selects a destination:
    - Example: `/Tech Notes/React/` + `Jotai vs Redux` → `/Tech Notes/React/Jotai vs Redux`
 
 The destination is always a directory (ends with `/`). You are responsible for proposing the page
-name portion. (When the destination came from Step 1a, make sure the directory is the **decoded**
+name portion. (When the destination came from Step 1b, make sure the directory is the **decoded**
 GROWI page path, not the on-disk percent-encoded filename — see `references/vault-grep-discovery.md`.)
 
 ### Step 4: Confirm visibility (grant)
@@ -83,7 +87,7 @@ Before saving, confirm the page's visibility with the user. The `grant` value at
 visibility that exceeds it. How you know the limit depends on which Step 1 path produced the
 candidate:
 
-**When the candidate came from Step 1b (server).** The suggestion carries a `grant` upper limit.
+**When the candidate came from Step 1a (server).** The suggestion carries a `grant` upper limit.
 Present up to 3 options based on it:
 
 1. **Inherit from parent page** — use the destination's `grant` value as-is
@@ -106,7 +110,7 @@ How should the page visibility be set?
 
 Do NOT silently default to the upper limit. Always ask unless the only option is Only-me.
 
-**When the candidate came from Step 1a (Vault grep).** You discovered the path from the clone, so
+**When the candidate came from Step 1b (Vault grep).** You discovered the path from the clone, so
 you do **not** have the grant upper limit in hand. Default to **inheriting from the parent** —
 save with `grant` omitted, and GROWI applies the parent's visibility, which by construction cannot
 exceed the limit. Only ask the user about visibility if they signal they want something more
@@ -122,10 +126,10 @@ Use the **page creation** tool to save:
 - **path**: The combined path from Step 3
 - **body**: The content to save
 - **grant**: The visibility confirmed in Step 4 — or **omit it to inherit from the parent**, which
-  is the default for Vault-grep candidates (Step 1a) and whenever the user is happy with parent
+  is the default for Vault-grep candidates (Step 1b) and whenever the user is happy with parent
   visibility
 
-## Understanding the server response (Step 1b)
+## Understanding the server response (Step 1a)
 
 When candidates come from the suggest-path tool, each suggestion contains:
 
@@ -137,7 +141,7 @@ When candidates come from the suggest-path tool, each suggestion contains:
 | `description` | Why this destination is recommended — show this to the user |
 | `grant`       | Maximum permission level allowed at this path            |
 
-Vault-grep candidates (Step 1a) are just directory `path`s you discovered; you supply the
+Vault-grep candidates (Step 1b) are just directory `path`s you discovered; you supply the
 reason-to-show yourself (Step 2) and inherit grant by default (Step 4).
 
 ## Grant constraints
@@ -157,10 +161,12 @@ When saving, the selected grant must not exceed this limit. See Step 4 for how t
 
 The discovery method degrades gracefully — the user can always save, whatever is available:
 
-- **Vault clone not reachable** (disabled, not bootstrapped, no local `git`, clone/fetch error)
-  → fall back to the server suggest-path tool (Step 1b). This is silent and expected, not an
-  error to surface.
-- **suggest-path tool also fails or is unavailable** → offer manual path input.
-- **Candidates are all `memo` type, or none fit the document** → present what you have plus the
-  manual input option; don't force a poor pick.
+- **Vault mode was requested but the clone is not reachable** (disabled, not bootstrapped, no
+  local `git`, clone/fetch error) → tell the user briefly that Vault is not usable and use the
+  server suggest-path tool (Step 1a) instead. Do not block the save.
+- **suggest-path tool fails or is unavailable** → offer manual path input.
+- **Server candidates look weak** (all `memo` type, or none fit the document) → present what you
+  have plus the manual input option; don't force a poor pick. If a Vault clone is reachable, you
+  may additionally offer — once — to re-discover with the slower, more accurate Vault grep mode
+  (Step 1b); run it only if the user accepts.
 - Always ensure the user can save their content regardless of which discovery path worked.
