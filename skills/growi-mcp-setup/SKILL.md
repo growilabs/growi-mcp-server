@@ -16,7 +16,7 @@ What this skill does **not** cover: installing the plugin/skill itself (adding t
 
 ## Why UTCP Code-Mode
 
-The GROWI MCP server exposes nearly 30 tools (27 as of this writing). Loading every tool schema into the client context is heavy on tokens. UTCP Code-Mode sits between the client and the GROWI MCP server and lets the agent call tools through a single code-execution interface, which keeps context small.
+The GROWI MCP server exposes nearly 30 tools (29 as of this writing). Loading every tool schema into the client context is heavy on tokens. UTCP Code-Mode sits between the client and the GROWI MCP server and lets the agent call tools through a single code-execution interface, which keeps context small.
 
 UTCP Code-Mode is the **default path** this skill sets up — do not assume it is already present; the workflow below installs and wires it. A direct MCP connection also works (all tools function) and is offered only as a fallback or for light use — see the last section.
 
@@ -39,6 +39,7 @@ Ask the user for:
 - **Base URL** of their GROWI instance (e.g. `https://wiki.example.com`)
 - **API token** — issued from GROWI: User Settings → API Token
 - **App name** — a short identifier the user picks (e.g. `main`)
+- **HTTP Basic auth credentials (only if applicable)** — if something in front of GROWI enforces HTTP authentication (e.g. a reverse proxy with Basic auth), also collect that username and password. This is separate from the API token: the proxy credentials go in the `Authorization` header, while the API token is still sent to GROWI via `X-GROWI-ACCESS-TOKEN`. Only Basic auth is supported for now.
 
 The Base URL must be reachable **from the machine where the client launches code-mode**. If GROWI runs in a container (devcontainer, docker compose), `localhost` from inside another container does not reach it — use the compose service hostname (e.g. `http://app:3000`) or `http://host.docker.internal:<port>` as appropriate for the topology.
 
@@ -77,6 +78,8 @@ The `mcpServers` entry to add (when editing the config manually):
   }
 }
 ```
+
+If the GROWI sits behind Basic auth (Step 1), the credential pair also lives in this `env` block, next to the other values: `"GROWI_HTTP_AUTH_USERNAME_1": "<proxy username>"`, `"GROWI_HTTP_AUTH_PASSWORD_1": "<proxy password>"`.
 
 Why real values here and not in `.utcp_config.json`: client configs live under the user's home directory and are not version-controlled, while `.utcp_config.json` often sits inside a project where it is easy to commit by accident. If the user does not want the token in the client config either, use the dotenv alternative in Step 4.
 
@@ -144,7 +147,23 @@ Every field below is load-bearing — omitting any of them produces one of the f
 - **`"transport": "stdio"` is required.** UTCP's MCP call template does not default it (this differs from typical `mcpServers` configs); omitting it fails at discovery with `Unsupported MCP transport: 'undefined'`.
 - **The `variables` map is the bridge** between namespaced lookups and the plain names in Step 3's `env` block: `growi_GROWI_BASE_URL_1` (what UTCP looks up from inside the manual) is filled from `${GROWI_BASE_URL_1}` (resolved without a namespace against the code-mode process environment). Keep the `growi_` prefix in the keys in sync with the manual's `name`.
 - `GROWI_APP_NAME_1` is a plain inline value (not secret). The `_1` suffix groups one app's settings: **all three of `GROWI_APP_NAME_n` / `GROWI_BASE_URL_n` / `GROWI_API_TOKEN_n` must be present** or the GROWI MCP server fails with `Invalid environment variables` ("At least one GROWI app configuration is required"). For multiple GROWI instances, repeat the trio with `_2`, `_3`, … and add the matching `variables` bridge entries.
+- **How the app name is used at call time**: every GROWI tool takes an optional `appName` parameter selecting the target instance. When omitted, the server falls back to `GROWI_DEFAULT_APP_NAME` or — if that is not set — the first configured app. With a single app the fallback is always right; with multiple apps, set `GROWI_DEFAULT_APP_NAME` (a plain inline value in the server's `env` block; it must equal one of the `GROWI_APP_NAME_n` values or startup fails) and prefer passing `appName` explicitly on every call so the agent never operates on the wrong wiki. An unknown `appName` fails the call with `App name "<name>" is not configured`.
 - `GROWI_BASE_URL_n` must be a full, valid URL (e.g. `https://wiki.example.com`), not just a hostname.
+
+**If the GROWI sits behind Basic auth (Step 1)**, wire the credential pair through the same pattern — bridge entries in `variables`, `${VAR}` references in the server's `env`:
+
+```json
+"variables": {
+  "growi_GROWI_HTTP_AUTH_USERNAME_1": "${GROWI_HTTP_AUTH_USERNAME_1}",
+  "growi_GROWI_HTTP_AUTH_PASSWORD_1": "${GROWI_HTTP_AUTH_PASSWORD_1}"
+},
+"env": {
+  "GROWI_HTTP_AUTH_USERNAME_1": "${GROWI_HTTP_AUTH_USERNAME_1}",
+  "GROWI_HTTP_AUTH_PASSWORD_1": "${GROWI_HTTP_AUTH_PASSWORD_1}"
+}
+```
+
+The pair is per-app (`_1`, `_2`, …) and optional, but **set both or neither**: a half-set pair fails fast at startup with `Incomplete GROWI HTTP auth configuration for app <n>` (a blank value counts as unset). It does not replace the API token — the proxy credentials go in the `Authorization` header while the API token is still sent to GROWI via `X-GROWI-ACCESS-TOKEN`.
 
 **Alternative: keep the token out of the client config too (dotenv).** Put the values in a separate env file and load it with a variable loader, instead of putting them in Step 3's `env` block:
 
@@ -185,6 +204,8 @@ Under UTCP Code-Mode the GROWI tools are not called directly; they are invoked f
 const pages = await growi.growi_getRecentPages({});
 // or:
 const hits = await growi.growi_searchPages({ q: "test" });
+// with multiple apps, pin the target explicitly:
+const pages2 = await growi.growi_getRecentPages({ appName: "main" });
 ```
 
 A `success: true` result with real data confirms the full code-mode → UTCP → GROWI path, not just that the tools registered.
@@ -215,6 +236,8 @@ If UTCP Code-Mode cannot be used, register the GROWI MCP server directly in the 
 
 No `transport` / `name` / `variables` here — those are UTCP concepts; this file is read by the client itself. Note that `${VAR}` expansion in client configs is client-dependent (Claude Code expands it only in `.mcp.json`; Claude Desktop does not expand it at all), so real values in the `env` block are the portable form.
 
+The same optional variables work here too: add `GROWI_HTTP_AUTH_USERNAME_1` / `GROWI_HTTP_AUTH_PASSWORD_1` when GROWI sits behind Basic auth (Step 1), and `GROWI_DEFAULT_APP_NAME` to pick the default target when multiple apps are configured (see Step 4 for how both behave).
+
 > [!WARNING]
 > Because the token is inline, only put this in a config that is not version-controlled (user-level client config). Never put it in a committed file such as `.mcp.json`.
 
@@ -228,6 +251,9 @@ All GROWI tools work this way, but every tool schema stays resident in the clien
 - **code-mode tools appear, but zero GROWI tools** — the GROWI manual failed to register; code-mode starts normally even when registration fails (rule 3). Check the code-mode server logs (the client's MCP log / stderr) for `Error during batch registration` or `Error registering manual` and match the message against the items above.
 - **Tools still not visible after restart** — re-check the `UTCP_CONFIG_FILE` path is absolute and the JSON is valid.
 - **`Invalid environment variables` / "At least one GROWI app configuration is required"** — a `GROWI_*_n` trio is incomplete. Each app needs all three of `GROWI_APP_NAME_n`, `GROWI_BASE_URL_n`, `GROWI_API_TOKEN_n` set together (see Step 4).
+- **`Incomplete GROWI HTTP auth configuration for app <n>` ("Username and password are required together")** — one of `GROWI_HTTP_AUTH_USERNAME_n` / `GROWI_HTTP_AUTH_PASSWORD_n` is set without the other (a blank value counts as unset). Set both or neither (Step 4).
 - **Tools listed but every call fails (auth/network)** — discovery does not contact GROWI (Step 5), so this is the first moment a bad Base URL or token shows up. Verify the URL is reachable from the machine running code-mode (container hostname issues — Step 1) and the token has not been revoked in GROWI.
+- **Every call fails with `401` although the API token is correct** — if GROWI sits behind HTTP Basic auth, the proxy rejects requests before they reach GROWI. Set the `GROWI_HTTP_AUTH_USERNAME_n` / `GROWI_HTTP_AUTH_PASSWORD_n` pair for that app (Step 4).
+- **`App name "<name>" is not configured`** — a call passed an `appName` that matches no `GROWI_APP_NAME_n` value. Check the spelling against the configured app names.
 - **`No native build was found for ... isolated-vm` (code-mode crashes at startup)** — the active Node is an odd-numbered (current) release with no `isolated-vm` prebuild (Step 2). Switch the code-mode launch to a Node LTS line (20 / 22): install one (`nvm install --lts`, `brew install node@22`, …) and ensure it is the `node` code-mode uses — pin it on the code-mode entry's `PATH` (Step 3 `env`) if multiple Node versions are installed.
 - **`npx` cannot find the package / no registry access** — ensure Node.js LTS (20 / 22) and network access. In offline or restricted environments (some devcontainers), install/build the packages locally and replace `"command": "npx", "args": ["@growi/mcp-server"]` with `"command": "node", "args": ["/path/to/growi-mcp-server/dist/index.js"]` (same for code-mode).
