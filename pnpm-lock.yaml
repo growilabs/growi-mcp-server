@@ -25,8 +25,8 @@ importers:
         specifier: ^2.3.2
         version: 2.3.2
       '@growi/sdk-typescript':
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^1.11.0
+        version: 1.11.0
       '@tsconfig/node22':
         specifier: ^22.0.2
         version: 22.0.2
@@ -300,8 +300,8 @@ packages:
   '@growi/core@2.3.2':
     resolution: {integrity: sha512-6XkUu3i1qDuf/HEajSo/XBbPO4ZliGE87x+T3HATiBq9qvaXrMN9cl4V+MoSJ8xsF+cC8qTeHk/Hp/yGOUvgUg==}
 
-  '@growi/sdk-typescript@1.10.0':
-    resolution: {integrity: sha512-bE2HFyUr4qowNOryWl5FH/EwupCW+mrclibVa5Uucny+r1+1E2t4TwOXTfSUJUwTdDKu+TM3tW+8nV1+cYAGfA==}
+  '@growi/sdk-typescript@1.11.0':
+    resolution: {integrity: sha512-ju7wZBibikb7Vb2pWNj8tDSHTmD3mlbfmNNFFHHmiuQVvAz96HH+gW6FE3QiSYVvITeJ0l0c0yPf+zYxvmPO9w==}
     engines: {node: '>=18.0.0'}
 
   '@isaacs/cliui@8.0.2':
@@ -1672,7 +1672,7 @@ snapshots:
     dependencies:
       bson-objectid: 2.0.4
 
-  '@growi/sdk-typescript@1.10.0':
+  '@growi/sdk-typescript@1.11.0':
     dependencies:
       axios: 1.9.0
     transitivePeerDependencies:
