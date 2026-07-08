@@ -42,7 +42,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@growi/core": "^2.3.2",
-    "@growi/sdk-typescript": "^1.10.0",
+    "@growi/sdk-typescript": "^1.11.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^20.11.30",
     "@vercel/ncc": "^0.38.3",
