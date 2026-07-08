@@ -194,6 +194,8 @@ npx skills update
 ### リビジョン管理
 - `listRevisions` - ページの編集履歴を取得
 - `getRevision` - 特定リビジョンの詳細
+- `listRevisionChanges` - 認証ユーザー自身の連続編集（run）をページ横断で一覧取得（GROWI v7.5.6 以降が必要）
+- `getRevisionDiffs` - リビジョンペア（最大 20 件）の unified diff を一括取得（GROWI v7.5.6 以降が必要）
 
 ### 共有リンク
 - `createShareLink` - 共有リンクを作成
