@@ -1,7 +1,7 @@
 ---
 name: growi-smart-save
 description: |
-  Save content to GROWI wiki with intelligent path suggestions. Use this skill when the user asks to save, store, or archive content to GROWI. Triggers on: "save to GROWI", "store this in the wiki", "save this page", or any request to persist content in GROWI. Also use when the user uploads a document and wants it stored in GROWI, or after a conversation session the user wants to capture as a wiki page. Finding the destination uses the server-side suggest-path tool by default; when the user explicitly asks for higher-accuracy placement and a GROWI Vault clone is reachable, a slower local Vault grep discovery mode is used instead — either way the user ends up choosing and saving.
+  Save content to GROWI wiki with intelligent path suggestions. Use this skill when the user asks to save, store, or archive content to GROWI. Triggers on: "save to GROWI", "store this in the wiki", "save this page", or any request to persist content in GROWI. Also use when the user uploads a document and wants it stored in GROWI, or after a conversation session the user wants to capture as a wiki page. Also use when the user asks for a slower, higher-accuracy destination search ("use the Vault", "take your time and find the right place").
 ---
 
 # Smart Save: GROWI Content Save Workflow
