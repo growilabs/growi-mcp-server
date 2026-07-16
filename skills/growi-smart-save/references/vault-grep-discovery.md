@@ -28,7 +28,8 @@ A GROWI Vault clone is the whole wiki as Markdown files on disk:
   characters like `:` is stored on disk percent-encoded (e.g. the page `旧: …` becomes the file
   `旧%3A ….md`). When you turn a discovered **file path** back into a GROWI **page path** for the
   rest of the workflow (Step 3), **decode** those (`%3A`→`:`, etc.) so the final path is the real
-  page path, not the on-disk filename.
+  page path, not the on-disk filename — use the helper instead of decoding by hand:
+  `sh scripts/vault-sync.sh decode '<on-disk name>'` (see `vault-clone-access.md`).
 
 This makes every lookup a plain filesystem operation:
 

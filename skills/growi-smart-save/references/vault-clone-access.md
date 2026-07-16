@@ -1,9 +1,10 @@
 # Getting a Vault clone (detect, clone, refresh)
 
 The grep discovery in `vault-grep-discovery.md` needs the wiki as local Markdown files. GROWI
-exposes the Vault as a **PAT-authenticated git endpoint**, so obtaining and refreshing the clone
-is plain `git` — no special tooling. This file is the mechanical how-to; the judgement of *where
-a document belongs* lives in `vault-grep-discovery.md`.
+exposes the Vault as a **PAT-authenticated git endpoint**, and the mechanics of obtaining and
+refreshing a clone are wrapped in one deterministic script — `scripts/vault-sync.sh` in this
+skill. This file explains when the clone is usable and how to run the script; the judgement of
+*where a document belongs* lives in `vault-grep-discovery.md`.
 
 ## Is a Vault clone usable? (the branch condition)
 
@@ -20,8 +21,10 @@ Falling back is always safe.
    Vault feature is disabled and `503` when it is enabled but the initial bootstrap has not
    finished; a bad or missing token gives `401`. Treat any failure to clone/fetch as "not usable"
    and fall back — do not block the save.
-3. **You can run `git` locally.** The client environment must have `git` (2.31+ for the
-   `GIT_CONFIG_*` env vars used below) and a writable working directory. If not, fall back.
+3. **You can run `git` and a POSIX `sh` locally.** The client environment must have `git`
+   (2.31+, for the `GIT_CONFIG_*` env vars the sync script relies on), a POSIX shell to run the
+   script (on Windows, Git Bash provides one), and a writable working directory. If not, fall
+   back.
 
 If any check fails, say nothing dramatic — mention briefly that Vault is not usable (the user did
 ask for it) and use the server suggest-path tool (Step 1a of the main workflow). The user still
@@ -46,82 +49,72 @@ GROWI serves the Vault as a **read-only git smart-http endpoint** at `<base-url>
   the wiki areas that token may read. You do not compute or filter permissions yourself; clone
   with the user's own token and you get exactly the pages they may see.
 
-## Clone (first time)
+## Getting and refreshing the clone — run the script
 
-Pick a stable local cache path the skill owns, namespaced per instance so multiple GROWI
-instances don't collide — e.g. `<cache-root>/growi-vault/<instance-id>/`. The user does not need
-to manage this path. GROWI does not dictate where the clone lives; that is the client's choice.
+The clone/refresh mechanics live in one script, `scripts/vault-sync.sh` (in this skill), so they
+behave the same every time. **Do not assemble `git clone` / `git fetch` commands by hand.** The
+script exists because hand-assembled commands fail in agent environments: exported `GIT_CONFIG_*`
+variables do not survive from one shell invocation to the next (so the auth header silently goes
+missing), and re-deciding "clone or fetch?" plus URL/token substitution on every run invites
+quoting and decoding mistakes. The script makes those decisions internally, in a single process.
 
-Pass the PAT through git's `GIT_CONFIG_*` environment variables rather than `git -c …`, so it
-never appears in the process's command line (see "Security notes"):
-
-```bash
-export GIT_CONFIG_COUNT=1
-export GIT_CONFIG_KEY_0=http.extraHeader
-export GIT_CONFIG_VALUE_0="Authorization: Bearer <PAT>"
-
-git clone --filter=blob:none <base-url>/vault.git <cache-root>/growi-vault/<instance-id>
-```
-
-Keep those three variables exported for every later `git` command in this clone: it is a partial
-clone, so git may need to reach the server again to fill in missing objects.
-
-- `--filter=blob:none` makes it a **partial clone**: the server omits blobs, and git then fetches
-  only the ones the checkout actually needs. What this saves is the **history** — every past
-  revision of every page — which is where a long-lived wiki's bulk lives. It does **not** shrink
-  the checkout itself: the blobs for the current tree are all downloaded when the working tree is
-  materialized, not lazily on first read. Discovery greps the working tree, so those blobs are
-  needed either way.
-- A few pages with names longer than the filesystem limit may fail to check out
-  (`File name too long`); the clone still succeeds and all normal pages are present. Ignore that
-  warning.
-- To actually shrink the checkout — e.g. skip everyone's personal `user/` space — combine the
-  filter with sparse-checkout. Sparse-checkout alone only controls which files land in the working
-  tree; it does not reduce what the server sends, which is why both flags are needed:
-
-  ```bash
-  git clone --filter=blob:none --no-checkout <base-url>/vault.git <dir>
-  cd <dir>
-  git sparse-checkout init --cone
-  git sparse-checkout set '/*' '!/user'
-  git checkout HEAD
-  ```
-
-  For discovery the plain full checkout above is fine; reach for this only on a wiki large enough
-  that the checkout is painful, and remember that pages under `user/` then become invisible to
-  grep.
-
-## Refresh (keep it current)
-
-The clone is a snapshot as of the last fetch. **Before using it for discovery, refresh it** so
-you are not grepping a stale wiki:
+One command covers both the first clone and every later refresh:
 
 ```bash
-export GIT_CONFIG_COUNT=1
-export GIT_CONFIG_KEY_0=http.extraHeader
-export GIT_CONFIG_VALUE_0="Authorization: Bearer <PAT>"
-
-cd <cache-root>/growi-vault/<instance-id>
-git fetch --quiet
-git reset --hard '@{u}' --quiet
+sh scripts/vault-sync.sh sync <n> <cache-root>/growi-vault/<instance-id>
 ```
 
-Reset to `@{u}` (the current branch's upstream), not `origin/HEAD`: `origin/HEAD` is a symbolic ref
-written once at clone time and **not** updated by a later `git fetch`, so resetting to it can
-silently leave you on a stale tree.
+- **`<n>` is the GROWI instance number.** The script reads `GROWI_BASE_URL_<n>` and
+  `GROWI_API_TOKEN_<n>` from the environment — the same variables the GROWI MCP server is
+  configured with (see the `growi-mcp-setup` skill). The PAT therefore never appears in the
+  command you write, in shell history, or in a transcript. If those variables are not already
+  exported in the shell, set them for that one invocation by reading the value from wherever the
+  MCP configuration keeps it, without echoing it — e.g.
+  `GROWI_API_TOKEN_1="$(…read from the MCP config…)" GROWI_BASE_URL_1="<base-url>" sh scripts/vault-sync.sh sync 1 <dir>`.
+- **Run it before every discovery session.** The script clones on first use and does
+  `fetch` + hard-reset-to-upstream afterwards, so you are never grepping a stale wiki. The
+  destination is a stable path the skill owns, namespaced per instance (e.g.
+  `<cache-root>/growi-vault/<instance-id>/`); the script refuses a directory that belongs to a
+  different instance.
+- **`--no-user` (optional)** leaves everyone's personal `user/` space out of the working tree.
+  Reach for it only on a wiki large enough that a full checkout is painful, and remember pages
+  under `user/` then become invisible to grep.
+- **Exit codes**: `0` success, `1` usage/environment problem, `2` git failure. The endpoint
+  answers `401` for a bad token, `404` when the Vault feature is disabled, `503` while bootstrap
+  has not finished — the script surfaces git's message either way. Any non-zero exit means
+  "Vault not usable": fall back to Step 1a.
+- A page whose name is too long for the local filesystem may fail to materialize; the script
+  prints a warning, keeps every other page, and still exits `0`.
 
-A fetch is cheap and resolves the freshness concern that a one-time clone would have. If the
-fetch fails (network, Vault disabled since last time), fall back to the server suggest-path tool
-rather than grepping a stale or missing clone.
+On the wire the script clones with `--filter=blob:none` (partial clone). What that omits is the
+**history** — every past revision of every page, which is where a long-lived wiki's bulk lives.
+It does not shrink the checkout itself: the current tree's blobs are downloaded when the working
+tree is materialized (with `--no-user`, the excluded blobs are genuinely never fetched).
+
+**Route any git operation on this clone through the script.** Authentication exists only inside
+the script's process — a bare `git fetch`, or any git command that goes back to the server (e.g.
+a history operation triggering a partial-clone blob fetch), would run unauthenticated and fail.
+Discovery itself needs no git at all: `ls`/`grep`/file reads work on plain files.
+
+### Decoding on-disk names
+
+On-disk names percent-encode path-unsafe characters. When turning a discovered file path back
+into a GROWI page path (see `vault-grep-discovery.md`), decode segments with the same script
+rather than by hand:
+
+```bash
+sh scripts/vault-sync.sh decode '旧%3A old page.md'   # → 旧: old page.md
+```
 
 ## Security notes
 
-- The PAT is the user's existing GROWI API token — do not print it, log it, or write it into the
-  clone (never `git config http.extraHeader …`, which persists it in `.git/config`).
-- **Do not pass the PAT as a command-line argument.** `git -c http.extraHeader="Authorization:
-  Bearer <PAT>" …` puts the token in the process's argv, where any other user on the machine can
-  read it out of `ps`, and where it lands in shell history. Use the `GIT_CONFIG_COUNT` /
-  `GIT_CONFIG_KEY_0` / `GIT_CONFIG_VALUE_0` environment variables shown above: git reads the same
-  config from them, and a process's environment is only readable by its owner (and root).
+- The PAT is the user's existing GROWI API token. The sync script reads it from the environment
+  (`GROWI_API_TOKEN_<n>`) inside its own process, passes it to git via the `GIT_CONFIG_COUNT` /
+  `GIT_CONFIG_KEY_0` / `GIT_CONFIG_VALUE_0` environment variables, and never persists it — so the
+  token appears nowhere another user could read it: not in process argv (`ps`), not in shell
+  history, not in `.git/config`, not in a transcript.
+- Keep it that way when driving the script: never echo the token, never paste it into a command
+  line as an argument, and never run `git config http.extraHeader …` by hand (that would persist
+  it in `.git/config`).
 - The clone contains real wiki content the user can read. Keep it in the skill's cache path, not
   somewhere it would be shared or committed.

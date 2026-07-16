@@ -29,10 +29,10 @@ of the wiki yourself. Use this instead of Step 1a only when **both** hold:
    takes longer — e.g. "use the Vault", "take your time and find the right place", "accuracy over
    speed". Do not switch to this mode on your own judgement; the server path stays the default
    even when a Vault clone is available.
-2. **A GROWI Vault clone is reachable.** Check and get/refresh a clone — see
-   `references/vault-clone-access.md` (detect, `git clone`/`fetch` via the user's GROWI token,
-   where to cache it). If Vault turns out not to be usable, tell the user briefly and use
-   Step 1a instead.
+2. **A GROWI Vault clone is reachable.** Get or refresh the clone by running the skill's
+   `scripts/vault-sync.sh` — one command that clones on first use and refreshes afterwards,
+   with auth handled inside the script — see `references/vault-clone-access.md`. If the script
+   fails, Vault is not usable: tell the user briefly and use Step 1a instead.
 
 Before starting, let the user know this takes a minute or two. Then discover candidate shelves by
 grepping the clone — see `references/vault-grep-discovery.md` (the method: grep the document's
