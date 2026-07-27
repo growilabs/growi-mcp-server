@@ -61,40 +61,77 @@ quoting and decoding mistakes. The script makes those decisions internally, in a
 One command covers both the first clone and every later refresh:
 
 ```bash
-sh scripts/vault-sync.sh sync <n> <cache-root>/growi-vault/<instance-id>
+sh <skill-dir>/scripts/vault-sync.sh sync <n>
 ```
+
+`<skill-dir>` is the directory this skill was loaded from — the same directory that holds
+`SKILL.md`. Use its absolute path: your working directory is the user's project, not the skill,
+so a bare `scripts/vault-sync.sh` will not resolve.
 
 - **`<n>` is the GROWI instance number.** The script reads `GROWI_BASE_URL_<n>` and
   `GROWI_API_TOKEN_<n>` from the environment — the same variables the GROWI MCP server is
   configured with (see the `growi-mcp-setup` skill). The PAT therefore never appears in the
-  command you write, in shell history, or in a transcript. If those variables are not already
-  exported in the shell, set them for that one invocation by reading the value from wherever the
-  MCP configuration keeps it, without echoing it — e.g.
-  `GROWI_API_TOKEN_1="$(…read from the MCP config…)" GROWI_BASE_URL_1="<base-url>" sh scripts/vault-sync.sh sync 1 <dir>`.
-- **Run it before every discovery session.** The script clones on first use and does
-  `fetch` + hard-reset-to-upstream afterwards, so you are never grepping a stale wiki. The
-  destination is a stable path the skill owns, namespaced per instance (e.g.
-  `<cache-root>/growi-vault/<instance-id>/`); the script refuses a directory that belongs to a
-  different instance.
+  command you write, in shell history, or in a transcript.
+- **You do not choose the destination.** With no directory argument the script clones into a fixed
+  cache path derived from the instance's base URL, and `sh <skill-dir>/scripts/vault-sync.sh path
+  <n>` prints that path without touching the network — use it to locate the clone for grepping.
+  Letting the script decide is what makes the clone *reused*: pick your own directory each session
+  and every session re-downloads the whole wiki. Pass an explicit directory only when the user
+  asked for a specific location. The script refuses a directory that belongs to a different
+  instance.
+- **Run `sync` before every discovery session.** The script clones on first use and does
+  `fetch` + reset-to-upstream afterwards, so you are never grepping a stale wiki.
 - **`--no-user` (optional)** leaves everyone's personal `user/` space out of the working tree.
   Reach for it only on a wiki large enough that a full checkout is painful, and remember pages
-  under `user/` then become invisible to grep.
-- **Exit codes**: `0` success, `1` usage/environment problem, `2` git failure. The endpoint
-  answers `401` for a bad token, `404` when the Vault feature is disabled, `503` while bootstrap
-  has not finished — the script surfaces git's message either way. Any non-zero exit means
-  "Vault not usable": fall back to Step 1a.
-- A page whose name is too long for the local filesystem may fail to materialize; the script
-  prints a warning, keeps every other page, and still exits `0`.
+  under `user/` then become invisible to grep. It takes effect on the **first clone only** — an
+  existing clone keeps its layout, so adding or dropping the flag on a refresh changes nothing.
+- **Exit codes**: `0` the clone is usable, `1` usage/environment problem, `2` git failure or a
+  clone that could not be materialized. The endpoint answers `401` for a bad token, `404` when the
+  Vault feature is disabled, `503` while bootstrap has not finished — the script surfaces git's
+  message either way. Any non-zero exit means "Vault not usable": fall back to Step 1a.
+- A few pages whose names are too long for the local filesystem may fail to materialize (a
+  Japanese title of 85 characters already exceeds ext4's 255-byte limit — growilabs/growi#11596).
+  The script reports how many (`N of M pages could not be written …`), lists them, keeps every
+  other page, and exits `0` — proceed, and mention to the user that those pages were invisible to
+  the search. If the failure is broader than that, the script exits `2` instead of passing off an
+  incomplete clone as usable.
 
-On the wire the script clones with `--filter=blob:none` (partial clone). What that omits is the
-**history** — every past revision of every page, which is where a long-lived wiki's bulk lives.
-It does not shrink the checkout itself: the current tree's blobs are downloaded when the working
-tree is materialized (with `--no-user`, the excluded blobs are genuinely never fetched).
+### If the environment variables are not already exported
+
+The MCP config normally supplies `GROWI_BASE_URL_<n>` / `GROWI_API_TOKEN_<n>` by expanding
+`${GROWI_API_TOKEN_1}` from the environment, in which case your shell already has them and there
+is nothing to do. When it does not, set them for that one invocation, reading the value out of the
+client's MCP config without echoing it — pick the file the user's client actually uses:
+
+```bash
+# Claude Code, project scope (.mcp.json in the project root)
+GROWI_BASE_URL_1="$(node -p 'JSON.parse(require("fs").readFileSync(".mcp.json","utf8")).mcpServers["code-mode"].env.GROWI_BASE_URL_1')" \
+GROWI_API_TOKEN_1="$(node -p 'JSON.parse(require("fs").readFileSync(".mcp.json","utf8")).mcpServers["code-mode"].env.GROWI_API_TOKEN_1')" \
+  sh <skill-dir>/scripts/vault-sync.sh sync 1
+```
+
+For Claude Code's `local`/`user` scopes the same values live in `~/.claude.json` (under
+`projects[<cwd>].mcpServers` and top-level `mcpServers` respectively); for Claude Desktop they are
+in `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/`, Windows:
+`%APPDATA%\Claude\`). If the config stores `"${GROWI_API_TOKEN_1}"` rather than a literal value and
+the variable is not set, the token is not available to you — say so and use Step 1a rather than
+asking the user to paste a token into the chat.
+
+On the wire this is an ordinary **full clone**, history included. The Vault endpoint does not
+advertise git's `filter` capability, so `--filter=blob:none` would be silently ignored (git only
+prints `warning: filtering not recognized by server, ignoring`) while still transferring
+everything — and it would mark the clone a *promisor* repo, which is worse than useless here
+because the Vault deliberately refuses fetches of objects it did not advertise
+(`uploadpack.allowAnySHA1InWant=false`), so any later lazy fetch fails. The script therefore does
+not pass `--filter`. Budget for the first clone accordingly: on a long-lived wiki it is the
+slowest part of Vault mode, and `--no-user` shrinks the working tree but **not** the transfer.
+(Tracked upstream as growilabs/growi#11595 — revisit if the Vault gains a supported way to skip
+history.)
 
 **Route any git operation on this clone through the script.** Authentication exists only inside
-the script's process — a bare `git fetch`, or any git command that goes back to the server (e.g.
-a history operation triggering a partial-clone blob fetch), would run unauthenticated and fail.
-Discovery itself needs no git at all: `ls`/`grep`/file reads work on plain files.
+the script's process — a bare `git fetch`, or any other git command that goes back to the server,
+would run unauthenticated and fail. Discovery itself needs no git at all: `ls`/`grep`/file reads
+work on plain files.
 
 ### Decoding on-disk names
 
@@ -103,16 +140,21 @@ into a GROWI page path (see `vault-grep-discovery.md`), decode segments with the
 rather than by hand:
 
 ```bash
-sh scripts/vault-sync.sh decode '旧%3A old page.md'   # → 旧: old page.md
+sh <skill-dir>/scripts/vault-sync.sh decode '旧%3A old page.md'   # → 旧: old page.md
 ```
 
 ## Security notes
 
 - The PAT is the user's existing GROWI API token. The sync script reads it from the environment
   (`GROWI_API_TOKEN_<n>`) inside its own process, passes it to git via the `GIT_CONFIG_COUNT` /
-  `GIT_CONFIG_KEY_0` / `GIT_CONFIG_VALUE_0` environment variables, and never persists it — so the
+  `GIT_CONFIG_KEY_*` / `GIT_CONFIG_VALUE_*` environment variables, and never persists it — so the
   token appears nowhere another user could read it: not in process argv (`ps`), not in shell
   history, not in `.git/config`, not in a transcript.
+- The script also resets `credential.helper` to empty for its git calls. Without that, a `401`
+  hands the request to whatever credential helper the machine has configured (Git Credential
+  Manager, the VS Code helper, …), which on a desktop can open a login dialog and block until
+  someone dismisses it. `GIT_TERMINAL_PROMPT=0` alone does not prevent this — it only suppresses
+  git's own terminal prompt.
 - Keep it that way when driving the script: never echo the token, never paste it into a command
   line as an argument, and never run `git config http.extraHeader …` by hand (that would persist
   it in `.git/config`).

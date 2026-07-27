@@ -29,10 +29,12 @@ of the wiki yourself. Use this instead of Step 1a only when **both** hold:
    takes longer — e.g. "use the Vault", "take your time and find the right place", "accuracy over
    speed". Do not switch to this mode on your own judgement; the server path stays the default
    even when a Vault clone is available.
-2. **A GROWI Vault clone is reachable.** Get or refresh the clone by running the skill's
-   `scripts/vault-sync.sh` — one command that clones on first use and refreshes afterwards,
-   with auth handled inside the script — see `references/vault-clone-access.md`. If the script
-   fails, Vault is not usable: tell the user briefly and use Step 1a instead.
+2. **A GROWI Vault clone is reachable.** Get or refresh the clone by running this skill's
+   `scripts/vault-sync.sh sync <n>` (absolute path — your working directory is not the skill
+   directory). One command clones on first use and refreshes afterwards, picks the cache directory
+   itself, and handles auth inside its own process — see `references/vault-clone-access.md`. A
+   non-zero exit means Vault is not usable: tell the user briefly and use Step 1a instead. The
+   first clone downloads the whole wiki, so on a large wiki it dominates the wait.
 
 Before starting, let the user know this takes a minute or two. Then discover candidate shelves by
 grepping the clone — see `references/vault-grep-discovery.md` (the method: grep the document's
@@ -111,13 +113,25 @@ How should the page visibility be set?
 Do NOT silently default to the upper limit. Always ask unless the only option is Only-me.
 
 **When the candidate came from Step 1b (Vault grep).** You discovered the path from the clone, so
-you do **not** have the grant upper limit in hand. Default to **inheriting from the parent** —
-save with `grant` omitted, and GROWI applies the parent's visibility, which by construction cannot
-exceed the limit. Only ask the user about visibility if they signal they want something more
-restrictive (e.g. "only me"); if so, pass that grant — GROWI rejects it server-side if it would
-exceed the limit, and you can relay that back rather than guessing the limit yourself. (If you do
-want the precise limit, resolve the destination with `getPage` → `getPageInfo`, but inheriting is
-the simpler default and is usually what the user wants.)
+you do **not** have the grant upper limit in hand. The rule above still applies: inheriting from
+the parent *is* saving at the upper limit, so choosing it for the user would be exactly the silent
+default the rule forbids — a personal note filed under a Public shelf would become a public page
+without anyone being asked. Ask the same question, with the inherit option described without a
+level (you don't know it yet):
+
+```
+How should the page visibility be set?
+1. Inherit from parent page (same visibility as the destination)
+2. Only me
+3. Anyone with the link
+```
+
+- **Option 1** → omit `grant` when saving. GROWI applies the closest ancestor's visibility, which
+  by construction cannot exceed the limit.
+- **Options 2 and 3** → pass that grant. If it would exceed the destination's limit GROWI rejects
+  it server-side; relay the error and re-ask rather than guessing the limit yourself.
+- If you would rather not offer an option that will be rejected, resolve the destination with
+  `getPage` → `getPageInfo` first to read the limit, then use the Step 1a table above.
 
 ### Step 5: Save the page
 
@@ -125,9 +139,8 @@ Use the **page creation** tool to save:
 
 - **path**: The combined path from Step 3
 - **body**: The content to save
-- **grant**: The visibility confirmed in Step 4 — or **omit it to inherit from the parent**, which
-  is the default for Vault-grep candidates (Step 1b) and whenever the user is happy with parent
-  visibility
+- **grant**: The visibility confirmed in Step 4 — **omit it** when the user chose "inherit from
+  parent page", so GROWI applies the destination's own visibility
 
 ## Understanding the server response (Step 1a)
 
@@ -142,7 +155,7 @@ When candidates come from the suggest-path tool, each suggestion contains:
 | `grant`       | Maximum permission level allowed at this path            |
 
 Vault-grep candidates (Step 1b) are just directory `path`s you discovered; you supply the
-reason-to-show yourself (Step 2) and inherit grant by default (Step 4).
+reason-to-show yourself (Step 2), and you ask about visibility without knowing the limit (Step 4).
 
 ## Grant constraints
 
