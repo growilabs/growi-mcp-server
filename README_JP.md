@@ -207,6 +207,24 @@ npx skills update
 - `getUserRecentPages` - 特定ユーザーの最近のページ
 
 
+## Vault コマンド
+
+本パッケージは MCP ツールの提供に加えて、GROWI Vault（wiki を読み取り専用の git エンドポイントとして公開したもの）のローカルクローンを扱うコマンドを備えています。エージェントが wiki をただのファイルとして検索できるようにするためのもので、`growi-smart-save` スキルが高精度な保存先探索で利用します。
+
+```bash
+# 初回はクローン、以降は更新し、クローンの場所を表示する
+npx @growi/mcp-server vault-sync --app-name main [--dest <dir>] [--no-user]
+
+# ネットワークに触らずクローンのディレクトリだけを表示する
+npx @growi/mcp-server vault-path --app-name main
+
+# ディスク上の Vault のファイル名を GROWI のページパスに戻す
+npx @growi/mcp-server vault-decode '旧%3A old page.md'
+```
+
+対象インスタンスはアプリ名で指定し、その base URL と認証情報は MCP サーバーと同じ設定から解決されます（GROWI の前段がリバースプロキシの場合の `GROWI_HTTP_AUTH_*` も含む）。そのためトークンをコマンドラインに渡す必要はありません。`git` 2.31 以上が必要です（`--no-user` は 2.35 以上）。終了コードは `0` がクローン利用可、`1` が使い方または環境の問題、`2` が git の失敗またはクローンが使えない状態です。
+
+
 ## 設定オプション
 
 ### 環境変数
