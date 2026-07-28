@@ -26,7 +26,6 @@ export async function renamePage(params: RenamePageParam, appName: string): Prom
     const renameResult = await apiv3.putRenameForPages(
       {
         pageId: params.pageId,
-        revisionId: params.revisionId,
         ...(params.newPagePath && { newPagePath: params.newPagePath }),
         ...(params.isRenameRedirect !== undefined && { isRenameRedirect: params.isRenameRedirect }),
         ...(params.isRecursively !== undefined && { isRecursively: params.isRecursively }),

@@ -2,6 +2,7 @@
 
 import { axiosInstanceManager } from '@growi/sdk-typescript';
 import { FastMCP } from 'fastmcp';
+import { buildBasicAuthHeader } from './commons/utils/build-basic-auth-header.js';
 import config from './config/default.js';
 import type { GrowiAppConfig } from './config/types.js';
 
@@ -15,10 +16,16 @@ const server = new FastMCP({
  */
 const setupAxiosInstance = async (apps: Map<string, GrowiAppConfig>): Promise<void> => {
   Array.from(apps.values()).map((app) => {
+    // When HTTP auth is configured, the proxy credentials go in the Authorization header and the
+    // SDK moves the GROWI API token to X-GROWI-ACCESS-TOKEN. Without it, the SDK keeps the default
+    // Bearer scheme, so existing setups are unaffected.
+    const authorizationHeader = app.httpAuth != null ? buildBasicAuthHeader(app.httpAuth.username, app.httpAuth.password) : undefined;
+
     axiosInstanceManager.addAxiosInstance({
       appName: app.name,
       baseURL: app.baseUrl,
       token: app.apiToken,
+      ...(authorizationHeader != null ? { authorizationHeader } : {}),
     });
   });
 };

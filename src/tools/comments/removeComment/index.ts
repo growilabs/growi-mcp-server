@@ -1,0 +1,1 @@
+export { registerRemoveCommentTool } from './register';
