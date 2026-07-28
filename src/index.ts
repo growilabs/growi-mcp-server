@@ -3,8 +3,8 @@
 import { axiosInstanceManager } from '@growi/sdk-typescript';
 import { FastMCP } from 'fastmcp';
 import { buildBasicAuthHeader } from './commons/utils/build-basic-auth-header.js';
-import config from './config/default.js';
 import type { GrowiAppConfig } from './config/types.js';
+import { isVaultCommand, runVaultCommand } from './vault/cli.js';
 
 const server = new FastMCP({
   name: 'growi-mcp-server',
@@ -31,6 +31,10 @@ const setupAxiosInstance = async (apps: Map<string, GrowiAppConfig>): Promise<vo
 };
 
 async function main(): Promise<void> {
+  // Imported here rather than at module scope because loading it validates the environment and
+  // throws when no GROWI app is configured. A subcommand such as vault-decode needs no
+  // configuration at all, so that check must not run before the argv dispatch below.
+  const { default: config } = await import('./config/default.js');
   setupAxiosInstance(config.growi.apps);
 
   try {
@@ -51,7 +55,20 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
-  console.error('Unhandled error:', error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+const [subcommand, ...subcommandArgs] = process.argv.slice(2);
+
+if (isVaultCommand(subcommand)) {
+  // A Vault subcommand is a one-shot CLI run against the same configuration the server uses, so it
+  // must not go on to occupy stdio with an MCP session.
+  runVaultCommand(subcommand, subcommandArgs)
+    .then((exitCode) => process.exit(exitCode))
+    .catch((error) => {
+      console.error(`${subcommand}: error:`, error instanceof Error ? error.message : String(error));
+      process.exit(2);
+    });
+} else {
+  main().catch((error) => {
+    console.error('Unhandled error:', error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });
+}

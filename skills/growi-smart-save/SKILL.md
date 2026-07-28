@@ -29,19 +29,29 @@ of the wiki yourself. Use this instead of Step 1a only when **both** hold:
    takes longer — e.g. "use the Vault", "take your time and find the right place", "accuracy over
    speed". Do not switch to this mode on your own judgement; the server path stays the default
    even when a Vault clone is available.
-2. **A GROWI Vault clone is reachable.** Get or refresh the clone by running this skill's
-   `scripts/vault-sync.sh sync <n>` (absolute path — your working directory is not the skill
-   directory). One command clones on first use and refreshes afterwards, picks the cache directory
-   itself, and handles auth inside its own process — see `references/vault-clone-access.md`. A
-   non-zero exit means Vault is not usable: tell the user briefly and use Step 1a instead. The
-   first clone downloads the whole wiki, so on a large wiki it dominates the wait.
+2. **A GROWI Vault clone is reachable.** Get or refresh the clone with the MCP server's own
+   `vault-sync` command:
 
-Before starting, let the user know this takes a minute or two. Then discover candidate shelves by
-grepping the clone — see `references/vault-grep-discovery.md` (the method: grep the document's
-concrete tokens, follow where hits cluster, confirm by reading sibling pages, converge on 1–3
-parent directories). Judge content fit, not path-string similarity. This mode is worth the wait
-because you are a stronger reasoner than the server's path agent, and a real `grep` over raw
-Markdown hits the exact tokens (slugs, dates, IDs) that decide the right shelf.
+   ```bash
+   npx @growi/mcp-server vault-sync --app-name <name>
+   ```
+
+   One command clones on first use and refreshes afterwards, picks the cache directory itself, and
+   resolves the instance's URL and credential from the same configuration the MCP server uses — so
+   you never handle a token. It prints the app name, the base URL and the clone directory; check
+   that the base URL is the instance this save is for. A non-zero exit means Vault is not usable:
+   tell the user briefly and use Step 1a instead. See `references/vault-clone-access.md` for
+   prerequisites, other ways to invoke it, and what the exit codes mean. The first clone downloads
+   the whole wiki, so on a large wiki it dominates the wait.
+
+Before starting, check that the command can run at all (`node --version` — it needs Node.js, the
+same as the MCP server) and only then tell the user this takes a minute or two, so a missing
+prerequisite does not cost them the wait. Then discover candidate shelves by grepping the clone —
+see `references/vault-grep-discovery.md` (the method: grep the document's concrete tokens, follow
+where hits cluster, confirm by reading sibling pages, converge on 1–3 parent directories). Judge
+content fit, not path-string similarity. This mode is worth the wait because you are a stronger
+reasoner than the server's path agent, and a real `grep` over raw Markdown hits the exact tokens
+(slugs, dates, IDs) that decide the right shelf.
 
 The output is 1–3 candidate directory paths (each ending in `/`), the same shape Step 1a returns.
 
@@ -174,8 +184,9 @@ When saving, the selected grant must not exceed this limit. See Step 4 for how t
 
 The discovery method degrades gracefully — the user can always save, whatever is available:
 
-- **Vault mode was requested but the clone is not reachable** (disabled, not bootstrapped, no
-  local `git`, clone/fetch error) → tell the user briefly that Vault is not usable and use the
+- **Vault mode was requested but the clone is not reachable** (Vault disabled or not bootstrapped on
+  the instance, no local Node.js or `git`, no GROWI configuration reachable, clone/fetch error — any
+  non-zero exit from `vault-sync`) → tell the user briefly that Vault is not usable and use the
   server suggest-path tool (Step 1a) instead. Do not block the save.
 - **suggest-path tool fails or is unavailable** → offer manual path input.
 - **Server candidates look weak** (all `memo` type, or none fit the document) → present what you

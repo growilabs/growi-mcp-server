@@ -207,6 +207,30 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 - `getUserRecentPages` - Get recent pages of a specific user
 
 
+## Vault Commands
+
+Besides serving MCP tools, the package provides commands for working with a local clone of a GROWI
+Vault (the wiki exposed as a read-only git endpoint). They exist so an agent can search the wiki as
+plain files — the `growi-smart-save` skill uses them for its high-accuracy destination search.
+
+```bash
+# Clone the Vault on first run, refresh it afterwards, and print where it is
+npx @growi/mcp-server vault-sync --app-name main [--dest <dir>] [--no-user]
+
+# Print the clone directory without touching the network
+npx @growi/mcp-server vault-path --app-name main
+
+# Decode on-disk Vault file names into GROWI page paths
+npx @growi/mcp-server vault-decode '旧%3A old page.md'
+```
+
+The instance is named by its app name, and its base URL and credential come from the same
+configuration the MCP server uses — including `GROWI_HTTP_AUTH_*` when the instance sits behind a
+reverse proxy — so no token is ever passed on the command line. Requires `git` 2.31+ (2.35+ for
+`--no-user`). Exit codes: `0` the clone is usable, `1` a usage or environment problem, `2` a git
+failure or an unusable clone.
+
+
 ## Configuration Options
 
 ### Environment Variables
