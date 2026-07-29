@@ -168,7 +168,7 @@ npx skills update
 ### ページ管理
 - `searchPages` - キーワードでページを検索
 - `createPage` - 新しいページを作成
-- `updatePage` - 既存ページを更新
+- `updatePage` - 既存ページを更新（本文全体を置換。新しいリビジョン ID を返却）
 - `editPage` - 文字列置換でページの一部だけを編集（本文全体の送信が不要。dry-run での diff プレビュー対応）
 - `deletePages` - ページを削除（一括対応）
 - `duplicatePage` - ページを複製（子ページも含む）
@@ -195,7 +195,7 @@ npx skills update
 - `removeComment` - ページのコメントを削除
 
 ### リビジョン管理
-- `listRevisions` - ページの編集履歴を取得
+- `listRevisions` - ページの編集履歴を取得（リビジョン本文は省略され、代わりに bodyLength を返却）
 - `getRevision` - 特定リビジョンの詳細
 - `listRevisionChanges` - 認証ユーザー自身の連続編集（run）をページ横断で一覧取得（GROWI v7.5.6 以降が必要）
 - `getRevisionDiffs` - リビジョンペア（最大 20 件）の unified diff を一括取得（GROWI v7.5.6 以降が必要）

@@ -195,7 +195,7 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 - `removeComment` - Remove a comment from a page
 
 ### Revision Management
-- `listRevisions` - Get page edit history
+- `listRevisions` - Get page edit history (revision bodies are omitted; bodyLength is returned instead)
 - `getRevision` - Get details of a specific revision
 - `listRevisionChanges` - List the authenticated user's consecutive-edit runs across all pages (requires GROWI v7.5.6 or later)
 - `getRevisionDiffs` - Get unified diffs for a batch of revision pairs (requires GROWI v7.5.6 or later)

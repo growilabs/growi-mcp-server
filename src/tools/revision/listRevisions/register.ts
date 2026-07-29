@@ -3,13 +3,16 @@ import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { trimRevisionForResponse } from '../../../commons/utils/growi-page.js';
 import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { listRevisionsParamSchema } from './schema.js';
 
 export function registerListRevisionsTool(server: FastMCP): void {
   server.addTool({
     name: 'listRevisions',
-    description: 'List revisions for a page in GROWI with pagination support',
+    description:
+      'List revisions for a page in GROWI with pagination support. ' +
+      'Revision bodies are omitted (bodyLength is returned instead); use getRevision for a specific revision body, or getRevisionDiffs to compare revisions.',
     parameters: listRevisionsParamSchema,
     annotations: {
       readOnlyHint: true,
@@ -27,7 +30,10 @@ export function registerListRevisionsTool(server: FastMCP): void {
         // Execute operation using SDK
         const result = await apiv3.getListForRevisions(listRevisionsParams, { appName: resolvedAppName });
 
-        return JSON.stringify(result);
+        // Strip revision bodies: each revision otherwise carries a full copy of the page content
+        const revisions = Array.isArray(result?.revisions) ? result.revisions.map((revision) => trimRevisionForResponse(revision)) : result?.revisions;
+
+        return JSON.stringify({ ...result, revisions });
       } catch (error) {
         // Handle validation errors
         if (error instanceof z.ZodError) {
