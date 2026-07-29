@@ -169,10 +169,13 @@ npx skills update
 - `searchPages` - キーワードでページを検索
 - `createPage` - 新しいページを作成
 - `updatePage` - 既存ページを更新
+- `editPage` - 文字列置換でページの一部だけを編集（本文全体の送信が不要。dry-run での diff プレビュー対応）
 - `deletePages` - ページを削除（一括対応）
 - `duplicatePage` - ページを複製（子ページも含む）
 - `renamePage` - ページ名とパスを変更
 - `getPage` - ページの内容を取得
+- `getPageOutline` - ページの見出しアウトラインを取得（本文なしで見出しツリー・行範囲・サイズを返却）
+- `getPageSection` - ページの一部だけを読み取り（見出しテキストまたは行範囲で指定）
 - `getPageInfo` - ページの詳細情報を取得
 - `getRecentPages` - 最近更新されたページ一覧
 - `getPageListingRoot` - ルートページ一覧を取得

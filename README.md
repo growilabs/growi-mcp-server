@@ -168,11 +168,14 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 ### Page Management
 - `searchPages` - Search pages by keywords
 - `createPage` - Create a new page
-- `updatePage` - Update an existing page
+- `updatePage` - Update an existing page (full-body replace; returns the new revision ID)
+- `editPage` - Edit parts of a page with string replacements without sending the whole body (supports dry-run diff preview)
 - `deletePages` - Delete pages (bulk operation supported)
 - `duplicatePage` - Duplicate a page (including child pages)
 - `renamePage` - Change page name and path
 - `getPage` - Get a page data
+- `getPageOutline` - Get the heading outline of a page (heading tree with line ranges and sizes, without the body)
+- `getPageSection` - Read only a part of a page, addressed by heading text or line range
 - `getPageInfo` - Get detailed page information
 - `getRecentPages` - Get list of recently updated pages
 - `getPageListingRoot` - Get root page list
