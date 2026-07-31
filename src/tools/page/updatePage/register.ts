@@ -3,17 +3,23 @@ import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { extractNewRevisionId, trimPageForResponse } from '../../../commons/utils/growi-page.js';
 import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { updatePageParamSchema } from './schema.js';
 
 export function registerUpdatePageTool(server: FastMCP): void {
   server.addTool({
     name: 'updatePage',
-    description: 'Update an existing page in GROWI',
+    description:
+      'Update an existing page in GROWI by replacing the entire body. ' +
+      'The response includes the new revision ID required for a subsequent update. For partial modifications, prefer the token-efficient editPage tool.',
     parameters: updatePageParamSchema,
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+      title: 'Update Page',
     },
     execute: async (params) => {
       try {
@@ -28,7 +34,11 @@ export function registerUpdatePageTool(server: FastMCP): void {
           throw new UserError('Failed to retrieve page data after update');
         }
 
-        return JSON.stringify(result.page);
+        const newRevisionId = extractNewRevisionId(result);
+        return JSON.stringify({
+          page: trimPageForResponse(result.page, { keepBody: false }),
+          revision: newRevisionId != null ? { _id: newRevisionId } : undefined,
+        });
       } catch (error) {
         // Handle validation errors
         if (error instanceof z.ZodError) {
