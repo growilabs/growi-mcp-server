@@ -110,13 +110,21 @@ PR #34（merge commit `399e8ba`）のレビューを経た追随作業。**1.8.0
   - 現状はユーティリティ単体で `editIndex` を検証しているだけで、「例外が飛ぶので保存されない」という実際の効果が service レベルで固定されていない
   - _Requirements: 7.3_
 
-- [ ] 8. 応答軽量化で失われた権限情報の扱いを決める
-  - `grant` がユーザー指定公開（`grant: 5`）のページで、権限保持者を確認できる代替経路が存在するかを調べる（`getPageInfo` が呼ぶ `getInfoForPage` の応答に含まれるか）
-  - `seenUsers` / `liker` の件数化は妥当だが、`grantedUsers` は権限そのものの情報である
-  - 代替経路が無い場合、件数化のままにするか復帰させるかを判断し、結論を requirements.md / design.md に追記する
-  - あわせて `getPageOutline` の応答にページのメタデータ（`parent`・`grant`・タグ等）を含めるかを判断する
-  - この判断も 1.8.0 公開前なら自由に決められる（応答軽量化自体が未公開）
-  - _Requirements: 8.1, 8.2, 8.3_
+- [ ] 8. 権限情報をメタデータとして返す
+- [ ] 8.1 `grantedUsers` の実体を応答に戻す
+  - `trimPageForResponse` から `grantedUsers` の件数化を外し、実体を返す。`grantedUsersCount` は併記する
+  - 要素がオブジェクトなら `toUserSummary` で `{ _id, username }` に縮小し、ID 文字列ならそのまま通す（SDK v3 の宣言は `grantedUsers?: string[]` だが、`@growi/core` の `IPage` は `Ref<IUser>[]` なので populate される可能性に備える）
+  - `seenUsers` / `liker` は件数のみのまま維持する（閲覧のたびに際限なく増えるため性質が違う）
+  - 件数化したままだと、グループ指定の権限（`grantedGroups`、PR #34 でも件数化されていない）は読めるのにユーザー指定の権限だけ読めないという不整合が残る
+  - `growi-page.test.ts` に新規 2 件（`grantedUsers` の実体と件数が両方返る／`seenUsers` と `liker` は件数のみ）。既存 9 件は変更なしで通る
+  - _Requirements: 8.1, 8.2, 8.3, 8.4_
+- [ ] 8.2 `getPageOutline` の応答にページのメタデータを含める
+  - 本文を除いた同じ整形処理（`trimPageForResponse(page, { keepBody: false })` 相当）を通し、`parent`・`grant`・`grantedUsers`・タグ等を返す
+  - 含めないと「`parent` や `grant` だけ知りたいのに全文取得ツールを呼ぶ」しかなくなり、本 spec が削ろうとしているトークンの無駄が残る
+  - `fetchPageBodyInfo` がすでにページ文書全体を取得しているので、**API 呼び出しを増やしてはならない**。整形の対象を増やすだけにする
+  - `getPageOutline/service.test.ts` に新規 1 件（メタデータが含まれる）。既存 4 件は `toMatchObject` なのでフィールドが増えても通る
+  - タスク 3.2 と同じファイルに触るため、3.2 の後に着手する
+  - _Requirements: 8.5, 8.6_
 
 - [ ] 9. ドキュメントを更新する
   - `README.md` / `README_JP.md` のページ管理セクションに `getPageWholeContents` を追加し、`getPage` を非推奨（2.0.0 で削除予定）と明記する

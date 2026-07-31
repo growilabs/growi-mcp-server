@@ -12,6 +12,7 @@ PR #34 のレビュー結果に基づく追随作業の設計。うち 2 件（r
 - CommonMark 準拠部分の保守を micromark に委ね、自前で持つ範囲を「自分たちの製品仕様」だけに絞る（Requirement 1）
 - ページの読み方を名前で選び分けられるようにし、既存の `getPage` 利用者を壊さずに移行経路を作る（Requirement 2）
 - アウトラインの意味論を `parse-outline` モジュールに閉じ込める（Requirement 3）
+- 権限情報を件数ではなく実体で返し、本文を取得せずにページのメタデータを読めるようにする（Requirement 8）
 - 応答フィールドの意味を名前だけで判別できるようにする（Requirement 4）
 - 到達しないコードと重複した判定・組み立てを除去する（Requirement 5・6）
 - 振る舞いが変わった箇所をテスト差分から特定できる状態を作る（Requirement 7）
@@ -227,6 +228,36 @@ export const filterOutlineByDepth = (
 - 全文取得ツールの `isGrowiApiError` 分岐は削除（前述）
 - `editPage` / `getPageOutline` / `getPageSection` の同分岐は**残す**（service が投げるため到達する）
 
+### 権限情報をメタデータとして返す（Requirement 8）
+
+PR #34 は `seenUsers` / `grantedUsers` / `liker` の 3 つをまとめて件数に置き換えたが、この 3 つは性質が違う。
+
+| フィールド | 増え方 | 扱い |
+| --- | --- | --- |
+| `seenUsers` | ページが閲覧されるたびに際限なく増える | **件数のみ**（`seenUsersCount`） |
+| `liker` | 同様に際限なく増える | **件数のみ**（`likerCount`） |
+| `grantedUsers` | 作成者が意図して設定する権限情報。通常は少数 | **実体を返す** ＋ `grantedUsersCount` も併記 |
+| `grantedGroups` | 同様に権限情報 | PR #34 でも件数化されていない（現状維持） |
+
+`grantedUsers` を件数化したままにすると、**グループ指定の権限（`grantedGroups`）は読めるのにユーザー指定の権限だけ読めない**という不整合が残る。また実際の応答は ID 文字列の配列であり（SDK v3 の宣言は `grantedUsers?: string[]`）、`seenUsers` と違って本文サイズに比べれば無視できる大きさである。
+
+要素がオブジェクトとして返される環境（`@growi/core` の `IPage` は `Ref<IUser>[]` と宣言しており、populate される可能性がある）に備え、オブジェクトなら既存の `toUserSummary` で `{ _id, username }` に縮小し、文字列ならそのまま通す。
+
+```typescript
+const toGrantedUser = (entry: unknown): unknown =>
+  typeof entry === 'string' ? entry : toUserSummary(entry);
+```
+
+`grantedUsersCount` は配列長から導出できるため厳密には冗長だが、`seenUsersCount` / `likerCount` と形を揃える意味で残す。不要と判断すれば 1 行で外せる。
+
+### `getPageOutline` にページのメタデータを含める（Requirement 8.5）
+
+`getPageOutline` の応答に、本文を除いたページのメタデータ（`parent`・`grant`・`grantedUsers`・タグ等）を含める。
+
+この判断の理由は、含めない場合に「`parent` や `grant` だけ知りたいのに全文取得ツールを呼ぶ」しかなくなり、本 spec が削ろうとしているトークンの無駄がそのまま残るためである。`getPageOutline` は `fetchPageBodyInfo` 経由で**すでにページ文書全体を取得している**ので、API 呼び出しは増えず、応答フィールドが増えるだけで済む。
+
+整形は全文取得ツールと同じ処理を本文なしで通す（`trimPageForResponse(page, { keepBody: false })` 相当）。これにより権限情報の扱いが 2 つのツールで自動的に揃う。
+
 ### 共通化（Requirement 6）
 
 - `src/commons/utils/require-page-id-or-path.ts` を追加し、`pageId` と `path` がともに未指定なら `UserError` を投げる関数を置く。新規 3 ツールの登録処理から呼ぶ。判定を登録層に置き続ける理由（fastmcp が `parameters` に素の `z.object` を要求し、top-level の `.refine()` が使えない）はその関数の JSDoc に移す
@@ -243,7 +274,7 @@ export const filterOutlineByDepth = (
 | 5 | `apply-string-edits.ts`, `getPageWholeContents/register.ts` | 到達しないコードの除去 |
 | 6 | `commons/utils/require-page-id-or-path.ts`（新規）, 新規 3 ツールの登録処理, `editPage/service.ts` | 共通化 |
 | 7 | 全テストファイル | Testing Strategy |
-| 8 | 調査のみ（`getPageInfo` の応答確認） | — |
+| 8 | `growi-page.ts`（`trimPageForResponse`）, `getPageOutline/service.ts`, `growi-page.test.ts` | 権限情報をメタデータとして返す／`getPageOutline` にページのメタデータを含める |
 
 ## Testing Strategy
 
@@ -276,7 +307,8 @@ CI が無いため、テストの通過状況が唯一の検出手段である�
 | テスト | 扱い |
 | --- | --- |
 | `unterminatedFence` を応答に伝える | **削除**（フラグ廃止） |
-| 残り 4 件（アウトライン取得・`maxDepth` の絞り込み・preamble の再計算 2 件） | **変更なしで通る**（Requirement 3.4 の確認手段） |
+| 残り 4 件（アウトライン取得・`maxDepth` の絞り込み・preamble の再計算 2 件） | **変更なしで通る**（Requirement 3.4 の確認手段）。いずれも `toMatchObject` を使っているため、メタデータのフィールドが増えても壊れない |
+| — | **新規: 応答にページのメタデータ（`parent`・`grant`・`grantedUsers`）が含まれる**（Requirement 8.5） |
 
 ### `editPage/service.test.ts`
 
@@ -288,7 +320,12 @@ CI が無いため、テストの通過状況が唯一の検出手段である�
 
 ### `growi-page.test.ts`
 
-応答整形関数そのもののテストは変更なしで通る。呼び出し元が `getPage` から `getPageWholeContents` に移るだけである。
+既存 9 件は**変更なしで通る**。`grantedUsers` を復帰させても、既存テストは `grantedUsersCount` が 1 であることだけを確認しており、`grantedUsers` が存在しないことは検証していないためである（`seenUsers` については `toBeUndefined()` を確認しているが、`grantedUsers` については確認していない）。
+
+**新規 2 件**（Requirement 8.1〜8.4）:
+
+- `grantedUsers` の実体が残り、`grantedUsersCount` も併記される
+- `seenUsers` / `liker` は件数のみで実体が消える（既存の意図を明示的に固定する）
 
 ### 新規テスト（Requirement 2・7.5）
 
