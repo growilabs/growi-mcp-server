@@ -24,7 +24,7 @@ export function registerGetPageListingRootTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getRootForPageListing({ appName: resolvedAppName });
+        const result = await apiv3.getPageListingRoot({ appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

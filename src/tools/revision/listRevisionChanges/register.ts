@@ -26,7 +26,7 @@ export function registerListRevisionChangesTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getChangesForRevisions(listRevisionChangesParams, { appName: resolvedAppName });
+        const result = await apiv3.getRevisionsChanges(listRevisionChangesParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

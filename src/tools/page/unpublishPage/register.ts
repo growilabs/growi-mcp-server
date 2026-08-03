@@ -20,7 +20,7 @@ export function registerUnpublishPageTool(server: FastMCP): void {
         const { appName, ...unpublishPageParams } = unpublishPageParamSchema.parse(params);
         const resolvedAppName = resolveAppName(appName);
 
-        const page = await apiv3.putUnpublishByPageIdForPage(unpublishPageParams.pageId, { appName: resolvedAppName });
+        const page = await apiv3.putPagePageIdUnpublish(unpublishPageParams.pageId, { appName: resolvedAppName });
 
         return JSON.stringify({
           status: 'success',

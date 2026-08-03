@@ -24,7 +24,7 @@ export function registerGetRevisionTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getRevisionsById(getRevisionParams.id, { pageId: getRevisionParams.pageId }, { appName: resolvedAppName });
+        const result = await apiv3.getRevisionsId(getRevisionParams.id, { pageId: getRevisionParams.pageId }, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

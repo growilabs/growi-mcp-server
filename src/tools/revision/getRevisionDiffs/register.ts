@@ -26,7 +26,7 @@ export function registerGetRevisionDiffsTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.postDiffForRevisions(getRevisionDiffsParams, { appName: resolvedAppName });
+        const result = await apiv3.postRevisionsDiff(getRevisionDiffsParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

@@ -24,7 +24,7 @@ export function registerPageListingInfoTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getInfoForPageListing(pageListingInfoParams, { appName: resolvedAppName });
+        const result = await apiv3.getPageListingInfo(pageListingInfoParams, { appName: resolvedAppName });
         return JSON.stringify(result);
       } catch (error) {
         // Handle validation errors

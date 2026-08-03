@@ -31,8 +31,8 @@ importers:
         specifier: ^2.3.2
         version: 2.3.2
       '@growi/sdk-typescript':
-        specifier: ^1.12.0
-        version: 1.12.0
+        specifier: ^1.13.0
+        version: 1.13.0
       '@tsconfig/node22':
         specifier: ^22.0.2
         version: 22.0.2
@@ -389,8 +389,8 @@ packages:
   '@growi/core@2.3.2':
     resolution: {integrity: sha512-6XkUu3i1qDuf/HEajSo/XBbPO4ZliGE87x+T3HATiBq9qvaXrMN9cl4V+MoSJ8xsF+cC8qTeHk/Hp/yGOUvgUg==}
 
-  '@growi/sdk-typescript@1.12.0':
-    resolution: {integrity: sha512-kIOI4QMTB0mfsd8jUm6C0AmHsizFbOBhd5FDz0z3/Pnm+QaXD/EnKyaRF5I9/MtUr++Cb5ou36D8/qW7DN0Q0A==}
+  '@growi/sdk-typescript@1.13.0':
+    resolution: {integrity: sha512-GJgI1qWRKbQifOgLprRlfYhs0uHGPWXbV//DDD16eQdCqXbU/GxDsMNT6QekFdRTJY+OZyhuw8kC/o4N+YDOyw==}
     engines: {node: '>=18.0.0'}
 
   '@inquirer/external-editor@1.0.3':
@@ -2364,7 +2364,7 @@ snapshots:
     dependencies:
       bson-objectid: 2.0.4
 
-  '@growi/sdk-typescript@1.12.0':
+  '@growi/sdk-typescript@1.13.0':
     dependencies:
       axios: 1.18.1
     transitivePeerDependencies:

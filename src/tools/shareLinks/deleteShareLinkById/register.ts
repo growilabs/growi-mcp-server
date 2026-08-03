@@ -24,7 +24,7 @@ export function registerDeleteShareLinkByIdTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.deleteShareLinksById(deleteShareLinkByIdParams.id, { appName: resolvedAppName });
+        const result = await apiv3.deleteShareLinksId(deleteShareLinkByIdParams.id, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

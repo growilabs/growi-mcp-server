@@ -24,7 +24,7 @@ export function registerGetRecentPagesTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getRecentForPages(getRecentPagesParams, { appName: resolvedAppName });
+        const result = await apiv3.getPagesRecent(getRecentPagesParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {
