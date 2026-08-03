@@ -1,6 +1,6 @@
 {
   "name": "growi-mcp-server",
-  "version": "1.2.0",
+  "version": "1.7.0",
   "description": "MCP server that connects AI models to GROWI wiki content. Enables searching, reading, and creating pages in your GROWI knowledge base.",
   "settings": [
     {
@@ -27,9 +27,8 @@
   ],
   "mcpServers": {
     "growi": {
-      "command": "node",
-      "args": ["${extensionPath}${/}dist${/}index.js"],
-      "cwd": "${extensionPath}"
+      "command": "npx",
+      "args": ["-y", "@growi/mcp-server@1.7.0"]
     }
   }
 }
