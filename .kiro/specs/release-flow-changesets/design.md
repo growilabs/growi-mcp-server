@@ -298,7 +298,7 @@ export const collectVersionViolations: (
 
 **Implementation Notes**
 
-- Integration: 起動引数のバージョン指定は「`@growi/mcp-server` で始まる引数」を対象に `@growi/mcp-server@<version>` へ置き換える。バージョン指定が付いていない形（`@growi/mcp-server`）でも付与できるようにし、導入時の初期状態を扱えるようにする。
+- Integration: 起動引数のバージョン指定は、引数がパッケージ名と完全一致する場合（バージョン指定なし。導入時の初期状態）か、パッケージ名の直後にバージョン区切りが続く場合のみを対象に置き換える。単純な前方一致にしないのは、将来 `@growi/mcp-server-cli` のような別パッケージを引数に置いたときに黙って書き換えてしまうことを避けるため。
 - Validation: 検査の出力には対象ファイル名・場所（`version` か起動引数か）・実際の値・期待値を含める。機微情報は扱わない。
 - Risks: 起動引数の構成を将来変える場合、置換対象の判定条件を合わせて見直す必要がある。
 
