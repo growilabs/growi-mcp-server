@@ -400,21 +400,7 @@ Contributions to the project are welcome!
 #### Development Guidelines
 - **Coding Standards**: Use [Biome](https://biomejs.dev/)
 - **Commit Messages**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
-
-#### Releasing
-
-Releases are automated with [Changesets](https://github.com/changesets/changesets).
-
-1. **Record your change intent**: For any pull request with user-facing changes, run `pnpm changeset` to record the impact level (patch / minor / major) and a user-facing description, then commit the generated `.changeset/*.md` file as part of your PR. Internal-only changes (e.g. refactors, CI tweaks) don't need a changeset.
-2. **Releases follow a two-stage flow**:
-   - Merging to `main` automatically opens (or updates) a Release PR that aggregates the pending changesets into a version bump and changelog entry.
-   - Merging that Release PR automatically publishes the package to npm, pushes a `vX.Y.Z` tag, and then creates a GitHub Release — in that order.
-   - `package.json` is the single source of truth for the version; `gemini-extension.json` and `.claude-plugin/plugin.json` are kept in sync automatically whenever the version is bumped.
-   - Between the Release PR being merged and the publish step completing (and for as long as a failed publish stays unresolved, see below), `gemini-extension.json` on `main` points to a version that does not exist on npm yet. This doesn't affect the normal Release-based install path, but it does matter if something references the branch directly instead.
-3. **One-time maintainer setup** (only the npm side remains to be done):
-   - **npm**: Register a [Trusted Publisher](https://docs.npmjs.com/trusted-publishers) for this package, specifying the repository `growilabs/growi-mcp-server` and the workflow file `release.yml`. Every field on that registration screen is case-sensitive, and the workflow file name must match exactly, including the `.yml` extension. **Leave the "environment" field on that screen blank** — this release workflow doesn't declare a GitHub Actions environment, so filling anything in there makes npm's identity check fail and the publish step fail with it. If this registration is missing or wrong, it shows up as a workflow failure rather than a silent no-op.
-   - **GitHub repository settings**: "Allow GitHub Actions to create and approve pull requests" (`Settings > Actions > General`) is already enabled for this repository — confirmed, no action needed here. (Without it, the Release PR could not be created.)
-4. **If publish succeeds but the GitHub Release doesn't get created**: re-running the workflow will not fix this on its own — `changeset publish` sees that there is nothing left to publish and skips recreating the Release. Recover by creating it by hand: `gh release create vX.Y.Z`, using the matching section of `CHANGELOG.md` as the release notes. Since the Gemini CLI extension is distributed through GitHub Releases, skipping this step means the extension update never reaches users even though the package itself published fine.
+- **Changesets**: If your pull request changes anything users can observe, run `pnpm changeset` to record the impact level and a user-facing description, and commit the generated `.changeset/*.md` with your PR. Internal-only changes don't need one.
 
 ## License
 
