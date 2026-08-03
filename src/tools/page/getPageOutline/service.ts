@@ -24,11 +24,11 @@ export const getPageOutline = async (params: GetPageOutlineParams, appName: stri
   const pageInfo = await fetchPageBodyInfo({ pageId: params.pageId, path: params.path }, appName);
   const parsed = parseMarkdownOutline(pageInfo.body);
 
-  // Depth filtering (and the preamble recompute it implies) is delegated to parse-outline.ts so
-  // the logic and its char-counting exist in one place. The body is split here, once, only when
-  // filtering actually needs the raw lines; the unfiltered path never re-splits it.
+  // Depth filtering (and the preamble recompute it implies) is delegated to parse-outline.ts so the
+  // logic, its char-counting and its line-splitting rule exist in one place. This layer never
+  // splits the body itself.
   const filtered: MarkdownOutline & { hiddenHeadingCount?: number } =
-    params.maxDepth != null ? filterOutlineByDepth(parsed, params.maxDepth, pageInfo.body.split('\n')) : parsed;
+    params.maxDepth != null ? filterOutlineByDepth(parsed, params.maxDepth, pageInfo.body) : parsed;
 
   return {
     pageId: pageInfo.pageId,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HeadingMatchError, parseMarkdownOutline, resolveHeadingRange } from './parse-outline.js';
+import { HeadingMatchError, parseMarkdownOutline, resolveHeadingRange, splitLines } from './parse-outline.js';
 
 describe('parseMarkdownOutline', () => {
   it('parses a flat heading structure with correct line ranges', () => {
@@ -229,5 +229,48 @@ describe('resolveHeadingRange', () => {
       expect((error as HeadingMatchError).kind).toBe('ambiguous');
       expect((error as HeadingMatchError).candidates).toHaveLength(2);
     }
+  });
+});
+
+// A bare `\r` is a line ending to the parser but not to `split('\n')`. Bodies reach here already
+// LF-normalized in practice, but the common `replace(/\r\n/g, '\n')` leaves lone `\r` behind, and
+// mismatched line numbers reported one heading's position against another heading's text.
+describe('parseMarkdownOutline with mixed line endings', () => {
+  const mixed = '# Intro\nSome text\r## Sub\rmore\n# Next\ntail';
+
+  it('keeps heading line numbers aligned with the source when a bare CR appears inside a fence', () => {
+    const body = ['# Title', '', '```', 'downloading...\rdone', '```', '', '## After', 'tail'].join('\n');
+    const { outline, totalLines } = parseMarkdownOutline(body);
+
+    expect(totalLines).toBe(9);
+    expect(outline.map((entry) => entry.text)).toEqual(['Title', 'After']);
+    expect(outline[1]).toMatchObject({ text: 'After', raw: 'After', startLine: 8, endLine: 9 });
+  });
+
+  it('never reports a section that ends before it starts', () => {
+    for (const entry of parseMarkdownOutline(mixed).outline) {
+      expect(entry.endLine).toBeGreaterThanOrEqual(entry.startLine);
+      expect(entry.chars).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('resolves every heading to the line that actually holds it', () => {
+    const lines = splitLines(mixed);
+
+    for (const entry of parseMarkdownOutline(mixed).outline) {
+      expect(lines[entry.startLine - 1]).toContain(entry.raw);
+    }
+  });
+
+  it('does not throw on a body that mixes CR and LF', () => {
+    expect(() => parseMarkdownOutline('# A\nbody\r## B\rmore\n# C')).not.toThrow();
+  });
+
+  it('counts section characters exactly for CRLF bodies', () => {
+    const body = ['pre', '# A', 'aaa', '# B', 'bb'].join('\r\n');
+    const { outline, preamble } = parseMarkdownOutline(body);
+
+    // preamble + CRLF + sectionA + CRLF + sectionB reassembles the whole body
+    expect((preamble?.chars ?? 0) + 2 + outline[0].chars + 2 + outline[1].chars).toBe(body.length);
   });
 });

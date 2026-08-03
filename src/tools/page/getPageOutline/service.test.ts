@@ -65,6 +65,17 @@ describe('getPageOutline service', () => {
     expect(mockedGetPage).toHaveBeenCalledTimes(1);
   });
 
+  it('never carries the page body, which is the whole point of the outline', async () => {
+    const body = ['# Title', 'a distinctive sentence only present in the body'].join('\n');
+    mockedGetPage.mockResolvedValue({ page: { _id: 'page1', path: '/p', revision: { _id: 'rev1', body } } });
+
+    const result = await getPageOutline({ pageId: 'page1' }, 'default');
+
+    // Asserted against the serialized response: the metadata trimming must not regress to keepBody
+    expect(JSON.stringify(result)).not.toContain('a distinctive sentence');
+    expect(result.page).toMatchObject({ revision: { bodyLength: body.length } });
+  });
+
   it('keeps the whole page addressable via preamble when maxDepth hides every heading', async () => {
     const body = ['intro', '### Deep', 'text', 'more'].join('\n');
     mockedGetPage.mockResolvedValue({ page: { _id: 'page1', path: '/p', revision: { _id: 'rev1', body } } });

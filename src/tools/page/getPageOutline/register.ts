@@ -12,7 +12,9 @@ export function registerGetPageOutlineTool(server: FastMCP): void {
     name: 'getPageOutline',
     description:
       'Get the heading outline of a GROWI page (heading levels, texts, line ranges and section sizes) WITHOUT the page body. ' +
-      'Token-efficient entry point for large pages: use it to locate a section, then read only that part with getPageSection and edit it with editPage.',
+      'Token-efficient entry point for large pages: use it to locate a section, then read only that part with getPageSection and edit it with editPage. ' +
+      "Both ATX (`#`) and setext (underlined) headings are listed. Each entry carries `text` (as rendered, matching GROWI's table of contents) and `raw` (as authored, for building an editPage oldString); either can be passed back as the `heading` argument. " +
+      'The response also includes the page metadata (parent, grant, grantedUsers, tags), so reading those does not require fetching the whole body.',
     parameters: getPageOutlineParamSchema,
     annotations: {
       readOnlyHint: true,

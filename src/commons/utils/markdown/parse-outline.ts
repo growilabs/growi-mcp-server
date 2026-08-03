@@ -6,8 +6,11 @@
  * boundaries, the preamble range and character counts are this repository's own contract and are
  * computed here: the syntax tree does not carry them.
  *
- * Bodies are assumed to be LF-normalized (GROWI replaces CR/CRLF with LF on read); a trailing `\r`
- * is tolerated when reading heading lines back out of the source.
+ * Lines are split on every CommonMark line ending (`\r\n`, `\r`, `\n`) — the same set micromark
+ * counts — because heading line numbers come from the syntax tree while the text they address is
+ * sliced out of this line array. Splitting on `\n` alone would desynchronize the two as soon as a
+ * body contained a bare `\r` (the usual `replace(/\r\n/g, '\n')` normalization leaves those behind),
+ * which reported one heading's line number against another heading's text.
  */
 
 import { toString as renderHeadingText } from 'mdast-util-to-string';
@@ -55,7 +58,8 @@ export class HeadingMatchError extends GrowiApiError {
   constructor(
     message: string,
     public kind: 'not-found' | 'ambiguous',
-    public candidates: Array<{ text: string; level: number; startLine: number }>,
+    // `raw` is reported alongside `text` because either may have been used to look the heading up
+    public candidates: Array<{ text: string; raw: string; level: number; startLine: number }>,
   ) {
     super(message, 422, { kind, candidates });
     this.name = 'HeadingMatchError';
@@ -68,7 +72,38 @@ const processor = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']);
 const ATX_MARKER_PATTERN = /^#{1,6}/;
 const ATX_CLOSING_PATTERN = /[ \t]+#+[ \t]*$/;
 
-const withoutCarriageReturn = (line: string): string => line.replace(/\r$/, '');
+const LINE_ENDING_PATTERN = /\r\n|\r|\n/g;
+
+interface SourceLines {
+  /** Line contents, without their terminator */
+  lines: string[];
+  /** `separators[i]` terminates `lines[i]`; the last entry is empty */
+  separators: string[];
+}
+
+/**
+ * Splits a body into lines on every CommonMark line ending, keeping the terminators so character
+ * counts stay exact for `\r\n` bodies too. Line `n` of the syntax tree is `lines[n - 1]` here.
+ */
+const splitSourceLines = (body: string): SourceLines => {
+  const lines: string[] = [];
+  const separators: string[] = [];
+  LINE_ENDING_PATTERN.lastIndex = 0;
+  let start = 0;
+  let match = LINE_ENDING_PATTERN.exec(body);
+  while (match != null) {
+    lines.push(body.slice(start, match.index));
+    separators.push(match[0]);
+    start = match.index + match[0].length;
+    match = LINE_ENDING_PATTERN.exec(body);
+  }
+  lines.push(body.slice(start));
+  separators.push('');
+  return { lines, separators };
+};
+
+/** Line contents of a body, split the same way `parseMarkdownOutline` numbers them. */
+export const splitLines = (body: string): string[] => splitSourceLines(body).lines;
 
 /**
  * Recovers the authored heading notation, which the syntax tree does not keep (it only holds
@@ -77,10 +112,11 @@ const withoutCarriageReturn = (line: string): string => line.replace(/\r$/, '');
  * Setext headings carry no markers, so their body lines are taken as they are, minus the underline.
  */
 const extractRawHeading = (lines: string[], startLine: number, startColumn: number, endLine: number): string => {
-  const firstLine = withoutCarriageReturn(lines[startLine - 1] ?? '').slice(startColumn - 1);
+  const firstLine = (lines[startLine - 1] ?? '').slice(startColumn - 1);
 
   if (endLine > startLine) {
-    const continuation = lines.slice(startLine, endLine - 1).map((line) => withoutCarriageReturn(line).trim());
+    // Continuation lines of a setext heading: slice at the same column so container markers stay out
+    const continuation = lines.slice(startLine, endLine - 1).map((line) => line.slice(startColumn - 1).trim());
     return [firstLine.trim(), ...continuation].join('\n');
   }
 
@@ -120,16 +156,26 @@ const detectHeadings = (body: string, lines: string[]): DetectedHeading[] => {
   return headings;
 };
 
-const sliceChars = (lines: readonly string[], startLine: number, endLine: number): number => {
+/**
+ * Character count of lines `startLine`..`endLine` inclusive, counting the terminators between them
+ * but not the one after the last line. `endLine` is clamped so a range that outruns the line array
+ * can never read past its end.
+ */
+const sliceChars = (source: SourceLines, startLine: number, endLine: number): number => {
+  const last = Math.min(endLine, source.lines.length);
   let chars = 0;
-  for (let i = startLine - 1; i < endLine; i++) {
-    chars += lines[i].length;
+  for (let i = startLine - 1; i < last; i++) {
+    chars += source.lines[i].length;
+    if (i < last - 1) {
+      chars += source.separators[i].length;
+    }
   }
-  return chars + (endLine - startLine); // newlines between the lines
+  return chars;
 };
 
 export const parseMarkdownOutline = (body: string): MarkdownOutline => {
-  const lines = body.split('\n');
+  const source = splitSourceLines(body);
+  const lines = source.lines;
   const totalLines = lines.length;
   const headings = detectHeadings(body, lines);
 
@@ -141,7 +187,7 @@ export const parseMarkdownOutline = (body: string): MarkdownOutline => {
         break;
       }
     }
-    return { ...heading, endLine, chars: sliceChars(lines, heading.startLine, endLine) };
+    return { ...heading, endLine, chars: sliceChars(source, heading.startLine, endLine) };
   });
 
   let preamble: SectionRange | undefined;
@@ -149,7 +195,7 @@ export const parseMarkdownOutline = (body: string): MarkdownOutline => {
     preamble = { startLine: 1, endLine: totalLines, chars: body.length };
   } else if (outline[0].startLine > 1) {
     const endLine = outline[0].startLine - 1;
-    preamble = { startLine: 1, endLine, chars: sliceChars(lines, 1, endLine) };
+    preamble = { startLine: 1, endLine, chars: sliceChars(source, 1, endLine) };
   }
 
   return { outline, preamble, totalLines, totalChars: body.length };
@@ -164,11 +210,7 @@ export const parseMarkdownOutline = (body: string): MarkdownOutline => {
  * never filters by depth, so threading an argument through `parseMarkdownOutline` would leave it
  * unused there.
  */
-export const filterOutlineByDepth = (
-  parsed: MarkdownOutline,
-  maxDepth: number,
-  lines: readonly string[],
-): MarkdownOutline & { hiddenHeadingCount?: number } => {
+export const filterOutlineByDepth = (parsed: MarkdownOutline, maxDepth: number, body: string): MarkdownOutline & { hiddenHeadingCount?: number } => {
   const outline = parsed.outline.filter((entry) => entry.level <= maxDepth);
   const hidden = parsed.outline.length - outline.length;
 
@@ -182,7 +224,7 @@ export const filterOutlineByDepth = (
       preamble = { startLine: 1, endLine: parsed.totalLines, chars: parsed.totalChars };
     } else if (outline[0].startLine > 1) {
       const endLine = outline[0].startLine - 1;
-      preamble = { startLine: 1, endLine, chars: sliceChars(lines, 1, endLine) };
+      preamble = { startLine: 1, endLine, chars: sliceChars(splitSourceLines(body), 1, endLine) };
     }
   }
 
@@ -201,8 +243,8 @@ const MATCH_STRATEGIES: ReadonlyArray<{ label: 'text' | 'raw'; caseSensitive: bo
   { label: 'raw', caseSensitive: false },
 ];
 
-const toCandidates = (entries: OutlineEntry[]): Array<{ text: string; level: number; startLine: number }> =>
-  entries.map(({ text, level, startLine }) => ({ text, level, startLine }));
+const toCandidates = (entries: OutlineEntry[]): Array<{ text: string; raw: string; level: number; startLine: number }> =>
+  entries.map(({ text, raw, level, startLine }) => ({ text, raw, level, startLine }));
 
 const findHeading = (outline: OutlineEntry[], heading: string): OutlineEntry => {
   const lowered = heading.toLowerCase();

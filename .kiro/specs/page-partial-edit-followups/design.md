@@ -64,6 +64,14 @@ GROWI 本体の見出し抽出は `apps/app/src/services/renderer/` の `rehype-
 | `---` の直後に `# A`、その後 `---` | `A` と `B` を報告 | frontmatter として読み捨て、`B` のみ |
 | 入れ子リスト内の 4 スペース字下げ見出し | 検出しない | 検出する |
 | `## **Bold** and \`code\`` | `**Bold** and \`code\``（生の記法） | `Bold and code`（描画後テキスト） |
+| 引用・リスト項目の内側の見出し（`> # Quoted` / `- # InList`） | 検出しない | 検出する |
+
+実装後の敵対的レビューで確認した、利用者から見えやすい 2 パターン（いずれも GROWI 本体と同じ結果になるため**正しい**変更だが、「見出しが増えた／消えた」と見える）:
+
+- `<details>` のような開始タグの**直後に空行を置かず**見出しを書くと、その見出しは検出されなくなる（HTML ブロックの内側になるため）
+- 空行を挟まず段落の直下に `---` を書くと、その段落行が setext の h2 として見出しに現れる
+
+リリースノートに書いておくと問い合わせを減らせる。
 
 ### 受け入れるコスト（実測）
 
@@ -249,6 +257,8 @@ const toGrantedUser = (entry: unknown): unknown =>
 ```
 
 `grantedUsersCount` は配列長から導出できるため厳密には冗長だが、`seenUsersCount` / `likerCount` と形を揃える意味で残す。不要と判断すれば 1 行で外せる。
+
+**波及先**: この整形処理は `getPageWholeContents`（および別名の `getPage`）・`getPageOutline` のほかに、**本 spec の対象外である `updatePage`** も通る。したがって `updatePage` の応答にも `grantedUsers` が載る。フィールドの追加のみで削除・型変更はないため互換性は壊れないが、意図した副次効果として記録しておく（`listRevisions` は別の関数を使うので影響しない）。
 
 ### `getPageOutline` にページのメタデータを含める（Requirement 8.5）
 

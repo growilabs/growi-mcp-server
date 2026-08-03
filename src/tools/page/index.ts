@@ -29,8 +29,10 @@ export async function loadPageTools(server: FastMCP): Promise<void> {
   registerUnpublishPageTool(server);
   registerDuplicatePageTool(server);
   registerPageListingInfoTool(server);
-  registerGetPageTool(server);
+  // The replacement is registered before the deprecated alias: tools/list preserves this order, so
+  // a client scanning for the first plausible match lands on the supported name.
   registerGetPageWholeContentsTool(server);
+  registerGetPageTool(server);
   registerGetPageOutlineTool(server);
   registerGetPageSectionTool(server);
   registerGetPageInfoTool(server);
