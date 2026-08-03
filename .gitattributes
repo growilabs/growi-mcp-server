@@ -1,6 +1,2 @@
 # Shell scripts must stay LF: a CRLF sh script breaks at runtime.
 *.sh text eol=lf
-
-# Force LF for all text files so Biome's line-ending check (LF by default) doesn't
-# fail on Windows checkouts with core.autocrlf=true.
-* text=auto eol=lf
