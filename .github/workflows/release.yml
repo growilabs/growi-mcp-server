@@ -1,0 +1,58 @@
+# WARNING: Do not rename this file. npm's Trusted Publisher registration is
+# bound to this workflow's filename (see design.md's Release Workflow section);
+# renaming it breaks publishing even if the job logic is unchanged.
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    name: Version or publish via changesets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          # changesets needs full tag history to compute the next version and changelog.
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.11.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          # No registry-url here: publishing uses npm Trusted Publishing (OIDC)
+          # via id-token: write, not a registry auth token.
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create release pull request or publish
+        uses: changesets/action@v1
+        with:
+          # changesets/action@v1 expects `version` / `publish`; v2 renamed
+          # these to `version-script` / `publish-script` but v2 is prerelease-only,
+          # so this workflow stays on v1.
+          version: pnpm release:version
+          publish: pnpm release:publish
+          title: 'chore(release): publish @growi/mcp-server'
+        env:
+          # No NPM_TOKEN: publishing authenticates via OIDC Trusted Publishing
+          # (permissions.id-token: write above), not a long-lived npm token.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
