@@ -392,6 +392,19 @@ pnpm build
 - **コーディング規約**: [Biome](https://biomejs.dev/)を使用
 - **コミットメッセージ**: [Conventional Commits](https://www.conventionalcommits.org/)に従う
 
+#### リリース手順
+
+リリースは [Changesets](https://github.com/changesets/changesets) によって自動化されています。
+
+1. **変更意図を記録する**: 利用者に影響する変更を含む PR では `pnpm changeset` を実行し、影響区分（patch / minor / major）と利用者向けの説明文を記録したうえで、生成された `.changeset/*.md` を PR に含めてください。内部的な変更のみ（リファクタリングやCIの調整など）のPRにはchangesetは不要です。
+2. **リリースは2段階の流れで進みます**:
+   - `main` へマージすると、未処理のchangesetを集約したRelease PRが自動で作成（または更新）されます。
+   - そのRelease PRをマージすると、npmへの公開、`vX.Y.Z` 形式のtag作成、GitHub Release作成が自動で行われます。
+   - バージョン番号は `package.json` を唯一の出所とし、`gemini-extension.json` と `.claude-plugin/plugin.json` のバージョンは版上げ時に自動で追従します。
+3. **メンテナが一度だけ行う前提設定**（未設定のままだとワークフローの失敗として現れます）:
+   - npm側で、このパッケージに対して[Trusted Publisher](https://docs.npmjs.com/trusted-publishers)を登録してください。リポジトリ `growilabs/growi-mcp-server` とワークフローのファイル名 `release.yml` を指定します。この登録はワークフローのファイル名に紐づくため、**`release.yml` は改名できません**。
+   - リポジトリ設定の `Settings > Actions > General` で「**Allow GitHub Actions to create and approve pull requests**」を有効にしてください。これが無効だとRelease PRを作成できません。
+
 ## ライセンス
 
 このプロジェクトは[MITライセンス](./LICENSE)の下で公開されています。

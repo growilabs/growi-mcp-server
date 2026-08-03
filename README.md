@@ -398,6 +398,19 @@ Contributions to the project are welcome!
 - **Coding Standards**: Use [Biome](https://biomejs.dev/)
 - **Commit Messages**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
 
+#### Releasing
+
+Releases are automated with [Changesets](https://github.com/changesets/changesets).
+
+1. **Record your change intent**: For any pull request with user-facing changes, run `pnpm changeset` to record the impact level (patch / minor / major) and a user-facing description, then commit the generated `.changeset/*.md` file as part of your PR. Internal-only changes (e.g. refactors, CI tweaks) don't need a changeset.
+2. **Releases follow a two-stage flow**:
+   - Merging to `main` automatically opens (or updates) a Release PR that aggregates the pending changesets into a version bump and changelog entry.
+   - Merging that Release PR automatically publishes the package to npm, creates a `vX.Y.Z` tag, and creates a GitHub Release.
+   - `package.json` is the single source of truth for the version; `gemini-extension.json` and `.claude-plugin/plugin.json` are kept in sync automatically whenever the version is bumped.
+3. **One-time maintainer setup** (required before the first release; if missing, it shows up as a workflow failure rather than a silent no-op):
+   - On npm, register a [Trusted Publisher](https://docs.npmjs.com/trusted-publishers) for this package, specifying the repository `growilabs/growi-mcp-server` and the workflow file `release.yml`. Because this registration is tied to the workflow file name, **`release.yml` must not be renamed**.
+   - In the repository settings, under `Settings > Actions > General`, enable **"Allow GitHub Actions to create and approve pull requests"** — without this, the Release PR cannot be created.
+
 ## License
 
 This project is released under the [MIT License](./LICENSE).
