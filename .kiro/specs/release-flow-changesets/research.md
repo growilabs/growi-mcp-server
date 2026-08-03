@@ -124,7 +124,7 @@
 
 - **Context**: 現状 `gemini-extension.json` は 1.2.0、`.claude-plugin/plugin.json` は 1.0.0 で、`package.json`（1.7.0）と食い違っている。検査を入れると、最初のリリースまで PR チェックが常に失敗する。
 - **Selected Approach**: 実装時に両 manifest を 1.7.0 に揃えたうえで検査を導入する。
-- **Rationale**: 検査が導入直後から意味を持つ状態にする。切替後の最初の公開は 1.8.0 以降になるため、この初期化は 1 回だけの作業で済む。
+- **Rationale**: 検査が導入直後から意味を持つ状態にする。切替後の最初の公開は 1.7.1 になるため（実際に追加された changeset は patch 区分。隔離環境での実測で確認済み）、この初期化は 1 回だけの作業で済む。
 - **Trade-offs**: 「1.7.0 として配布された Gemini 拡張は存在しない」という履歴上の不整合が残るが、拡張の更新検知は Release tag で行われるため実害はない。
 
 ## Risks & Mitigations

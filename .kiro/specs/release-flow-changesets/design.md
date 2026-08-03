@@ -237,6 +237,8 @@ graph LR
 
 ##### Service Interface
 
+実装は下記の中核となる変換・検査関数に加え、CLI 層（ファイル読み書きと終了コードの決定）が使う補助関数（起動引数の書き換え単体、バージョン抽出、違反メッセージの整形）も export する。補助関数のシグネチャは実装（`scripts/sync-manifest-versions.ts`）を正とし、ここでは一覧として挙げるに留める。
+
 ```typescript
 const PACKAGE_NAME = '@growi/mcp-server';
 
@@ -266,6 +268,7 @@ type VersionViolation = {
   readonly expected: string;
 };
 
+// Core transform and check functions.
 export const applyVersionToGeminiManifest: (
   manifest: GeminiExtensionManifest,
   version: string,
@@ -283,6 +286,18 @@ export const collectVersionViolations: (
   },
   version: string,
 ) => readonly VersionViolation[];
+
+// Auxiliary exports used by the CLI layer and by tests.
+export const applyVersionToLaunchArgs: (
+  args: readonly string[],
+  version: string,
+) => readonly string[];
+
+export const formatViolation: (violation: VersionViolation) => string;
+
+export const extractPackageVersion: (
+  packageManifest: Readonly<Record<string, unknown>>,
+) => string;
 ```
 
 - Preconditions: `version` は `package.json` から読んだ空でない文字列。両 manifest は JSON として読める。
@@ -352,7 +367,7 @@ export const collectVersionViolations: (
 - Trigger: `push` (main) / `workflow_dispatch`
 - Input / validation: `.changeset/` に記録があるか。無ければ何もしない（2.2）。
 - Output / destination: Release PR、npm 上の新バージョン、tag、GitHub Release
-- Idempotency & recovery: 同じ内容の main に対して再実行しても、Release PR は更新されるだけで重複しない。公開が失敗した場合は tag と Release が作られないため、原因を直して再実行できる。
+- Idempotency & recovery: 同じ内容の main に対して再実行しても、Release PR は更新されるだけで重複しない。npm への公開自体が失敗した場合は tag も Release も作られないため、原因を直して再実行すれば復旧する。ただし npm への公開が成功した後で tag push や GitHub Release 作成だけが失敗した場合は、再実行では復旧しない（`changeset publish` が「公開すべきものが無い」と判断し、Release 作成をやり直さないため）。この場合は `gh release create vX.Y.Z` による手動作成が必要になる（詳細は Error Handling を参照）。
 
 **Implementation Notes**
 
@@ -488,7 +503,8 @@ export const collectVersionViolations: (
 
 ### Error Categories and Responses
 
-- **設定不足（前提作業の未実施）**: npm の Trusted Publisher 未登録、リポジトリ設定の PR 作成許可が無効。いずれもジョブの失敗として現れる。ワークフロー側で判定して案内することはできないため、文書で先回りする（7.1）。公開が失敗した場合、tag と GitHub Release は作られない（3.5）。
+- **設定不足（前提作業の未実施）**: npm の Trusted Publisher 未登録、リポジトリ設定の PR 作成許可が無効。いずれもジョブの失敗として現れる。ワークフロー側で判定して案内することはできないため、文書で先回りする（7.1）。この場合は npm への公開自体が起きないため、tag と GitHub Release も作られない（3.5）。
+- **公開成功後の Release 作成失敗**: npm への公開自体は成功したが、その後の tag push または GitHub Release 作成だけが失敗するケース。ワークフローを再実行しても復旧しない。`changeset publish` は「公開すべき変更が残っていない」と判断し、Release 作成をやり直さないため。この場合は `gh release create vX.Y.Z` で該当バージョンの GitHub Release を手動作成する（本文には `CHANGELOG.md` の該当節を使う）。Gemini CLI 拡張は GitHub Release 経由で配布されるため、これを行わないと npm 側は公開済みでも拡張の更新が利用者に届かない。
 - **バージョンの食い違い**: 検査モードが違反一覧（ファイル名・場所・実際の値・期待値）を出力して非ゼロ終了する。PR チェックでは PR の失敗として、公開前ではビルドと公開に進まない形で現れる（5.3）。
 - **入力の不備**: `package.json` の `version` が読めない・空である場合は、その場で失敗させる（既定値で代替しない）。
 - **同時実行**: `concurrency` により後続の実行が待つか打ち切られる。中途半端な Release PR が並行して作られる状態を避ける。

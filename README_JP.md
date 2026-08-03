@@ -74,6 +74,9 @@ gemini extensions install https://github.com/growilabs/growi-mcp-server
 gemini extensions update growi-mcp-server
 ```
 
+> [!IMPORTANT]
+> v1.7.1 より前のリリースからインストールした拡張は MCP サーバーを起動できません（同梱のスキルだけが動き、GROWI ツールは使えません）。既存のインストールは自動では切り替わらないため、`gemini extensions update growi-mcp-server` を実行して修正を取り込んでください。
+
 #### Skills.sh (Vercel)
 
 Claude Code、Gemini CLI、Cursor、Codex、GitHub Copilot など[多数のエージェント](https://skills.sh/)で利用可能：
@@ -121,7 +124,7 @@ npx skills update
   "mcpServers": {
     "growi": {
       "command": "npx",
-      "args": ["@growi/mcp-server"],
+      "args": ["-y", "@growi/mcp-server"],
       "env": {
         "GROWI_APP_NAME_1": "main",
         "GROWI_BASE_URL_1": "https://your-growi-instance.com",
@@ -138,7 +141,7 @@ npx skills update
   "mcpServers": {
     "growi": {
       "command": "npx",
-      "args": ["@growi/mcp-server"],
+      "args": ["-y", "@growi/mcp-server"],
       "env": {
         "GROWI_DEFAULT_APP_NAME": "staging",
 
@@ -399,11 +402,13 @@ pnpm build
 1. **変更意図を記録する**: 利用者に影響する変更を含む PR では `pnpm changeset` を実行し、影響区分（patch / minor / major）と利用者向けの説明文を記録したうえで、生成された `.changeset/*.md` を PR に含めてください。内部的な変更のみ（リファクタリングやCIの調整など）のPRにはchangesetは不要です。
 2. **リリースは2段階の流れで進みます**:
    - `main` へマージすると、未処理のchangesetを集約したRelease PRが自動で作成（または更新）されます。
-   - そのRelease PRをマージすると、npmへの公開、`vX.Y.Z` 形式のtag作成、GitHub Release作成が自動で行われます。
+   - そのRelease PRをマージすると、「npmへの公開 → `vX.Y.Z` 形式のtagのpush → GitHub Releaseの作成」がこの順番で自動で行われます。
    - バージョン番号は `package.json` を唯一の出所とし、`gemini-extension.json` と `.claude-plugin/plugin.json` のバージョンは版上げ時に自動で追従します。
-3. **メンテナが一度だけ行う前提設定**（未設定のままだとワークフローの失敗として現れます）:
-   - npm側で、このパッケージに対して[Trusted Publisher](https://docs.npmjs.com/trusted-publishers)を登録してください。リポジトリ `growilabs/growi-mcp-server` とワークフローのファイル名 `release.yml` を指定します。この登録はワークフローのファイル名に紐づくため、**`release.yml` は改名できません**。
-   - リポジトリ設定の `Settings > Actions > General` で「**Allow GitHub Actions to create and approve pull requests**」を有効にしてください。これが無効だとRelease PRを作成できません。
+   - Release PRをマージしてから公開が完了するまでの間（および、下記の通り公開が失敗して未解決のまま残っている間）は、`main` 上の `gemini-extension.json` がnpmにまだ存在しないバージョンを指す状態になります。通常のRelease経由のインストールではこの影響を受けませんが、ブランチを直接参照する使い方をしている場合は関係してきます。
+3. **メンテナが一度だけ行う前提設定**（残っているのはnpm側の登録だけです）:
+   - **npm側**: このパッケージに対して[Trusted Publisher](https://docs.npmjs.com/trusted-publishers)を登録してください。リポジトリ `growilabs/growi-mcp-server` とワークフローのファイル名 `release.yml` を指定します。この登録画面の各項目はすべて大文字小文字を区別し、ワークフローのファイル名は `.yml` の拡張子を含めて完全に一致させる必要があります。**登録画面にある「environment（環境名）」の欄は空のままにしてください** — このリリースワークフローは GitHub Actions の environment を宣言していないため、この欄に何か入力すると npm 側の身元照合が合わなくなり、公開が失敗します。この登録が漏れている、または誤っている場合は、黙って何も起きないのではなく、ワークフローの失敗として現れます。
+   - **GitHubリポジトリ設定**: `Settings > Actions > General` の「**Allow GitHub Actions to create and approve pull requests**」は、このリポジトリで既に有効になっています（確認済み・対応不要）。（これが無効だとRelease PRを作成できません。）
+4. **公開は成功したのにGitHub Releaseが作成されなかった場合**: ワークフローを再実行するだけでは復旧しません。`changeset publish` は「公開すべきものが既に無い」と判断し、Release作成をやり直さないためです。この場合は `gh release create vX.Y.Z` で該当バージョンのGitHub Releaseを手動作成してください。本文には `CHANGELOG.md` の該当節をそのまま使います。Gemini CLI 拡張はGitHub Release経由で配布されるため、この対応をしないと、npm側のパッケージ自体は無事公開されていても拡張の更新は利用者に届きません。
 
 ## ライセンス
 
