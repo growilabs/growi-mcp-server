@@ -160,7 +160,7 @@ visit(tree, 'heading', (node) => {
 });
 ```
 
-本 spec の調査中に実際に踏んだので、実装時とレビュー時に確認する。
+本 spec の調査中に実際に踏んだ落とし穴である。現在の実装（`parse-outline.ts` の `detectHeadings`）は波括弧で包む形を採っているが、この注意はソースコード側には書かれていないため、ここが唯一の記録になっている。
 
 ### 将来 GROWI 本体が解析を publish したとき
 
@@ -303,70 +303,5 @@ const toGrantedUser = (entry: unknown): unknown =>
 | 4 | `editPage/service.ts`, `editPage/register.ts` | editPage の応答フィールド分離 |
 | 5 | `apply-string-edits.ts`, `getPageWholeContents/register.ts` | 到達しないコードの除去 |
 | 6 | `commons/utils/require-page-id-or-path.ts`（新規）, 新規 3 ツールの登録処理, `editPage/service.ts` | 共通化 |
-| 7 | 全テストファイル | Testing Strategy |
+| 7 | 全テストファイル | Non-Goals（CI が無いため、テストの通過状況が唯一の検出手段） |
 | 8 | `growi-page.ts`（`trimPageForResponse`）, `getPageOutline/service.ts`, `growi-page.test.ts` | 権限情報をメタデータとして返す／`getPageOutline` にページのメタデータを含める |
-
-## Testing Strategy
-
-CI が無いため、テストの通過状況が唯一の検出手段である。Requirement 1 は多くの期待値を変えるので、**変わるテストを事前に確定させ、この一覧に無いテストが変更を要したら作業を止める**という運用にする。
-
-### `parse-outline.test.ts`
-
-| テスト | 扱い | 理由 |
-| --- | --- | --- |
-| フェンス内の見出し形を無視（バッククォート／チルダ／短いマーカーで閉じない） 3 件 | **変更なしで通る** | remark が同じ結果を出すことを実測で確認 |
-| YAML frontmatter 内を無視 | 変更なしで通る | 同上 |
-| `...` を frontmatter の終端として受ける | 変更なしで通る | 実測で見出しが同じ行に出ることを確認 |
-| 閉じない `---` を frontmatter として扱わない | 変更なしで通る | 同上 |
-| CRLF を許容 | 変更なしで通る | 実測で確認 |
-| ATX 閉じ列の除去と 3 スペースまでの字下げ | **`raw` の期待値を追加** | 検出結果は同じ。`raw` フィールドが増えるため |
-| セクション範囲・preamble・文字数・最終行の見出し・空本文 6 件 | 変更なしで通る | 自前の製品仕様のまま |
-| 先頭の `---` の後に見出しがある場合 | **期待値を反転**（`['A','B']` → `['B']`） | GROWI 本体と一致させる（Requirement 1.7） |
-| 未閉フェンスにフラグを立てる | **書き換え** | フラグの検証を削除し、見出しが現れないことだけを検証（Requirement 1.8） |
-| 閉じたフェンスでフラグを立てない | **削除** | フラグ自体が無くなる |
-| — | **新規: setext 見出しを検出する** | Requirement 1.5 |
-| — | **新規: HTML ブロック内の見出し形を検出しない** | Requirement 1.6 |
-| — | **新規: 入れ子リスト内の字下げ見出しを検出する** | Requirement 1（本体一致の帰結） |
-| — | **新規: `text` は描画後・`raw` は生の記法** | Requirement 1.3 |
-| — | **新規: `text` でも `raw` でも見出しを解決できる** | Requirement 1.4 |
-| — | **新規: 空見出し（`#` のみ）の扱い** | Requirement 7.4。remark でも空テキストの見出しとして現れることを実測で確認済み |
-| `resolveHeadingRange` 6 件 | 変更なしで通る | 自前ロジック。テスト本文に inline markup が無いため `text` の変化の影響を受けない |
-
-### `getPageOutline/service.test.ts`
-
-| テスト | 扱い |
-| --- | --- |
-| `unterminatedFence` を応答に伝える | **削除**（フラグ廃止） |
-| 残り 4 件（アウトライン取得・`maxDepth` の絞り込み・preamble の再計算 2 件） | **変更なしで通る**（Requirement 3.4 の確認手段）。いずれも `toMatchObject` を使っているため、メタデータのフィールドが増えても壊れない |
-| — | **新規: 応答にページのメタデータ（`parent`・`grant`・`grantedUsers`）が含まれる**（Requirement 8.5） |
-
-### `editPage/service.test.ts`
-
-`revisionId` を参照する 4 件（dryRun・成功・リトライ・リビジョン欠落）で **フィールド名を `baseRevisionId` / `newRevisionId` に追随**させる。残りは変更なし。加えて **新規 1 件**（前半が一致し後半が一致しない編集列で保存が試みられないこと。Requirement 7.3）。
-
-### `getPageSection/service.test.ts`
-
-全 8 件が変更なしで通る見込み。テスト本文に setext 見出しや inline markup を含まないため。
-
-### `growi-page.test.ts`
-
-既存 15 件は**変更なしで通る**。`grantedUsers` を復帰させても、既存テストは `grantedUsersCount` が 1 であることだけを確認しており、`grantedUsers` が存在しないことは検証していないためである（`seenUsers` については `toBeUndefined()` を確認しているが、`grantedUsers` については確認していない）。
-
-**新規 2 件**（Requirement 8.1〜8.4）:
-
-- `grantedUsers` の実体が残り、`grantedUsersCount` も併記される
-- `seenUsers` / `liker` は件数のみで実体が消える（既存の意図を明示的に固定する）
-
-### 新規テスト（Requirement 2・7.5）
-
-- `getPageWholeContents` が全文を返す
-- `getPage` が `getPageWholeContents` と同一の応答を返し、`_notice` を含む
-- `_notice` の文言に代替 3 ツールの名前と削除予定バージョンが含まれる
-
-### 完了条件
-
-- `pnpm vitest run` が全件通る。テストの変更が上の一覧の範囲に収まっている
-- `pnpm tsc --noEmit` がエラーなし
-- `pnpm lint` の指摘が main の既存 6 件から増えていない（`aiTools/suggestPath` の 2 件、`.claude-plugin` の 2 件、`.kiro/settings/templates/specs/init.json`、`package.json` の CRLF。既存 6 件の解消は本 spec の対象外）
-- `README.md` / `README_JP.md` のツール一覧が実際の登録内容と一致し、`getPage` の削除予定バージョンが書かれている
-- `skills/growi-mcp-setup/SKILL.md` のツール数の記述が実際の数と一致している

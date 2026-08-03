@@ -1,9 +1,10 @@
 {
-  "feature_name": "page-partial-edit-followups",
+  "feature_name": "page-read-and-edit-tools",
   "created_at": "2026-07-31T14:10:00Z",
-  "updated_at": "2026-08-03T00:00:00Z",
+  "updated_at": "2026-08-03T09:20:00Z",
+  "cleaned_up_at": "2026-08-03T09:20:00Z",
   "language": "ja",
-  "phase": "tasks-generated",
+  "phase": "implementation-complete",
   "approvals": {
     "requirements": {
       "generated": true,
