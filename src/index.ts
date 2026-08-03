@@ -2,13 +2,17 @@
 
 import { axiosInstanceManager } from '@growi/sdk-typescript';
 import { FastMCP } from 'fastmcp';
+import pkg from '../package.json';
 import { buildBasicAuthHeader } from './commons/utils/build-basic-auth-header.js';
 import type { GrowiAppConfig } from './config/types.js';
 import { isVaultCommand, runVaultCommand } from './vault/cli.js';
 
 const server = new FastMCP({
   name: 'growi-mcp-server',
-  version: '1.0.0',
+  // FastMCP requires a template-literal-shaped version, but package.json's `version` is typed as
+  // plain `string`, so the assertion just narrows the type; the actual value still comes from
+  // package.json at build time (ncc inlines it), keeping package.json the single source of truth.
+  version: pkg.version as `${number}.${number}.${number}`,
 });
 
 /**
