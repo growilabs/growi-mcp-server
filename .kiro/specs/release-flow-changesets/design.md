@@ -469,6 +469,8 @@ export const collectVersionViolations: (
 | `.changeset/README.md` | 新規 | changesets の使い方（初期化で生成される定型文） |
 | `scripts/sync-manifest-versions.ts` | 新規 | バージョン派生の純粋変換と、読み書き・終了コードを担う薄い CLI 層 |
 | `scripts/sync-manifest-versions.test.ts` | 新規 | 上記の純粋変換と検査の単体テスト |
+| `vitest.config.ts` | 変更 | テスト対象に `scripts/` 配下を追加する（現状は `src/` 限定で、リリース基盤のテストが実行されない） |
+| 既存の整形違反があるファイル群 | 変更 | 新設する PR チェックが初日から失敗しないよう、整形のみを適用する（対象は `package.json`、`.claude-plugin/*.json`、`.kiro/settings/templates/specs/init.json`、`src/tools/aiTools/suggestPath/` の 2 ファイル） |
 | `.github/workflows/ci.yml` | 新規 | 全 PR での lint・テスト・整合検査 |
 | `.github/workflows/release.yml` | 新規 | Release PR の作成・更新、公開、tag と Release 作成（**ファイル名固定**） |
 | `package.json` | 変更 | 開発依存 2 件の追加、リリース用スクリプト 4 件の追加、`files` への `CHANGELOG.md` 追加 |
