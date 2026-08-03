@@ -274,3 +274,42 @@ describe('parseMarkdownOutline with mixed line endings', () => {
     expect((preamble?.chars ?? 0) + 2 + outline[0].chars + 2 + outline[1].chars).toBe(body.length);
   });
 });
+
+describe('section character counts', () => {
+  it('counts a section as its own text, independent of the body-terminating newline', () => {
+    const withoutTrailing = parseMarkdownOutline('# A\ntail');
+    const withTrailing = parseMarkdownOutline('# A\ntail\n');
+
+    // Identical content must report an identical size; the newline that ends the file is not
+    // part of the section, so it is not counted (unlike the totalChars of the whole body)
+    expect(withoutTrailing.outline[0].chars).toBe('# A\ntail'.length);
+    expect(withTrailing.outline[0].chars).toBe('# A\ntail'.length);
+    expect(withTrailing.totalChars).toBe('# A\ntail\n'.length);
+  });
+
+  it('excludes only the separating newline, keeping blank lines that belong to the section', () => {
+    const { outline } = parseMarkdownOutline('# A\ntail\n\n\n# B\nmore');
+
+    expect(outline[0].chars).toBe('# A\ntail\n\n'.length);
+  });
+});
+
+describe('authored heading labels', () => {
+  // `raw` exists so a caller can build an editPage oldString from it, so it has to be text that
+  // actually occurs in the body. Slicing by syntax-tree offsets guarantees that; reassembling the
+  // label from trimmed lines did not, inside a blockquote or list item.
+  it.each([
+    ['ATX', '## Title'],
+    ['ATX with a closing sequence', '   ## Indented ##'],
+    ['ATX in a blockquote', '> # Quoted\n> text'],
+    ['ATX in a list item', '- # InList\n'],
+    ['setext', 'Title\n====='],
+    ['multi-line setext', 'Line one\nline two\n=====\n'],
+    ['multi-line setext in a blockquote', '> Title\n> more\n> =====\nx'],
+  ])('reports a label that occurs verbatim in the body (%s)', (_name, body) => {
+    const { raw } = parseMarkdownOutline(body).outline[0];
+
+    expect(raw).not.toBe('');
+    expect(body).toContain(raw);
+  });
+});

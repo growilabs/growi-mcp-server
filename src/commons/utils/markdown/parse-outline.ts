@@ -6,11 +6,15 @@
  * boundaries, the preamble range and character counts are this repository's own contract and are
  * computed here: the syntax tree does not carry them.
  *
- * Lines are split on every CommonMark line ending (`\r\n`, `\r`, `\n`) — the same set micromark
- * counts — because heading line numbers come from the syntax tree while the text they address is
- * sliced out of this line array. Splitting on `\n` alone would desynchronize the two as soon as a
- * body contained a bare `\r` (the usual `replace(/\r\n/g, '\n')` normalization leaves those behind),
- * which reported one heading's line number against another heading's text.
+ * Positions are taken from the tree as character offsets, so this module builds no line array of
+ * its own. That matters beyond brevity: when line numbers came from the tree while the text they
+ * addressed was sliced out of a locally built line array, the two coordinate systems could
+ * disagree — a bare `\r` is a line ending to the parser but not to `split('\n')`, and the usual
+ * `replace(/\r\n/g, '\n')` normalization leaves those behind — and one heading's line number was
+ * reported against another heading's text.
+ *
+ * `splitLines` is exported for the one place that still has to turn a line number back into text
+ * (`getPageSection`), and it splits on the same set of line endings the parser counts.
  */
 
 import { toString as renderHeadingText } from 'mdast-util-to-string';
@@ -31,13 +35,18 @@ export interface OutlineEntry {
   startLine: number;
   /** 1-indexed inclusive last line of the section (up to the next heading of the same or higher level) */
   endLine: number;
-  /** Character count of the section (heading line through endLine, including newlines) */
+  /**
+   * Character count of the section's own text (heading line through endLine), excluding the line
+   * ending that separates it from what follows. A section therefore reports the same size whether
+   * or not the body happens to end with a newline; use `totalChars` for the length of the whole body.
+   */
   chars: number;
 }
 
 export interface SectionRange {
   startLine: number;
   endLine: number;
+  /** See `OutlineEntry.chars` */
   chars: number;
 }
 
@@ -71,56 +80,45 @@ const processor = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']);
 
 const ATX_MARKER_PATTERN = /^#{1,6}/;
 const ATX_CLOSING_PATTERN = /[ \t]+#+[ \t]*$/;
+/** The `===`/`---` line that closes a setext heading, which the node's source slice ends with */
+const SETEXT_UNDERLINE_PATTERN = /(\r\n|\r|\n)[^\r\n]*$/;
 
-const LINE_ENDING_PATTERN = /\r\n|\r|\n/g;
-
-interface SourceLines {
-  /** Line contents, without their terminator */
-  lines: string[];
-  /** `separators[i]` terminates `lines[i]`; the last entry is empty */
-  separators: string[];
-}
+const LINE_ENDING_PATTERN = /\r\n|\r|\n/;
 
 /**
- * Splits a body into lines on every CommonMark line ending, keeping the terminators so character
- * counts stay exact for `\r\n` bodies too. Line `n` of the syntax tree is `lines[n - 1]` here.
+ * Line contents of a body, split on every CommonMark line ending so line `n` here is line `n` of
+ * the syntax tree. Exported because `getPageSection` resolves the line numbers this module reports
+ * back into text, and the two must agree on what ends a line.
  */
-const splitSourceLines = (body: string): SourceLines => {
-  const lines: string[] = [];
-  const separators: string[] = [];
-  LINE_ENDING_PATTERN.lastIndex = 0;
-  let start = 0;
-  let match = LINE_ENDING_PATTERN.exec(body);
-  while (match != null) {
-    lines.push(body.slice(start, match.index));
-    separators.push(match[0]);
-    start = match.index + match[0].length;
-    match = LINE_ENDING_PATTERN.exec(body);
+export const splitLines = (body: string): string[] => body.split(new RegExp(LINE_ENDING_PATTERN, 'g'));
+
+/**
+ * Character count of the source between two offsets, minus the line ending that separates it from
+ * whatever follows. Offsets come straight from the syntax tree, so no line array is needed.
+ */
+const charsBetween = (body: string, start: number, end: number): number => {
+  let stop = Math.min(end, body.length);
+  if (stop > start && body[stop - 1] === '\n') {
+    stop -= 1;
   }
-  lines.push(body.slice(start));
-  separators.push('');
-  return { lines, separators };
+  if (stop > start && body[stop - 1] === '\r') {
+    stop -= 1;
+  }
+  return Math.max(0, stop - start);
 };
 
-/** Line contents of a body, split the same way `parseMarkdownOutline` numbers them. */
-export const splitLines = (body: string): string[] => splitSourceLines(body).lines;
-
-/**
- * Recovers the authored heading notation, which the syntax tree does not keep (it only holds
- * rendered text). The source line is sliced at the node's start column so container markers
- * (list bullets, blockquote `>`) stay out, then the ATX marker and closing sequence are removed.
- * Setext headings carry no markers, so their body lines are taken as they are, minus the underline.
- */
-const extractRawHeading = (lines: string[], startLine: number, startColumn: number, endLine: number): string => {
-  const firstLine = (lines[startLine - 1] ?? '').slice(startColumn - 1);
-
-  if (endLine > startLine) {
-    // Continuation lines of a setext heading: slice at the same column so container markers stay out
-    const continuation = lines.slice(startLine, endLine - 1).map((line) => line.slice(startColumn - 1).trim());
-    return [firstLine.trim(), ...continuation].join('\n');
+/** Characters of lines 1..`endLine`, which is exactly the offset of that line's own terminator. */
+const charsUpToLine = (body: string, endLine: number): number => {
+  const pattern = new RegExp(LINE_ENDING_PATTERN, 'g');
+  let seen = 0;
+  let match = pattern.exec(body);
+  while (match != null) {
+    if (++seen === endLine) {
+      return match.index;
+    }
+    match = pattern.exec(body);
   }
-
-  return firstLine.replace(ATX_MARKER_PATTERN, '').replace(ATX_CLOSING_PATTERN, '').trim();
+  return body.length;
 };
 
 interface DetectedHeading {
@@ -128,66 +126,65 @@ interface DetectedHeading {
   text: string;
   raw: string;
   startLine: number;
+  startOffset: number;
 }
 
 /**
+ * Collects headings from the syntax tree.
+ *
+ * `raw` is the heading's own source text, taken by offset. The tree only keeps rendered text, and
+ * slicing by offset — rather than by line and column — means the result is always a literal
+ * substring of the body, which is what an `editPage` oldString has to be. Container markers
+ * (blockquote `>`, list bullets) fall outside the node, so they need no stripping; only the ATX
+ * marker and its optional closing sequence do. A setext heading's slice ends with its underline,
+ * so that last line comes off.
+ *
  * Headings whose label renders empty (`#` on its own) are kept. Dropping them would silently fold
  * their lines into the preceding section, and the outline is meant to mirror the document structure.
  */
-const detectHeadings = (body: string, lines: string[]): DetectedHeading[] => {
-  const tree = processor.parse(body);
+const detectHeadings = (tree: ReturnType<typeof processor.parse>, body: string): DetectedHeading[] => {
   const headings: DetectedHeading[] = [];
 
   visit(tree, 'heading', (node) => {
     // The braces matter: a callback returning a number is read by unist-util-visit as the index to
     // continue from, and `push` returns the new length, which makes it revisit the same node.
     const position = node.position;
-    if (position == null) {
+    if (position?.start.offset == null || position.end.offset == null) {
       return;
     }
+    const source = body.slice(position.start.offset, position.end.offset);
+    const isSetext = position.end.line > position.start.line;
+    const raw = isSetext ? source.replace(SETEXT_UNDERLINE_PATTERN, '').trim() : source.replace(ATX_MARKER_PATTERN, '').replace(ATX_CLOSING_PATTERN, '').trim();
+
     headings.push({
       level: node.depth,
       text: renderHeadingText(node),
-      raw: extractRawHeading(lines, position.start.line, position.start.column, position.end.line),
+      raw,
       startLine: position.start.line,
+      startOffset: position.start.offset,
     });
   });
 
   return headings;
 };
 
-/**
- * Character count of lines `startLine`..`endLine` inclusive, counting the terminators between them
- * but not the one after the last line. `endLine` is clamped so a range that outruns the line array
- * can never read past its end.
- */
-const sliceChars = (source: SourceLines, startLine: number, endLine: number): number => {
-  const last = Math.min(endLine, source.lines.length);
-  let chars = 0;
-  for (let i = startLine - 1; i < last; i++) {
-    chars += source.lines[i].length;
-    if (i < last - 1) {
-      chars += source.separators[i].length;
-    }
-  }
-  return chars;
-};
-
 export const parseMarkdownOutline = (body: string): MarkdownOutline => {
-  const source = splitSourceLines(body);
-  const lines = source.lines;
-  const totalLines = lines.length;
-  const headings = detectHeadings(body, lines);
+  const tree = processor.parse(body);
+  // The tree counts line endings the same way splitLines does, so this needs no line array
+  const totalLines = tree.position?.end.line ?? 1;
+  const headings = detectHeadings(tree, body);
 
-  const outline: OutlineEntry[] = headings.map((heading, index) => {
+  const outline: OutlineEntry[] = headings.map(({ startOffset, ...heading }, index) => {
     let endLine = totalLines;
+    let endOffset = body.length;
     for (let j = index + 1; j < headings.length; j++) {
       if (headings[j].level <= heading.level) {
         endLine = headings[j].startLine - 1;
+        endOffset = headings[j].startOffset;
         break;
       }
     }
-    return { ...heading, endLine, chars: sliceChars(source, heading.startLine, endLine) };
+    return { ...heading, endLine, chars: charsBetween(body, startOffset, endOffset) };
   });
 
   let preamble: SectionRange | undefined;
@@ -195,7 +192,7 @@ export const parseMarkdownOutline = (body: string): MarkdownOutline => {
     preamble = { startLine: 1, endLine: totalLines, chars: body.length };
   } else if (outline[0].startLine > 1) {
     const endLine = outline[0].startLine - 1;
-    preamble = { startLine: 1, endLine, chars: sliceChars(source, 1, endLine) };
+    preamble = { startLine: 1, endLine, chars: charsUpToLine(body, endLine) };
   }
 
   return { outline, preamble, totalLines, totalChars: body.length };
@@ -224,7 +221,7 @@ export const filterOutlineByDepth = (parsed: MarkdownOutline, maxDepth: number, 
       preamble = { startLine: 1, endLine: parsed.totalLines, chars: parsed.totalChars };
     } else if (outline[0].startLine > 1) {
       const endLine = outline[0].startLine - 1;
-      preamble = { startLine: 1, endLine, chars: sliceChars(splitSourceLines(body), 1, endLine) };
+      preamble = { startLine: 1, endLine, chars: charsUpToLine(body, endLine) };
     }
   }
 
