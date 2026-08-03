@@ -11,7 +11,7 @@
   "bin": {
     "@growi/mcp-server": "./dist/index.js"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
   "scripts": {
     "build": "pnpm ncc build ./src/index.ts --license ./LICENSE",
     "prebuild": "pnpm run clean",
@@ -22,7 +22,11 @@
     "dev:inspect": "pnpm dlx @modelcontextprotocol/inspector pnpm nodemon --quiet --watch src --ext ts,json --exec \"cross-env NODE_ENV=development pnpm tsx src/index.ts\"",
     "lint": "biome check",
     "test": "pnpm vitest run",
-    "test:coverage": "pnpm vitest run --coverage"
+    "test:coverage": "pnpm vitest run --coverage",
+    "sync:versions": "tsx scripts/sync-manifest-versions.ts",
+    "sync:versions:check": "tsx scripts/sync-manifest-versions.ts --check",
+    "release:version": "changeset version && pnpm sync:versions && biome format --write package.json gemini-extension.json .claude-plugin/plugin.json",
+    "release:publish": "pnpm sync:versions:check && pnpm build && changeset publish"
   },
   "packageManager": "pnpm@10.11.0",
   "dependencies": {
@@ -32,6 +36,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.1",
     "@growi/core": "^2.3.2",
     "@growi/sdk-typescript": "^1.12.0",
     "@tsconfig/node22": "^22.0.2",
