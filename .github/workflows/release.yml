@@ -11,18 +11,53 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
-
 jobs:
-  release:
-    name: Version or publish via changesets
+  checks:
+    name: Lint, test, sync check, and build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.11.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Check manifest version consistency
+        run: pnpm sync:versions:check
+
+      - name: Build
+        run: pnpm build
+
+  release:
+    name: Version or publish via changesets
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
         with:
           # changesets needs full tag history to compute the next version and changelog.
           fetch-depth: 0
@@ -35,6 +70,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
+          # Trusted Publishing requires npm CLI >=11.5.1 (bundled with Node >=22.14);
+          # do not lower node-version below that or publishing silently breaks.
           node-version: '24'
           cache: 'pnpm'
           # No registry-url here: publishing uses npm Trusted Publishing (OIDC)

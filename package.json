@@ -12,6 +12,8 @@
     "@growi/mcp-server": "./dist/index.js"
   },
   "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+  "repository": { "type": "git", "url": "https://github.com/growilabs/growi-mcp-server.git" },
+  "homepage": "https://github.com/growilabs/growi-mcp-server",
   "scripts": {
     "build": "pnpm ncc build ./src/index.ts --license ./LICENSE",
     "prebuild": "pnpm run clean",
