@@ -55,6 +55,8 @@
 - Gemini CLI が拡張の取得経路や更新検知の方式を変えたとき
 - `skills/` を独立した配布物として別バージョンで配る要求が出たとき
 - 公開と tag / Release 作成の順序を変える変更を入れるとき（Gemini 拡張のバージョン固定が成立しなくなる）
+- Gemini CLI が拡張 manifest の未知キーを厳密に検証するようになったとき（説明用のコメントキーが使えなくなる）
+- Gemini CLI が manifest の変数（`${extensionPath}` など）の展開方法を変えたとき（作業ディレクトリの指定が壊れる）
 
 ## Requirements Traceability
 
@@ -287,6 +289,14 @@ export const collectVersionViolations: (
   version: string,
 ) => readonly VersionViolation[];
 
+// The launch-definition check is deliberately a separate function: its violations
+// cannot be repaired by the rewrite mode, so folding them into
+// collectVersionViolations would break that function's invariant.
+export const collectLaunchShapeViolations: (
+  manifest: GeminiExtensionManifest,
+  version: string,
+) => readonly VersionViolation[];
+
 // Auxiliary exports used by the CLI layer and by tests.
 export const applyVersionToLaunchArgs: (
   args: readonly string[],
@@ -406,9 +416,13 @@ export const extractPackageVersion: (
 **Responsibilities & Constraints**
 
 - MCP サーバーの起動は npm 経由とし、バージョンを固定して指定する。`${extensionPath}/dist` を参照しない（6.2）。
-- 作業ディレクトリ指定（`cwd`）を持たない（同名のローカルパッケージと紛れる余地を消すため）。
+- **作業ディレクトリ（`cwd`）は拡張の展開先の 1 つ上を指す。** 3 つの選択肢を実測して決めた。
+  - 展開先そのもの: 起動できない。展開先には `@growi/mcp-server` という名前の `package.json` が入るため、npm がそれをローカルパッケージと解釈し、そこに書かれた実行ファイル（配布物に含まれない `dist/index.js`）を探して失敗する。
+  - 展開先のサブディレクトリ: 同じく起動できない。npm は作業ディレクトリから親をたどって `package.json` を探すため、上と同じ状態になる。
+  - 展開先の 1 つ上: 起動する。`package.json` が無いためレジストリから取得され、環境変数ファイルの探索先も拡張の置き場所になる。
+- **指定を省略してはならない。** 省略すると利用者が `gemini` を起動したプロジェクトのディレクトリを引き継ぐため、(1) そのプロジェクトの `.npmrc` が読まれて社内レジストリ設定でパッケージ取得に失敗し、(2) そのプロジェクトの `.env` / `.env.local` が読まれて未設定の環境変数が混入する（`GROWI_APP_NAME_2` だけがある `.env` で設定検証が落ちる）。
 - `settings` に並ぶ GROWI 接続用の環境変数名と役割は変更しない（6.4）。
-- `version` は同期スクリプトが `package.json` に合わせる（6.3）。
+- `version` は同期スクリプトが `package.json` に合わせる（6.3）。MCP サーバーが応答で名乗るバージョンは、実装が `package.json` をビルド時に読むため同期対象に含めない（ずれる余地が無い）。
 
 **Contracts**: State [x]
 
@@ -417,21 +431,24 @@ export const extractPackageVersion: (
 
 **Implementation Notes**
 
-- Integration: 起動定義は「コマンドに npm の実行ラッパー、引数に確認省略フラグとバージョン固定のパッケージ指定」の形にする。
+- Integration: 起動定義は「コマンドに npm の実行ラッパー、引数に確認省略フラグとバージョン固定のパッケージ指定、作業ディレクトリに展開先の 1 つ上」の形にする。
 
   ```json
   {
+    "// mcpServers.growi.cwd": "<なぜ 1 つ上を指すのかの説明>",
     "mcpServers": {
       "growi": {
         "command": "npx",
-        "args": ["-y", "@growi/mcp-server@1.7.0"]
+        "args": ["-y", "@growi/mcp-server@1.7.0"],
+        "cwd": "${extensionPath}${/}.."
       }
     }
   }
   ```
 
-- Validation: 拡張のインストールと MCP サーバー起動の確認は、初回リリース後の手動確認で行う（Testing Strategy）。
-- Risks: 初回起動時に npm からの取得が入るため待ち時間が生じる。オフラインでは起動しない。いずれも要件から除外済み。
+- Integration: この manifest は厳密な JSON でコメントを書けないため、**説明はトップレベルの未知キー**（`"// <対象キー名>"`）として持つ。上流の manifest 型は TypeScript の interface で実行時の未知キー拒否が無いため無視される。**`mcpServers` の内側には置かない**（そこのキーはサーバー名として扱われるため、コメントキーがサーバー定義として起動を試みられる）。
+- Validation: 起動定義の形は同期スクリプトの検査が守る（`npx` であること・固定バージョンの引数があること・`cwd` があること）。人間向けの説明（コメントキー）と機械向けの検査を二重に置くのは、コメントが消されても壊れた状態が公開まで進まないようにするため。拡張のインストールと MCP サーバー起動の確認は、初回リリース後の手動確認で行う（Testing Strategy）。
+- Risks: 初回起動時に npm からの取得が入るため待ち時間が生じる。オフラインでは起動しない。いずれも要件から除外済み。バージョンを引数に固定しているため、リリースごとに拡張の更新時に確認プロンプトが出る（Gemini CLI は起動コマンドの文字列が変わったときに確認を求める）。
 
 #### Package Manifest
 
@@ -538,8 +555,9 @@ GitHub Actions の実行結果を唯一の観測点とする。専用の監視�
 ### Manual Verification
 
 1. `gemini extensions install` で拡張を導入し、MCP サーバーが起動して GROWI ツールが使えることを確認する（6.1、6.2）
-2. 拡張の表示バージョンと、起動したサーバーのバージョンが一致することを確認する（6.3）
-3. npm の `next` dist-tag が `1.0.0-RC.6` のまま変わっていないことを確認する（8.2、8.3）
+2. 次の 3 つが同じ値であることを確認する（6.3）。拡張の表示バージョン、起動引数に固定されたパッケージのバージョン、MCP の応答でサーバーが名乗るバージョン。3 つ目は実装が `package.json` をビルド時に読むため自動的に一致する
+3. 利用者のプロジェクト配下からの起動を確認する（6.1）。`.npmrc` を持つディレクトリと、`GROWI_` で始まるキーを含む `.env` を持つディレクトリの両方で `gemini` を起動し、いずれでも MCP サーバーが起動すること（作業ディレクトリの指定が効いていることの確認）
+4. npm の `next` dist-tag が `1.0.0-RC.6` のまま変わっていないことを確認する（8.2、8.3）
 
 ### Out of Scope
 

@@ -28,13 +28,27 @@ type ManifestVersions = {
   readonly pluginVersion: string;
 };
 
+/** The working directory the shipped manifest uses: the parent of the extension directory. */
+const EXTENSION_PARENT_CWD = '${extensionPath}${/}..';
+
 const buildGeminiManifest = (version: string): unknown => ({
   name: 'growi-mcp-server',
   version,
   description: 'MCP server that connects AI models to GROWI wiki content.',
   settings: [{ name: 'App Name', description: 'Name identifier for the GROWI app', envVar: 'GROWI_APP_NAME_1' }],
   mcpServers: {
-    growi: { command: 'npx', args: ['-y', `@growi/mcp-server@${version}`] },
+    growi: { command: 'npx', args: ['-y', `@growi/mcp-server@${version}`], cwd: EXTENSION_PARENT_CWD },
+  },
+});
+
+/** The state this release flow removed: starting a built file that the published package does not ship. */
+const buildRevertedGeminiManifest = (version: string): unknown => ({
+  name: 'growi-mcp-server',
+  version,
+  description: 'MCP server that connects AI models to GROWI wiki content.',
+  settings: [{ name: 'App Name', description: 'Name identifier for the GROWI app', envVar: 'GROWI_APP_NAME_1' }],
+  mcpServers: {
+    growi: { command: 'node', args: ['${extensionPath}/dist/index.js'] },
   },
 });
 
@@ -129,6 +143,19 @@ describe('sync-manifest-versions CLI', () => {
       geminiArgs: ['-y', `@growi/mcp-server@${STALE_VERSION}`],
       pluginVersion: STALE_VERSION,
     });
+  });
+
+  it('fails the check and asks for a person when the launch definition no longer starts the published package', async () => {
+    await prepare(PACKAGE_VERSION, PACKAGE_VERSION);
+    await writeJson(join(root, 'gemini-extension.json'), buildRevertedGeminiManifest(PACKAGE_VERSION));
+
+    const result = await runScript(root, ['--check']);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('mcpServers');
+    expect(result.stderr).toContain('by hand');
+    // Naming the sync command here would send a person in a circle: it never rebuilds a launch definition.
+    expect(result.stderr).not.toContain('release:version');
   });
 
   it('still fails the check when it is started through a symlinked path', async () => {

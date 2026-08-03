@@ -6,14 +6,19 @@ import {
   type McpServerEntry,
   applyVersionToGeminiManifest,
   applyVersionToPluginManifest,
+  collectLaunchShapeViolations,
   collectVersionViolations,
   extractPackageVersion,
 } from './sync-manifest-versions.js';
+
+/** The working directory the shipped manifest uses: the parent of the extension directory. */
+const EXTENSION_PARENT_CWD = '${extensionPath}${/}..';
 
 /** Extra keys stand for the launch options a manifest may carry; the sync must not drop any of them. */
 const buildServerEntry = (args?: readonly string[]): McpServerEntry => ({
   command: 'npx',
   ...(args === undefined ? {} : { args }),
+  cwd: EXTENSION_PARENT_CWD,
   env: { GROWI_APP_NAME_1: 'main' },
   timeout: 30000,
   trust: false,
@@ -207,6 +212,55 @@ describe('collectVersionViolations', () => {
   });
 });
 
+describe('collectLaunchShapeViolations', () => {
+  const version = '2.3.4';
+  const pinnedArgs = ['-y', `@growi/mcp-server@${version}`];
+
+  const expectedViolation = {
+    file: 'gemini-extension.json',
+    location: 'mcpServers',
+    found: 'no npx entry with a pinned version and a cwd',
+    expected: `an npx entry whose args include @growi/mcp-server@${version} and whose cwd is set`,
+  };
+
+  it('reports nothing for the launch definition the extension needs to start', () => {
+    const manifest = buildGeminiManifest({ version, args: pinnedArgs });
+
+    expect(collectLaunchShapeViolations(manifest, version)).toEqual([]);
+  });
+
+  it('reports nothing while one entry starts the published package, whatever the other entries are', () => {
+    const mcpServers = { remote: { httpUrl: 'https://mcp.example.com/mcp' }, growi: buildServerEntry(pinnedArgs) };
+    const manifest = buildGeminiManifest({ version, mcpServers });
+
+    expect(collectLaunchShapeViolations(manifest, version)).toEqual([]);
+  });
+
+  it.each([
+    {
+      // The state this release flow removed: it started a built file that the published package does not ship.
+      label: 'the definition went back to running a built file inside the extension directory',
+      mcpServers: { growi: { command: 'node', args: ['${extensionPath}/dist/index.js'] } },
+    },
+    { label: 'the entry carries no launch arguments', mcpServers: { growi: { command: 'npx', args: [], cwd: EXTENSION_PARENT_CWD } } },
+    { label: 'there is no entry at all', mcpServers: {} },
+    { label: 'the working directory is missing', mcpServers: { growi: { command: 'npx', args: pinnedArgs } } },
+    { label: 'the working directory is an empty string', mcpServers: { growi: { command: 'npx', args: pinnedArgs, cwd: '' } } },
+    {
+      label: 'the launch argument names a sibling package',
+      mcpServers: { growi: { command: 'npx', args: ['-y', `@growi/mcp-server-cli@${version}`], cwd: EXTENSION_PARENT_CWD } },
+    },
+    {
+      label: 'the pinned version is stale',
+      mcpServers: { growi: { command: 'npx', args: ['-y', '@growi/mcp-server@1.0.0'], cwd: EXTENSION_PARENT_CWD } },
+    },
+  ])('reports a violation naming the place, the state and the wanted shape when $label', ({ mcpServers }) => {
+    const manifest = buildGeminiManifest({ version, mcpServers });
+
+    expect(collectLaunchShapeViolations(manifest, version)).toEqual([expectedViolation]);
+  });
+});
+
 describe('the check mode and the rewrite mode agree', () => {
   const version = '2.3.4';
 
@@ -281,6 +335,14 @@ describe('the check mode and the rewrite mode agree', () => {
     {
       label: 'an argument names a sibling package only',
       gemini: buildGeminiManifest({ version, args: ['-y', '@growi/mcp-server-cli@1.0.0'] }),
+      plugin: buildPluginManifest(version),
+      inSync: true,
+    },
+    {
+      // The launch definition is outside this agreement on purpose: the rewrite cannot rebuild it, so
+      // "collectVersionViolations" stays silent about it and "collectLaunchShapeViolations" reports it.
+      label: 'a broken launch definition is not part of this agreement',
+      gemini: buildGeminiManifest({ version, mcpServers: { growi: { command: 'node', args: ['${extensionPath}/dist/index.js'] } } }),
       plugin: buildPluginManifest(version),
       inSync: true,
     },

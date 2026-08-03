@@ -81,6 +81,54 @@ export const applyVersionToGeminiManifest = (manifest: GeminiExtensionManifest, 
 
 export const applyVersionToPluginManifest = (manifest: ClaudePluginManifest, version: string): ClaudePluginManifest => ({ ...manifest, version });
 
+/** The only command that can start the published package; anything else means the manifest stopped using npm. */
+const NPX_COMMAND = 'npx';
+const MCP_SERVERS_LOCATION = 'mcpServers';
+
+/**
+ * A working directory has to be set, but its value cannot be judged here: it is a Gemini CLI variable
+ * expression (`${extensionPath}${/}..`) that only the CLI expands. A missing or blank value is rejected
+ * because npx then runs in whatever project the user started the CLI in, where a private registry in
+ * `.npmrc` can make the install fail and stray `.env` files leak into the server's configuration.
+ */
+const hasWorkingDirectory = (entry: McpServerEntry): boolean => typeof entry.cwd === 'string' && entry.cwd.trim() !== '';
+
+/**
+ * The argument naming this package has to be the exact expected spec. Asking `isPackageSpecArg` which
+ * argument names the package (instead of a plain search) keeps a sibling such as `@growi/mcp-server-cli`
+ * from passing as the pin, the same reason the rewrite uses it.
+ */
+const hasPinnedPackageSpec = (args: readonly string[], expectedSpec: string): boolean => args.find(isPackageSpecArg) === expectedSpec;
+
+const startsPublishedPackage = (entry: McpServerEntry, expectedSpec: string): boolean =>
+  entry.command === NPX_COMMAND && hasPinnedPackageSpec(entry.args ?? [], expectedSpec) && hasWorkingDirectory(entry);
+
+/**
+ * Report the shape of the launch definition, not only the versions written inside it.
+ *
+ * Comparing versions alone let the manifest go back to starting a built file inside the extension
+ * directory (`node ${extensionPath}/dist/index.js`) — the exact breakage this release flow removed —
+ * while the check stayed green all the way to publishing. A typo in the package name passed too.
+ *
+ * This is reported separately from the version mismatches because the rewrite mode cannot repair it:
+ * the sync replaces versions and never rebuilds a launch definition.
+ */
+export const collectLaunchShapeViolations = (manifest: GeminiExtensionManifest, version: string): readonly VersionViolation[] => {
+  const expectedSpec = buildPackageSpec(version);
+  if (Object.values(manifest.mcpServers).some((entry) => startsPublishedPackage(entry, expectedSpec))) {
+    return [];
+  }
+
+  return [
+    {
+      file: GEMINI_MANIFEST_FILE,
+      location: MCP_SERVERS_LOCATION,
+      found: 'no npx entry with a pinned version and a cwd',
+      expected: `an npx entry whose args include ${expectedSpec} and whose cwd is set`,
+    },
+  ];
+};
+
 const collectGeminiViolations = (manifest: GeminiExtensionManifest, version: string): readonly VersionViolation[] => {
   const expectedSpec = buildPackageSpec(version);
 
@@ -102,7 +150,9 @@ const collectGeminiViolations = (manifest: GeminiExtensionManifest, version: str
  * Report every place whose version does not match the package version.
  *
  * The returned list is empty exactly when applying the transformation functions would produce no
- * diff, so the check mode and the rewrite mode can never disagree.
+ * diff, so the check mode and the rewrite mode can never disagree. The shape of the launch definition
+ * is deliberately left out of that agreement (see `collectLaunchShapeViolations`): the rewrite cannot
+ * repair it, so reporting it here would break the invariant this function is relied on for.
  */
 export const collectVersionViolations = (input: ManifestSet, version: string): readonly VersionViolation[] => {
   const pluginViolations: readonly VersionViolation[] =
@@ -135,7 +185,7 @@ const USAGE_EXIT_CODE = 2;
 
 const USAGE = [
   `Usage: tsx scripts/sync-manifest-versions.ts [${CHECK_FLAG}|${WRITE_FLAG}]`,
-  `  ${CHECK_FLAG}   report version mismatches and exit non-zero; writes nothing`,
+  `  ${CHECK_FLAG}   report version mismatches and launch definition problems, then exit non-zero; writes nothing`,
   `  ${WRITE_FLAG}   rewrite the distribution manifests (the default when no argument is given)`,
 ].join('\n');
 
@@ -241,21 +291,50 @@ const loadManifests = async (): Promise<{ readonly version: string } & ManifestS
   };
 };
 
-const runCheck = async (): Promise<number> => {
-  const { version, gemini, plugin } = await loadManifests();
-  const violations = collectVersionViolations({ gemini, plugin }, version);
-
-  if (violations.length === 0) {
-    console.log(`✅ manifest versions are in sync with ${PACKAGE_MANIFEST_FILE} (${version}).`);
-    return 0;
-  }
-
-  console.error(`❌ ${violations.length} manifest version mismatch(es) against ${PACKAGE_MANIFEST_FILE} (${version}):`);
+const reportViolations = (headline: string, violations: readonly VersionViolation[], guidance: string): void => {
+  console.error(headline);
   for (const violation of violations) {
     console.error(`  - ${formatViolation(violation)}`);
   }
-  // "pnpm sync:versions" alone leaves the rewritten manifests unformatted, which then fails "pnpm lint".
-  console.error('Run "pnpm release:version" to fix: it rewrites the manifests and formats them.');
+  console.error(guidance);
+};
+
+/**
+ * Version mismatches and launch definition problems are reported apart from each other because they ask
+ * for different work: the first kind is produced by a command, the second one only by a person editing
+ * the manifest. Pointing at the sync command for a launch definition would send that person in a circle.
+ */
+const runCheck = async (): Promise<number> => {
+  const { version, gemini, plugin } = await loadManifests();
+  const versionViolations = collectVersionViolations({ gemini, plugin }, version);
+  const shapeViolations = collectLaunchShapeViolations(gemini, version);
+
+  if (versionViolations.length === 0 && shapeViolations.length === 0) {
+    console.log(`✅ ${GEMINI_MANIFEST_FILE} starts the published package, and every manifest version is in sync with ${PACKAGE_MANIFEST_FILE} (${version}).`);
+    return 0;
+  }
+
+  if (versionViolations.length > 0) {
+    reportViolations(
+      `❌ ${versionViolations.length} manifest version mismatch(es) against ${PACKAGE_MANIFEST_FILE} (${version}):`,
+      versionViolations,
+      // "pnpm sync:versions" alone leaves the rewritten manifests unformatted, which then fails "pnpm lint".
+      'Run "pnpm release:version" to fix: it rewrites the manifests and formats them.',
+    );
+  }
+
+  if (shapeViolations.length > 0) {
+    // A stale pin shows up in both lists, so the guidance names the sync only while such a mismatch is
+    // still pending: claiming a command exists for the launch definition itself would be false.
+    reportViolations(
+      `❌ ${shapeViolations.length} launch definition problem(s) in ${GEMINI_MANIFEST_FILE}:`,
+      shapeViolations,
+      versionViolations.length === 0
+        ? `Fix ${GEMINI_MANIFEST_FILE} by hand: no command rebuilds the launch definition.`
+        : `Run "pnpm release:version" for the mismatches above first, then fix whatever is left in ${GEMINI_MANIFEST_FILE} by hand: no command rebuilds the launch definition.`,
+    );
+  }
+
   return MISMATCH_EXIT_CODE;
 };
 
