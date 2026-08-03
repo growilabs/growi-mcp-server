@@ -45,14 +45,24 @@ describe('getPageOutline service', () => {
     expect(result.hiddenHeadingCount).toBe(1);
   });
 
-  it('propagates the unterminatedFence warning to the tool response', async () => {
-    const body = ['# A', '```', 'code', '# Hidden'].join('\n');
-    mockedGetPage.mockResolvedValue({ page: { _id: 'page1', path: '/p', revision: { _id: 'rev1', body } } });
+  it('includes page metadata (parent, grant, grantedUsers) in the response without an extra GROWI API call', async () => {
+    const body = ['# Title', 'text'].join('\n');
+    mockedGetPage.mockResolvedValue({
+      page: {
+        _id: 'page1',
+        path: '/wiki/test',
+        revision: { _id: 'rev1', body },
+        parent: 'parent1',
+        grant: 1,
+        grantedUsers: ['u1'],
+        tags: ['t1'],
+      },
+    });
 
     const result = await getPageOutline({ pageId: 'page1' }, 'default');
 
-    expect(result.unterminatedFence).toBe(true);
-    expect(result.outline.map((entry) => entry.text)).toEqual(['A']);
+    expect(result.page).toMatchObject({ parent: 'parent1', grant: 1, grantedUsers: ['u1'], tags: ['t1'] });
+    expect(mockedGetPage).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the whole page addressable via preamble when maxDepth hides every heading', async () => {

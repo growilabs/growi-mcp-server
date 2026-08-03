@@ -173,9 +173,10 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
 - `deletePages` - Delete pages (bulk operation supported)
 - `duplicatePage` - Duplicate a page (including child pages)
 - `renamePage` - Change page name and path
-- `getPage` - Get a page data
-- `getPageOutline` - Get the heading outline of a page (heading tree with line ranges and sizes, without the body)
+- `getPageOutline` - Get the heading outline of a page (heading tree with line ranges and sizes, without the body); also detects setext-style (underline) headings
 - `getPageSection` - Read only a part of a page, addressed by heading text or line range
+- `getPageWholeContents` - Get the full markdown body of a page
+- `getPage` - **Deprecated, will be removed in 2.0.0.** Alias of `getPageWholeContents` kept for backward compatibility; use `getPageOutline`, `getPageSection`, or `getPageWholeContents` instead
 - `getPageInfo` - Get detailed page information
 - `getRecentPages` - Get list of recently updated pages
 - `getPageListingRoot` - Get root page list

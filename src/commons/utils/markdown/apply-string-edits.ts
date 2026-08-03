@@ -48,9 +48,6 @@ export class EditMatchError extends GrowiApiError {
 }
 
 const findOccurrences = (body: string, needle: string): number[] => {
-  if (needle.length === 0) {
-    return []; // reported as not-found by the caller; an empty needle would otherwise loop forever
-  }
   const indices: number[] = [];
   let index = body.indexOf(needle);
   while (index !== -1) {

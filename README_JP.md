@@ -173,9 +173,10 @@ npx skills update
 - `deletePages` - ページを削除（一括対応）
 - `duplicatePage` - ページを複製（子ページも含む）
 - `renamePage` - ページ名とパスを変更
-- `getPage` - ページの内容を取得
-- `getPageOutline` - ページの見出しアウトラインを取得（本文なしで見出しツリー・行範囲・サイズを返却）
+- `getPageOutline` - ページの見出しアウトラインを取得（本文なしで見出しツリー・行範囲・サイズを返却）。下線形式（setext）の見出しも検出する
 - `getPageSection` - ページの一部だけを読み取り（見出しテキストまたは行範囲で指定）
+- `getPageWholeContents` - ページの全文（markdown 本文）を取得
+- `getPage` - **非推奨。2.0.0 で削除予定。** `getPageWholeContents` の別名として後方互換のために維持している。代わりに `getPageOutline` / `getPageSection` / `getPageWholeContents` のいずれかを使うこと
 - `getPageInfo` - ページの詳細情報を取得
 - `getRecentPages` - 最近更新されたページ一覧
 - `getPageListingRoot` - ルートページ一覧を取得

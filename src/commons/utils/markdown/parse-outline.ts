@@ -1,19 +1,30 @@
 /**
- * Parses the ATX heading outline of a markdown document.
+ * Parses the heading outline of a markdown document.
  *
- * Limitations (documented behavior):
- * - Only ATX headings (`# ` .. `###### `, up to 3 leading spaces) are recognized; setext headings are not treated as sections.
- * - Bodies are assumed to be LF-normalized (GROWI replaces CR/CRLF with LF on read); a trailing `\r` is tolerated for matching.
+ * Heading detection is delegated to remark (`remark-parse` + `remark-frontmatter`), the same parser
+ * GROWI renders pages with, so the outline lists exactly the headings a reader sees. Section
+ * boundaries, the preamble range and character counts are this repository's own contract and are
+ * computed here: the syntax tree does not carry them.
+ *
+ * Bodies are assumed to be LF-normalized (GROWI replaces CR/CRLF with LF on read); a trailing `\r`
+ * is tolerated when reading heading lines back out of the source.
  */
 
+import { toString as renderHeadingText } from 'mdast-util-to-string';
+import remarkFrontmatter from 'remark-frontmatter';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
+import { visit } from 'unist-util-visit';
 import { GrowiApiError } from '../../api/growi-api-error.js';
 
 export interface OutlineEntry {
   /** Heading level (1-6) */
   level: number;
-  /** Heading text without the leading `#` marks */
+  /** Rendered heading text, matching GROWI's table of contents (inline markup resolved) */
   text: string;
-  /** 1-indexed line number of the heading line */
+  /** The heading as authored, without the `#` marker and the optional ATX closing sequence */
+  raw: string;
+  /** 1-indexed line number of the heading line (the text line, for setext headings) */
   startLine: number;
   /** 1-indexed inclusive last line of the section (up to the next heading of the same or higher level) */
   endLine: number;
@@ -33,8 +44,6 @@ export interface MarkdownOutline {
   preamble?: SectionRange;
   totalLines: number;
   totalChars: number;
-  /** True when a code fence is left open at EOF: per CommonMark it runs to the end, so headings after it are not listed */
-  unterminatedFence?: boolean;
 }
 
 /**
@@ -53,32 +62,65 @@ export class HeadingMatchError extends GrowiApiError {
   }
 }
 
-const HEADING_PATTERN = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/;
-const FENCE_OPEN_PATTERN = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+// GFM is deliberately absent: it changes no heading in practice and only costs parse time.
+const processor = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']);
 
-interface FenceState {
-  char: string;
-  length: number;
-}
+const ATX_MARKER_PATTERN = /^#{1,6}/;
+const ATX_CLOSING_PATTERN = /[ \t]+#+[ \t]*$/;
 
-const detectFrontmatterEnd = (lines: string[]): number => {
-  if (lines.length === 0 || lines[0].trimEnd() !== '---') {
-    return 0;
+const withoutCarriageReturn = (line: string): string => line.replace(/\r$/, '');
+
+/**
+ * Recovers the authored heading notation, which the syntax tree does not keep (it only holds
+ * rendered text). The source line is sliced at the node's start column so container markers
+ * (list bullets, blockquote `>`) stay out, then the ATX marker and closing sequence are removed.
+ * Setext headings carry no markers, so their body lines are taken as they are, minus the underline.
+ */
+const extractRawHeading = (lines: string[], startLine: number, startColumn: number, endLine: number): string => {
+  const firstLine = withoutCarriageReturn(lines[startLine - 1] ?? '').slice(startColumn - 1);
+
+  if (endLine > startLine) {
+    const continuation = lines.slice(startLine, endLine - 1).map((line) => withoutCarriageReturn(line).trim());
+    return [firstLine.trim(), ...continuation].join('\n');
   }
-  for (let i = 1; i < lines.length; i++) {
-    const trimmed = lines[i].trimEnd();
-    if (trimmed === '---' || trimmed === '...') {
-      return i + 1; // 1-indexed line number of the closing delimiter
-    }
-    // A heading-shaped line means this is a document starting with a thematic break, not YAML frontmatter
-    if (HEADING_PATTERN.test(lines[i].replace(/\r$/, ''))) {
-      return 0;
-    }
-  }
-  return 0; // unterminated: do not treat as frontmatter
+
+  return firstLine.replace(ATX_MARKER_PATTERN, '').replace(ATX_CLOSING_PATTERN, '').trim();
 };
 
-const sliceChars = (lines: string[], startLine: number, endLine: number): number => {
+interface DetectedHeading {
+  level: number;
+  text: string;
+  raw: string;
+  startLine: number;
+}
+
+/**
+ * Headings whose label renders empty (`#` on its own) are kept. Dropping them would silently fold
+ * their lines into the preceding section, and the outline is meant to mirror the document structure.
+ */
+const detectHeadings = (body: string, lines: string[]): DetectedHeading[] => {
+  const tree = processor.parse(body);
+  const headings: DetectedHeading[] = [];
+
+  visit(tree, 'heading', (node) => {
+    // The braces matter: a callback returning a number is read by unist-util-visit as the index to
+    // continue from, and `push` returns the new length, which makes it revisit the same node.
+    const position = node.position;
+    if (position == null) {
+      return;
+    }
+    headings.push({
+      level: node.depth,
+      text: renderHeadingText(node),
+      raw: extractRawHeading(lines, position.start.line, position.start.column, position.end.line),
+      startLine: position.start.line,
+    });
+  });
+
+  return headings;
+};
+
+const sliceChars = (lines: readonly string[], startLine: number, endLine: number): number => {
   let chars = 0;
   for (let i = startLine - 1; i < endLine; i++) {
     chars += lines[i].length;
@@ -89,40 +131,7 @@ const sliceChars = (lines: string[], startLine: number, endLine: number): number
 export const parseMarkdownOutline = (body: string): MarkdownOutline => {
   const lines = body.split('\n');
   const totalLines = lines.length;
-  const frontmatterEnd = detectFrontmatterEnd(lines);
-
-  const headings: Array<{ level: number; text: string; startLine: number }> = [];
-  let fence: FenceState | null = null;
-
-  for (let i = frontmatterEnd; i < lines.length; i++) {
-    const line = lines[i].replace(/\r$/, '');
-
-    if (fence != null) {
-      const closeMatch = line.match(FENCE_OPEN_PATTERN);
-      if (closeMatch != null && closeMatch[1][0] === fence.char && closeMatch[1].length >= fence.length && closeMatch[2].trim() === '') {
-        fence = null;
-      }
-      continue;
-    }
-
-    const fenceMatch = line.match(FENCE_OPEN_PATTERN);
-    if (fenceMatch != null) {
-      const marker = fenceMatch[1];
-      // A backtick fence cannot have backticks in its info string (CommonMark)
-      if (marker[0] === '~' || !fenceMatch[2].includes('`')) {
-        fence = { char: marker[0], length: marker.length };
-        continue;
-      }
-    }
-
-    const headingMatch = line.match(HEADING_PATTERN);
-    if (headingMatch != null) {
-      const rawText = headingMatch[2] ?? '';
-      // Strip an optional ATX closing sequence (e.g. `## Title ##`)
-      const text = rawText.replace(/[ \t]+#+$/, '').trim();
-      headings.push({ level: headingMatch[1].length, text, startLine: i + 1 });
-    }
-  }
+  const headings = detectHeadings(body, lines);
 
   const outline: OutlineEntry[] = headings.map((heading, index) => {
     let endLine = totalLines;
@@ -143,11 +152,86 @@ export const parseMarkdownOutline = (body: string): MarkdownOutline => {
     preamble = { startLine: 1, endLine, chars: sliceChars(lines, 1, endLine) };
   }
 
-  return { outline, preamble, totalLines, totalChars: body.length, unterminatedFence: fence != null || undefined };
+  return { outline, preamble, totalLines, totalChars: body.length };
 };
 
 /**
- * Resolves a heading (by exact text, falling back to case-insensitive match) to its section line range.
+ * Filters an already-parsed outline down to a maximum heading depth, recomputing the preamble so
+ * every line stays addressable even when filtering hides the leading heading(s).
+ *
+ * This is a separate function rather than an extra `parseMarkdownOutline` argument because
+ * filtering by depth is a display-time concern specific to `getPageOutline`: `getPageSection`
+ * never filters by depth, so threading an argument through `parseMarkdownOutline` would leave it
+ * unused there.
+ */
+export const filterOutlineByDepth = (
+  parsed: MarkdownOutline,
+  maxDepth: number,
+  lines: readonly string[],
+): MarkdownOutline & { hiddenHeadingCount?: number } => {
+  const outline = parsed.outline.filter((entry) => entry.level <= maxDepth);
+  const hidden = parsed.outline.length - outline.length;
+
+  let preamble: SectionRange | undefined = parsed.preamble;
+  let hiddenHeadingCount: number | undefined;
+
+  if (hidden > 0) {
+    hiddenHeadingCount = hidden;
+    // Recompute the preamble so every line stays addressable even when filtering hides leading headings
+    if (outline.length === 0) {
+      preamble = { startLine: 1, endLine: parsed.totalLines, chars: parsed.totalChars };
+    } else if (outline[0].startLine > 1) {
+      const endLine = outline[0].startLine - 1;
+      preamble = { startLine: 1, endLine, chars: sliceChars(lines, 1, endLine) };
+    }
+  }
+
+  return { ...parsed, outline, preamble, hiddenHeadingCount };
+};
+
+/**
+ * Comparison order used to resolve a heading name. Both labels are accepted because both are
+ * handed out in the outline: `text` is what a reader sees, `raw` is what an edit has to match.
+ * Exact comparisons run before case-insensitive ones so the closest match wins.
+ */
+const MATCH_STRATEGIES: ReadonlyArray<{ label: 'text' | 'raw'; caseSensitive: boolean }> = [
+  { label: 'text', caseSensitive: true },
+  { label: 'raw', caseSensitive: true },
+  { label: 'text', caseSensitive: false },
+  { label: 'raw', caseSensitive: false },
+];
+
+const toCandidates = (entries: OutlineEntry[]): Array<{ text: string; level: number; startLine: number }> =>
+  entries.map(({ text, level, startLine }) => ({ text, level, startLine }));
+
+const findHeading = (outline: OutlineEntry[], heading: string): OutlineEntry => {
+  const lowered = heading.toLowerCase();
+  let ambiguous: OutlineEntry[] | undefined;
+
+  for (const { label, caseSensitive } of MATCH_STRATEGIES) {
+    const matches = outline.filter((entry) => (caseSensitive ? entry[label] === heading : entry[label].toLowerCase() === lowered));
+    if (matches.length === 1) {
+      return matches[0];
+    }
+    // Remember the first tie so the reported candidates come from the most precise comparison
+    if (matches.length > 1 && ambiguous == null) {
+      ambiguous = matches;
+    }
+  }
+
+  if (ambiguous != null) {
+    throw new HeadingMatchError(
+      `Heading "${heading}" matches ${ambiguous.length} headings; disambiguate with startLine/endLine instead`,
+      'ambiguous',
+      toCandidates(ambiguous),
+    );
+  }
+  throw new HeadingMatchError(`Heading "${heading}" was not found in the page`, 'not-found', toCandidates(outline));
+};
+
+/**
+ * Resolves a heading to its section line range. The name may be either the rendered `text` or the
+ * authored `raw` form; exact matches are tried before case-insensitive ones.
  * @throws HeadingMatchError when the heading is not found or matches multiple headings
  */
 export const resolveHeadingRange = (
@@ -155,28 +239,8 @@ export const resolveHeadingRange = (
   heading: string,
   includeSubsections: boolean,
 ): { startLine: number; endLine: number; matched: OutlineEntry } => {
-  let matches = outline.filter((entry) => entry.text === heading);
-  if (matches.length === 0) {
-    const lowered = heading.toLowerCase();
-    matches = outline.filter((entry) => entry.text.toLowerCase() === lowered);
-  }
+  const matched = findHeading(outline, heading);
 
-  if (matches.length === 0) {
-    throw new HeadingMatchError(
-      `Heading "${heading}" was not found in the page`,
-      'not-found',
-      outline.map(({ text, level, startLine }) => ({ text, level, startLine })),
-    );
-  }
-  if (matches.length > 1) {
-    throw new HeadingMatchError(
-      `Heading "${heading}" matches ${matches.length} headings; disambiguate with startLine/endLine instead`,
-      'ambiguous',
-      matches.map(({ text, level, startLine }) => ({ text, level, startLine })),
-    );
-  }
-
-  const matched = matches[0];
   if (includeSubsections) {
     return { startLine: matched.startLine, endLine: matched.endLine, matched };
   }

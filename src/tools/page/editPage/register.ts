@@ -3,6 +3,7 @@ import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { EditMatchError } from '../../../commons/utils/markdown/apply-string-edits.js';
+import { requirePageIdOrPath } from '../../../commons/utils/require-page-id-or-path.js';
 import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { editPageParamSchema } from './schema.js';
 import { editPage } from './service.js';
@@ -15,7 +16,8 @@ export function registerEditPageTool(server: FastMCP): void {
       'Each edit replaces an exact literal oldString with newString (oldString must match exactly once unless replaceAll is true). ' +
       "Uses optimistic concurrency on the page's current revision: a conflicting concurrent update is retried automatically once, " +
       'except when replaceAll or expectedRevisionId is used (those fail with a conflict error instead). ' +
-      'Use getPageOutline/getPageSection to read the current text first, and dryRun to preview a unified diff.',
+      'Use getPageOutline/getPageSection to read the current text first, and dryRun to preview a unified diff. ' +
+      "A dryRun response's baseRevisionId can be passed straight back as expectedRevisionId on the follow-up call.",
     parameters: editPageParamSchema,
     annotations: {
       readOnlyHint: false,
@@ -28,11 +30,7 @@ export function registerEditPageTool(server: FastMCP): void {
       try {
         // Validate parameters
         const { appName, ...editPageParams } = editPageParamSchema.parse(params);
-        // Cross-field checks live here: fastmcp requires a plain z.object for `parameters`,
-        // so a top-level .refine() (which wraps the schema in ZodEffects) is not an option
-        if (editPageParams.pageId == null && editPageParams.path == null) {
-          throw new UserError('Either pageId or path must be provided');
-        }
+        requirePageIdOrPath(editPageParams);
         const resolvedAppName = resolveAppName(appName);
 
         const result = await editPage(editPageParams, resolvedAppName);

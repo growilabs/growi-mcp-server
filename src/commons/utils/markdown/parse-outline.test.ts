@@ -68,24 +68,18 @@ describe('parseMarkdownOutline', () => {
     expect(outline[0]).toMatchObject({ text: 'real', startLine: 5 });
   });
 
-  it('does not mistake a leading thematic break for frontmatter when headings follow', () => {
+  it('treats a delimited leading "---" block as frontmatter even when it contains heading-like lines', () => {
     const body = ['---', '# A', 'text', '---', '# B'].join('\n');
     const { outline } = parseMarkdownOutline(body);
 
-    expect(outline.map((entry) => entry.text)).toEqual(['A', 'B']);
+    expect(outline.map((entry) => entry.text)).toEqual(['B']);
   });
 
-  it('flags an unterminated fence (headings after it run inside the fence per CommonMark)', () => {
+  it('omits headings after an unterminated fence (the fence runs to EOF per CommonMark)', () => {
     const body = ['# A', '```js', 'code', '# B'].join('\n');
-    const { outline, unterminatedFence } = parseMarkdownOutline(body);
+    const { outline } = parseMarkdownOutline(body);
 
     expect(outline.map((entry) => entry.text)).toEqual(['A']);
-    expect(unterminatedFence).toBe(true);
-  });
-
-  it('does not set unterminatedFence for balanced fences', () => {
-    const body = ['# A', '```', 'code', '```'].join('\n');
-    expect(parseMarkdownOutline(body).unterminatedFence).toBeUndefined();
   });
 
   it('accepts the "..." YAML frontmatter terminator', () => {
@@ -126,7 +120,7 @@ describe('parseMarkdownOutline', () => {
     const { outline } = parseMarkdownOutline(body);
 
     expect(outline).toHaveLength(1);
-    expect(outline[0]).toMatchObject({ level: 2, text: 'Indented' });
+    expect(outline[0]).toMatchObject({ level: 2, text: 'Indented', raw: 'Indented' });
   });
 
   it('computes section chars to reassemble exactly into the body', () => {
@@ -144,6 +138,47 @@ describe('parseMarkdownOutline', () => {
 
     expect(outline[0]).toMatchObject({ startLine: 2, endLine: 2, chars: '# End'.length });
   });
+
+  it('detects setext headings and starts their section at the text line', () => {
+    const body = ['Title', '=====', 'body', '', 'Sub', '-----', 'more'].join('\n');
+    const { outline, preamble } = parseMarkdownOutline(body);
+
+    expect(preamble).toBeUndefined();
+    expect(outline).toHaveLength(2);
+    expect(outline[0]).toMatchObject({ level: 1, text: 'Title', raw: 'Title', startLine: 1, endLine: 7 });
+    expect(outline[1]).toMatchObject({ level: 2, text: 'Sub', raw: 'Sub', startLine: 5, endLine: 7 });
+  });
+
+  it('does not report heading-like lines inside an HTML block', () => {
+    const body = ['<div>', '# fake', '</div>', '', '# real'].join('\n');
+    const { outline } = parseMarkdownOutline(body);
+
+    expect(outline.map((entry) => entry.text)).toEqual(['real']);
+  });
+
+  it('detects an indented heading inside a nested list', () => {
+    const body = ['- a', '    - b', '        # heading', '', '# outside'].join('\n');
+    const { outline } = parseMarkdownOutline(body);
+
+    expect(outline.map((entry) => entry.text)).toEqual(['heading', 'outside']);
+    expect(outline[0]).toMatchObject({ level: 1, raw: 'heading', startLine: 3 });
+  });
+
+  it('returns the rendered text and the authored notation as separate labels', () => {
+    const body = ['## **Bold** and `code` ##', 'x'].join('\n');
+    const { outline } = parseMarkdownOutline(body);
+
+    expect(outline[0]).toMatchObject({ text: 'Bold and code', raw: '**Bold** and `code`' });
+  });
+
+  it('keeps a heading whose label renders empty', () => {
+    const body = ['#', 'text', '## Next', 'y'].join('\n');
+    const { outline } = parseMarkdownOutline(body);
+
+    expect(outline).toHaveLength(2);
+    expect(outline[0]).toMatchObject({ level: 1, text: '', raw: '', startLine: 1, endLine: 4 });
+    expect(outline[1]).toMatchObject({ level: 2, text: 'Next', startLine: 3, endLine: 4 });
+  });
 });
 
 describe('resolveHeadingRange', () => {
@@ -153,6 +188,14 @@ describe('resolveHeadingRange', () => {
   it('resolves a unique heading to its full section range', () => {
     const range = resolveHeadingRange(outline, 'Usage', true);
     expect(range).toMatchObject({ startLine: 8, endLine: 9 });
+  });
+
+  it('resolves a heading by either the rendered text or the authored notation', () => {
+    const decorated = ['# Top', '## **Bold** section', 'body'].join('\n');
+    const parsed = parseMarkdownOutline(decorated);
+
+    expect(resolveHeadingRange(parsed.outline, 'Bold section', true)).toMatchObject({ startLine: 2, endLine: 3 });
+    expect(resolveHeadingRange(parsed.outline, '**Bold** section', true)).toMatchObject({ startLine: 2, endLine: 3 });
   });
 
   it('falls back to case-insensitive matching', () => {

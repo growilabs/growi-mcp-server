@@ -59,6 +59,24 @@ describe('trimPageForResponse', () => {
     expect(trimmed.lastUpdateUser).toEqual({ _id: 'u2', username: 'bob' });
   });
 
+  it('returns grantedUsers as actual entries alongside grantedUsersCount, reducing populated user objects', () => {
+    const pageWithPopulatedGrant = { ...page, grantedUsers: ['u1', { _id: 'u2', username: 'bob', email: 'x@y.z' }] };
+
+    const trimmed = trimPageForResponse(pageWithPopulatedGrant, { keepBody: true }) as Record<string, unknown>;
+
+    expect(trimmed.grantedUsers).toEqual(['u1', { _id: 'u2', username: 'bob' }]);
+    expect(trimmed.grantedUsersCount).toBe(2);
+  });
+
+  it('keeps seenUsers and liker as counts only (no actual entries)', () => {
+    const trimmed = trimPageForResponse(page, { keepBody: true }) as Record<string, unknown>;
+
+    expect(trimmed.seenUsers).toBeUndefined();
+    expect(trimmed.liker).toBeUndefined();
+    expect(trimmed.seenUsersCount).toBe(3);
+    expect(trimmed.likerCount).toBe(0);
+  });
+
   it('keeps the revision body when keepBody is true', () => {
     const trimmed = trimPageForResponse(page, { keepBody: true }) as { revision: Record<string, unknown> };
 

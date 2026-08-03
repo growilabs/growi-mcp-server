@@ -3,6 +3,7 @@ import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { HeadingMatchError } from '../../../commons/utils/markdown/parse-outline.js';
+import { requirePageIdOrPath } from '../../../commons/utils/require-page-id-or-path.js';
 import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { getPageSectionParamSchema } from './schema.js';
 import { getPageSection } from './service.js';
@@ -25,11 +26,7 @@ export function registerGetPageSectionTool(server: FastMCP): void {
       try {
         // Validate parameters
         const { appName, ...getPageSectionParams } = getPageSectionParamSchema.parse(params);
-        // Cross-field checks live here: fastmcp requires a plain z.object for `parameters`,
-        // so a top-level .refine() (which wraps the schema in ZodEffects) is not an option
-        if (getPageSectionParams.pageId == null && getPageSectionParams.path == null) {
-          throw new UserError('Either pageId or path must be provided');
-        }
+        requirePageIdOrPath(getPageSectionParams);
         if (getPageSectionParams.heading != null && (getPageSectionParams.startLine != null || getPageSectionParams.endLine != null)) {
           throw new UserError('heading and startLine/endLine are mutually exclusive; provide only one addressing mode');
         }

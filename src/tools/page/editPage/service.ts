@@ -13,10 +13,16 @@ export interface EditPageResult {
   pageId: string;
   path: string;
   /**
-   * Revision ID after the edit (the base revision ID for dryRun).
-   * Absent when the save response did not include the new revision.
+   * Revision ID the edit was applied on top of. Returned the same way for both dryRun and a
+   * normal save, so a dryRun response's baseRevisionId can be passed straight back as
+   * expectedRevisionId on the follow-up call.
    */
-  revisionId?: string;
+  baseRevisionId: string;
+  /**
+   * Revision ID created by the save. Only present after a normal (non-dryRun) save, and omitted
+   * (never a stale guess) when the save response did not include the new revision.
+   */
+  newRevisionId?: string;
   edits: EditResult[];
   totalLines: number;
   totalChars: number;
@@ -26,6 +32,32 @@ export interface EditPageResult {
   /** Set when the edit succeeded after an automatic retry caused by a concurrent update */
   retriedAfterConflict?: boolean;
 }
+
+interface BuildEditPageResultOptions {
+  dryRun?: true;
+  diff?: string;
+  newRevisionId?: string;
+  retriedAfterConflict?: true;
+}
+
+/**
+ * Assembles the EditPageResult shared by the dryRun, successful-save, and retried-save paths so
+ * totalLines/totalChars are computed in exactly one place (Requirement 6.2).
+ */
+const buildEditPageResult = (pageInfo: PageBodyInfo, newBody: string, results: EditResult[], options: BuildEditPageResultOptions = {}): EditPageResult => {
+  const { dryRun, diff, newRevisionId, retriedAfterConflict } = options;
+  return {
+    pageId: pageInfo.pageId,
+    path: pageInfo.path,
+    baseRevisionId: pageInfo.revisionId,
+    edits: results,
+    totalLines: newBody.split('\n').length,
+    totalChars: newBody.length,
+    ...(dryRun === true ? { dryRun: true, diff } : {}),
+    ...(newRevisionId != null ? { newRevisionId } : {}),
+    ...(retriedAfterConflict === true ? { retriedAfterConflict: true } : {}),
+  };
+};
 
 const CONFLICT_MESSAGE_PATTERN = /revisionId.*outdated|outdated.*revisionId/i;
 
@@ -108,28 +140,15 @@ export const editPage = async (params: EditPageParams, appName: string): Promise
   const { pageInfo, newBody, results } = await applyEditsToLatest(params, appName);
 
   if (params.dryRun === true) {
-    return {
-      pageId: pageInfo.pageId,
-      path: pageInfo.path,
-      revisionId: pageInfo.revisionId,
-      edits: results,
-      totalLines: newBody.split('\n').length,
-      totalChars: newBody.length,
+    return buildEditPageResult(pageInfo, newBody, results, {
       dryRun: true,
       diff: buildUnifiedDiff(pageInfo.body, newBody, pageInfo.path || 'page'),
-    };
+    });
   }
 
   try {
     const result = await putPageBody(pageInfo, newBody, appName);
-    return {
-      pageId: pageInfo.pageId,
-      path: pageInfo.path,
-      revisionId: extractNewRevisionId(result),
-      edits: results,
-      totalLines: newBody.split('\n').length,
-      totalChars: newBody.length,
-    };
+    return buildEditPageResult(pageInfo, newBody, results, { newRevisionId: extractNewRevisionId(result) });
   } catch (error) {
     if (!isRevisionOutdatedError(error)) {
       throw error;
@@ -157,14 +176,9 @@ export const editPage = async (params: EditPageParams, appName: string): Promise
       }
       throw retryError;
     }
-    return {
-      pageId: retry.pageInfo.pageId,
-      path: retry.pageInfo.path,
-      revisionId: extractNewRevisionId(result),
-      edits: retry.results,
-      totalLines: retry.newBody.split('\n').length,
-      totalChars: retry.newBody.length,
+    return buildEditPageResult(retry.pageInfo, retry.newBody, retry.results, {
+      newRevisionId: extractNewRevisionId(result),
       retriedAfterConflict: true,
-    };
+    });
   }
 };

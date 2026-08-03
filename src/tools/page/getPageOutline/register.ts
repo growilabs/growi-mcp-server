@@ -2,6 +2,7 @@ import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
 import { isGrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { requirePageIdOrPath } from '../../../commons/utils/require-page-id-or-path.js';
 import { resolveAppName } from '../../../commons/utils/resolve-app-name.js';
 import { getPageOutlineParamSchema } from './schema.js';
 import { getPageOutline } from './service.js';
@@ -24,11 +25,7 @@ export function registerGetPageOutlineTool(server: FastMCP): void {
       try {
         // Validate parameters
         const { appName, ...getPageOutlineParams } = getPageOutlineParamSchema.parse(params);
-        // Cross-field checks live here: fastmcp requires a plain z.object for `parameters`,
-        // so a top-level .refine() (which wraps the schema in ZodEffects) is not an option
-        if (getPageOutlineParams.pageId == null && getPageOutlineParams.path == null) {
-          throw new UserError('Either pageId or path must be provided');
-        }
+        requirePageIdOrPath(getPageOutlineParams);
         const resolvedAppName = resolveAppName(appName);
 
         const result = await getPageOutline(getPageOutlineParams, resolvedAppName);

@@ -320,7 +320,7 @@ CI が無いため、テストの通過状況が唯一の検出手段である�
 
 ### `growi-page.test.ts`
 
-既存 9 件は**変更なしで通る**。`grantedUsers` を復帰させても、既存テストは `grantedUsersCount` が 1 であることだけを確認しており、`grantedUsers` が存在しないことは検証していないためである（`seenUsers` については `toBeUndefined()` を確認しているが、`grantedUsers` については確認していない）。
+既存 15 件は**変更なしで通る**。`grantedUsers` を復帰させても、既存テストは `grantedUsersCount` が 1 であることだけを確認しており、`grantedUsers` が存在しないことは検証していないためである（`seenUsers` については `toBeUndefined()` を確認しているが、`grantedUsers` については確認していない）。
 
 **新規 2 件**（Requirement 8.1〜8.4）:
 
