@@ -1,6 +1,6 @@
-import { fetchPageBodyInfo } from '../../../commons/utils/growi-page.js';
-import type { MarkdownOutline, SectionRange } from '../../../commons/utils/markdown/parse-outline.js';
-import { parseMarkdownOutline } from '../../../commons/utils/markdown/parse-outline.js';
+import { fetchPageBodyInfo, trimPageForResponse } from '../../../commons/utils/growi-page.js';
+import type { MarkdownOutline } from '../../../commons/utils/markdown/parse-outline.js';
+import { filterOutlineByDepth, parseMarkdownOutline } from '../../../commons/utils/markdown/parse-outline.js';
 import type { GetPageOutlineParam } from './schema.js';
 
 export type GetPageOutlineParams = Omit<GetPageOutlineParam, 'appName'>;
@@ -12,50 +12,34 @@ export interface GetPageOutlineResult extends MarkdownOutline {
   updatedAt?: string;
   /** Number of headings hidden by maxDepth (their lines remain addressable via the preamble/parent sections) */
   hiddenHeadingCount?: number;
+  /**
+   * Page metadata (parent, grant, grantedUsers, tags, etc.), trimmed the same way as
+   * getPageWholeContents but without the body. fetchPageBodyInfo already retrieved the whole page
+   * document, so this costs no extra GROWI API call; it only widens what gets formatted from it.
+   */
+  page: unknown;
 }
-
-const charsOfLines = (lines: string[], startLine: number, endLine: number): number => {
-  let chars = 0;
-  for (let i = startLine - 1; i < endLine; i++) {
-    chars += lines[i].length;
-  }
-  return chars + (endLine - startLine);
-};
 
 export const getPageOutline = async (params: GetPageOutlineParams, appName: string): Promise<GetPageOutlineResult> => {
   const pageInfo = await fetchPageBodyInfo({ pageId: params.pageId, path: params.path }, appName);
   const parsed = parseMarkdownOutline(pageInfo.body);
 
-  const maxDepth = params.maxDepth;
-  let outline = parsed.outline;
-  let preamble: SectionRange | undefined = parsed.preamble;
-  let hiddenHeadingCount: number | undefined;
-
-  if (maxDepth != null) {
-    outline = parsed.outline.filter((entry) => entry.level <= maxDepth);
-    const hidden = parsed.outline.length - outline.length;
-    if (hidden > 0) {
-      hiddenHeadingCount = hidden;
-      // Recompute the preamble so every line stays addressable even when filtering hides leading headings
-      if (outline.length === 0) {
-        preamble = { startLine: 1, endLine: parsed.totalLines, chars: parsed.totalChars };
-      } else if (outline[0].startLine > 1) {
-        const endLine = outline[0].startLine - 1;
-        preamble = { startLine: 1, endLine, chars: charsOfLines(pageInfo.body.split('\n'), 1, endLine) };
-      }
-    }
-  }
+  // Depth filtering (and the preamble recompute it implies) is delegated to parse-outline.ts so the
+  // logic, its char-counting and its line-splitting rule exist in one place. This layer never
+  // splits the body itself.
+  const filtered: MarkdownOutline & { hiddenHeadingCount?: number } =
+    params.maxDepth != null ? filterOutlineByDepth(parsed, params.maxDepth, pageInfo.body) : parsed;
 
   return {
     pageId: pageInfo.pageId,
     path: pageInfo.path,
     revisionId: pageInfo.revisionId,
     updatedAt: pageInfo.updatedAt,
-    totalLines: parsed.totalLines,
-    totalChars: parsed.totalChars,
-    outline,
-    preamble,
-    unterminatedFence: parsed.unterminatedFence,
-    hiddenHeadingCount,
+    totalLines: filtered.totalLines,
+    totalChars: filtered.totalChars,
+    outline: filtered.outline,
+    preamble: filtered.preamble,
+    hiddenHeadingCount: filtered.hiddenHeadingCount,
+    page: trimPageForResponse(pageInfo.page, { keepBody: false }),
   };
 };

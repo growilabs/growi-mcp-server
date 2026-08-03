@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { appNameSchema } from '../../commons/app-name-schemas';
 
-export const getPageParamSchema = z.object({
+export const getPageWholeContentsParamSchema = z.object({
   pageId: z.string().optional().describe('ID of the GROWI page'),
   path: z.string().optional().describe('Path of the GROWI page'),
 
@@ -9,4 +9,4 @@ export const getPageParamSchema = z.object({
   ...appNameSchema.shape,
 });
 
-export type GetPageParam = z.infer<typeof getPageParamSchema>;
+export type GetPageWholeContentsParam = z.infer<typeof getPageWholeContentsParamSchema>;

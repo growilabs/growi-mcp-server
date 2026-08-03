@@ -1,6 +1,6 @@
 import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
 import { fetchPageBodyInfo } from '../../../commons/utils/growi-page.js';
-import { parseMarkdownOutline, resolveHeadingRange } from '../../../commons/utils/markdown/parse-outline.js';
+import { parseMarkdownOutline, resolveHeadingRange, splitLines } from '../../../commons/utils/markdown/parse-outline.js';
 import type { GetPageSectionParam } from './schema.js';
 
 const DEFAULT_MAX_CHARS = 20000;
@@ -30,7 +30,9 @@ export interface GetPageSectionResult {
 
 export const getPageSection = async (params: GetPageSectionParams, appName: string): Promise<GetPageSectionResult> => {
   const pageInfo = await fetchPageBodyInfo({ pageId: params.pageId, path: params.path }, appName);
-  const lines = pageInfo.body.split('\n');
+  // Split through parse-outline so the line numbers here mean the same thing as the ones
+  // getPageOutline hands out (both count every CommonMark line ending, not just `\n`)
+  const lines = splitLines(pageInfo.body);
   const totalLines = lines.length;
 
   let startLine: number;

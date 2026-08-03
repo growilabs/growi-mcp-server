@@ -44,7 +44,7 @@ describe('editPage service', () => {
     expect(result).toMatchObject({
       pageId: 'page1',
       path: '/wiki/test',
-      revisionId: 'rev2',
+      newRevisionId: 'rev2',
       edits: [{ replacements: 1 }],
       totalChars: 'hello GROWI'.length,
     });
@@ -58,7 +58,7 @@ describe('editPage service', () => {
 
     expect(mockedPutPage).not.toHaveBeenCalled();
     expect(result.dryRun).toBe(true);
-    expect(result.revisionId).toBe('rev1');
+    expect(result.baseRevisionId).toBe('rev1');
     expect(result.diff).toContain('-hello world');
     expect(result.diff).toContain('+hello GROWI');
   });
@@ -72,6 +72,24 @@ describe('editPage service', () => {
     expect(mockedPutPage).not.toHaveBeenCalled();
   });
 
+  it('aborts the whole edit batch without saving when a later edit does not match (all-or-nothing)', async () => {
+    mockedGetPage.mockResolvedValue(pageResponse('hello world', 'rev1'));
+
+    await expect(
+      editPage(
+        {
+          pageId: 'page1',
+          edits: [
+            { oldString: 'hello', newString: 'hi' },
+            { oldString: 'missing', newString: 'x' },
+          ],
+        },
+        'default',
+      ),
+    ).rejects.toThrow(EditMatchError);
+    expect(mockedPutPage).not.toHaveBeenCalled();
+  });
+
   it('retries once after a concurrent update and succeeds when the edit still applies', async () => {
     mockedGetPage.mockResolvedValueOnce(pageResponse('hello world', 'rev1')).mockResolvedValueOnce(pageResponse('intro added\nhello world', 'rev2'));
     // GROWI signals the outdated revision as a 400 with a specific message; the retry logic must recognize it
@@ -82,7 +100,7 @@ describe('editPage service', () => {
     expect(mockedGetPage).toHaveBeenCalledTimes(2);
     expect(mockedPutPage).toHaveBeenCalledTimes(2);
     expect(mockedPutPage).toHaveBeenLastCalledWith({ pageId: 'page1', revisionId: 'rev2', body: 'intro added\nhello GROWI' }, { appName: 'default' });
-    expect(result.revisionId).toBe('rev3');
+    expect(result.newRevisionId).toBe('rev3');
     expect(result.retriedAfterConflict).toBe(true);
   });
 
@@ -215,12 +233,12 @@ describe('editPage service', () => {
     expect(mockedPutPage).not.toHaveBeenCalled();
   });
 
-  it('returns no revisionId (instead of a stale one) when the save response lacks a revision', async () => {
+  it('returns no newRevisionId (instead of a stale one) when the save response lacks a revision', async () => {
     mockedGetPage.mockResolvedValue(pageResponse('hello world', 'rev1'));
     mockedPutPage.mockResolvedValue({ page: { _id: 'page1', path: '/wiki/test' } });
 
     const result = await editPage({ pageId: 'page1', edits: [{ oldString: 'world', newString: 'GROWI' }] }, 'default');
 
-    expect(result.revisionId).toBeUndefined();
+    expect(result.newRevisionId).toBeUndefined();
   });
 });

@@ -22,6 +22,13 @@ export interface PageBodyInfo {
   updatedAt?: string;
   /** Work-in-progress status of the page (passed through on writes so an edit never publishes a WIP page) */
   wip?: boolean;
+  /**
+   * Raw page document as returned by the GROWI API. Only fetchPageBodyInfo populates this (not
+   * extractPageBodyInfo, which stays a pure narrowing helper); callers that already hold the full
+   * document, such as getPageOutline formatting page metadata via trimPageForResponse, can reuse
+   * it instead of triggering a second API call.
+   */
+  page?: unknown;
 }
 
 const isPopulatedRevision = (revision: unknown): revision is PopulatedRevision => {
@@ -100,7 +107,7 @@ export const fetchPageBodyInfo = async (params: { pageId?: string; path?: string
     throw new GrowiApiError('Page was not found', 404, { pageId: params.pageId, path: params.path });
   }
 
-  return extractPageBodyInfo(response.page);
+  return { ...extractPageBodyInfo(response.page), page: response.page };
 };
 
 const toUserSummary = (user: unknown): unknown => {
@@ -110,6 +117,12 @@ const toUserSummary = (user: unknown): unknown => {
   const record = user as Record<string, unknown>;
   return { _id: record._id, username: record.username };
 };
+
+/**
+ * Reduces a granted-user entry for the response: the SDK types declare `grantedUsers` as
+ * `string[]`, but a populated environment could return user objects, so both shapes are handled.
+ */
+const toGrantedUser = (entry: unknown): unknown => (typeof entry === 'string' ? entry : toUserSummary(entry));
 
 /**
  * Trims a populated revision document for LLM-facing responses: the body (a full copy of the
@@ -129,8 +142,12 @@ export const trimRevisionForResponse = (revision: unknown): unknown => {
 
 /**
  * Trims token-heavy fields from a page document before returning it to the LLM:
- * unbounded user-ID arrays become counts, and user objects are reduced to `{ _id, username }`.
- * The revision body is kept only when `keepBody` is true (otherwise `bodyLength` is returned).
+ * `seenUsers` / `liker` grow without bound as the page is viewed/liked, so only their counts are
+ * kept. `grantedUsers` is different: it is a small, intentionally-set access grant, so its actual
+ * entries are returned (alongside `grantedUsersCount`) rather than collapsed into a count.
+ * User objects (`creator`, `lastUpdateUser`, `deleteUser`, and any populated `grantedUsers` entry)
+ * are reduced to `{ _id, username }`. The revision body is kept only when `keepBody` is true
+ * (otherwise `bodyLength` is returned).
  */
 export const trimPageForResponse = (page: unknown, options: { keepBody: boolean }): unknown => {
   if (typeof page !== 'object' || page == null) {
@@ -141,7 +158,10 @@ export const trimPageForResponse = (page: unknown, options: { keepBody: boolean 
   const trimmed: Record<string, unknown> = { ...rest };
 
   if (Array.isArray(seenUsers)) trimmed.seenUsersCount = seenUsers.length;
-  if (Array.isArray(grantedUsers)) trimmed.grantedUsersCount = grantedUsers.length;
+  if (Array.isArray(grantedUsers)) {
+    trimmed.grantedUsers = grantedUsers.map(toGrantedUser);
+    trimmed.grantedUsersCount = grantedUsers.length;
+  }
   if (Array.isArray(liker)) trimmed.likerCount = liker.length;
   if (creator != null) trimmed.creator = toUserSummary(creator);
   if (lastUpdateUser != null) trimmed.lastUpdateUser = toUserSummary(lastUpdateUser);

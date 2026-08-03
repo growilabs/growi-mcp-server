@@ -3,13 +3,13 @@ import { registerCreatePageTool } from './createPage';
 import { registerDeletePagesTool } from './deletePages';
 import { registerDuplicatePageTool } from './duplicatePages';
 import { registerEditPageTool } from './editPage';
-import { registerGetPageTool } from './getPage';
 import { registerGetPageInfoTool } from './getPageInfo';
 import { registerGetPageListingChildrenTool } from './getPageListingChildren';
 import { registerGetPageListingRootTool } from './getPageListingRoot';
 import { registerGetPageOutlineTool } from './getPageOutline';
 import { registerGetPageSectionTool } from './getPageSection';
 import { registerGetPageTagTool } from './getPageTag';
+import { registerGetPageTool, registerGetPageWholeContentsTool } from './getPageWholeContents';
 import { registerGetRecentPagesTool } from './getRecentPages';
 import { registerPageListingInfoTool } from './pageListingInfo';
 import { registerPublishPageTool } from './publishPage';
@@ -29,6 +29,9 @@ export async function loadPageTools(server: FastMCP): Promise<void> {
   registerUnpublishPageTool(server);
   registerDuplicatePageTool(server);
   registerPageListingInfoTool(server);
+  // The replacement is registered before the deprecated alias: tools/list preserves this order, so
+  // a client scanning for the first plausible match lands on the supported name.
+  registerGetPageWholeContentsTool(server);
   registerGetPageTool(server);
   registerGetPageOutlineTool(server);
   registerGetPageSectionTool(server);
