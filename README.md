@@ -74,6 +74,9 @@ Update with:
 gemini extensions update growi-mcp-server
 ```
 
+> [!IMPORTANT]
+> Extensions installed from a release earlier than v1.7.1 cannot start the MCP server: only the bundled skills work and the GROWI tools never show up. Existing installs do not switch over on their own, so run `gemini extensions update growi-mcp-server` to pick up the fix.
+
 #### Skills.sh (Vercel)
 
 Works with Claude Code, Gemini CLI, Cursor, Codex, GitHub Copilot, and [many other agents](https://skills.sh/):
@@ -121,7 +124,7 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
   "mcpServers": {
     "growi": {
       "command": "npx",
-      "args": ["@growi/mcp-server"],
+      "args": ["-y", "@growi/mcp-server"],
       "env": {
         "GROWI_APP_NAME_1": "main",
         "GROWI_BASE_URL_1": "https://your-growi-instance.com",
@@ -138,7 +141,7 @@ Supports simultaneous connections to multiple GROWI apps. Each app is configured
   "mcpServers": {
     "growi": {
       "command": "npx",
-      "args": ["@growi/mcp-server"],
+      "args": ["-y", "@growi/mcp-server"],
       "env": {
         "GROWI_DEFAULT_APP_NAME": "staging",
 
@@ -397,6 +400,7 @@ Contributions to the project are welcome!
 #### Development Guidelines
 - **Coding Standards**: Use [Biome](https://biomejs.dev/)
 - **Commit Messages**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
+- **Changesets**: If your pull request changes anything users can observe, run `pnpm changeset` to record the impact level and a user-facing description, and commit the generated `.changeset/*.md` with your PR. Internal-only changes don't need one.
 
 ## License
 

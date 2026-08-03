@@ -74,6 +74,9 @@ gemini extensions install https://github.com/growilabs/growi-mcp-server
 gemini extensions update growi-mcp-server
 ```
 
+> [!IMPORTANT]
+> v1.7.1 より前のリリースからインストールした拡張は MCP サーバーを起動できません（同梱のスキルだけが動き、GROWI ツールは使えません）。既存のインストールは自動では切り替わらないため、`gemini extensions update growi-mcp-server` を実行して修正を取り込んでください。
+
 #### Skills.sh (Vercel)
 
 Claude Code、Gemini CLI、Cursor、Codex、GitHub Copilot など[多数のエージェント](https://skills.sh/)で利用可能：
@@ -121,7 +124,7 @@ npx skills update
   "mcpServers": {
     "growi": {
       "command": "npx",
-      "args": ["@growi/mcp-server"],
+      "args": ["-y", "@growi/mcp-server"],
       "env": {
         "GROWI_APP_NAME_1": "main",
         "GROWI_BASE_URL_1": "https://your-growi-instance.com",
@@ -138,7 +141,7 @@ npx skills update
   "mcpServers": {
     "growi": {
       "command": "npx",
-      "args": ["@growi/mcp-server"],
+      "args": ["-y", "@growi/mcp-server"],
       "env": {
         "GROWI_DEFAULT_APP_NAME": "staging",
 
@@ -391,6 +394,7 @@ pnpm build
 #### 開発ガイドライン
 - **コーディング規約**: [Biome](https://biomejs.dev/)を使用
 - **コミットメッセージ**: [Conventional Commits](https://www.conventionalcommits.org/)に従う
+- **Changeset**: 利用者から見える変更を含む PR では `pnpm changeset` を実行し、影響区分と利用者向けの説明文を記録して、生成された `.changeset/*.md` を PR に含める。内部的な変更のみの PR には不要。
 
 ## ライセンス
 

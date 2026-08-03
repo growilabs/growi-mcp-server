@@ -34,9 +34,7 @@ export const suggestPath = async (params: SuggestPathParam, appName: string): Pr
     }
 
     const message = error instanceof Error ? error.message : String(error);
-    const statusCode = error instanceof Error && 'response' in error
-      ? (error as { response?: { status?: number } }).response?.status || 500
-      : 500;
+    const statusCode = error instanceof Error && 'response' in error ? (error as { response?: { status?: number } }).response?.status || 500 : 500;
 
     throw new GrowiApiError(`Failed to get path suggestions: ${message}`, statusCode, { originalError: error });
   }

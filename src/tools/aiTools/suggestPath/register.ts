@@ -8,7 +8,8 @@ import { suggestPath } from './service.js';
 export function registerSuggestPathTool(server: FastMCP): void {
   server.addTool({
     name: 'suggestPath',
-    description: 'Get suggested save paths for content in GROWI. Analyzes the content body and returns directory path candidates with grant (permission) constraints.',
+    description:
+      'Get suggested save paths for content in GROWI. Analyzes the content body and returns directory path candidates with grant (permission) constraints.',
     parameters: suggestPathParamSchema,
     annotations: {
       readOnlyHint: true,

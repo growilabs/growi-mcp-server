@@ -1,6 +1,6 @@
 {
   "name": "growi-mcp-server",
-  "version": "1.2.0",
+  "version": "1.7.0",
   "description": "MCP server that connects AI models to GROWI wiki content. Enables searching, reading, and creating pages in your GROWI knowledge base.",
   "settings": [
     {
@@ -25,11 +25,12 @@
       "envVar": "GROWI_BASE_URL_1"
     }
   ],
+  "// mcpServers.growi.cwd": "The parent of the extension directory is used on purpose: the extension directory itself holds a package.json named @growi/mcp-server, so npx resolves that local package instead of the published one and fails with mcp-server: not found. Leaving cwd out is worse, because npx then runs inside whatever project the user started gemini in: that project's .npmrc decides which registry is used, and its .env files leak GROWI settings into this server.",
   "mcpServers": {
     "growi": {
-      "command": "node",
-      "args": ["${extensionPath}${/}dist${/}index.js"],
-      "cwd": "${extensionPath}"
+      "command": "npx",
+      "args": ["-y", "@growi/mcp-server@1.7.0"],
+      "cwd": "${extensionPath}${/}.."
     }
   }
 }
