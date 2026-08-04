@@ -24,7 +24,7 @@ export function registerGetPageInfoTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getPageInfo(getPageInfoParams, { appName: resolvedAppName });
+        const result = await apiv3.getInfoForPage(getPageInfoParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

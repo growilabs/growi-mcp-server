@@ -24,7 +24,7 @@ export function registerGetPageListingChildrenTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getPageListingChildren(getChildrenParams, { appName: resolvedAppName });
+        const result = await apiv3.getChildrenForPageListing(getChildrenParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {

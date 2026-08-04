@@ -8,7 +8,7 @@ export type CreatePageResponse = PostPage201;
 export const createPage = async (params: CreatePageParam, appName: string): Promise<CreatePageResponse> => {
   try {
     // Check if page exists
-    const existResponse = await apiv3.getPageExist({ path: params.path }, { appName });
+    const existResponse = await apiv3.getExistForPage({ path: params.path }, { appName });
 
     if (existResponse.isExist) {
       throw new GrowiApiError('Page with this path already exists', 409, { path: params.path });

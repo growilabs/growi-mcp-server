@@ -8,7 +8,7 @@ export const duplicatePage = async (params: DuplicatePageParams, appName: string
     // Check if target path exists
     if (params.pageNameInput) {
       // Check if page exists
-      const existResponse = await apiv3.getPageExist(
+      const existResponse = await apiv3.getExistForPage(
         {
           path: params.pageNameInput,
         },
@@ -22,7 +22,7 @@ export const duplicatePage = async (params: DuplicatePageParams, appName: string
     }
 
     // Execute duplicate operation
-    const result = await apiv3.postPagesDuplicate(
+    const result = await apiv3.postDuplicateForPages(
       {
         pageId: params.pageId,
         pageNameInput: params.pageNameInput,

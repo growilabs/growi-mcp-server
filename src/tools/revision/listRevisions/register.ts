@@ -28,7 +28,7 @@ export function registerListRevisionsTool(server: FastMCP): void {
         const resolvedAppName = resolveAppName(appName);
 
         // Execute operation using SDK
-        const result = await apiv3.getRevisionsList(listRevisionsParams, { appName: resolvedAppName });
+        const result = await apiv3.getListForRevisions(listRevisionsParams, { appName: resolvedAppName });
 
         // Strip revision bodies: each revision otherwise carries a full copy of the page content
         const revisions = Array.isArray(result?.revisions) ? result.revisions.map((revision) => trimRevisionForResponse(revision)) : result?.revisions;

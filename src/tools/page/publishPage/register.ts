@@ -20,7 +20,7 @@ export function registerPublishPageTool(server: FastMCP): void {
         const { appName, ...publishPageParams } = publishPageParamSchema.parse(params);
         const resolvedAppName = resolveAppName(appName);
 
-        const page = await apiv3.putPagePageIdPublish(publishPageParams.pageId, { appName: resolvedAppName });
+        const page = await apiv3.putPublishByPageIdForPage(publishPageParams.pageId, { appName: resolvedAppName });
 
         return JSON.stringify({
           status: 'success',
