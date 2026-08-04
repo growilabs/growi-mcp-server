@@ -108,28 +108,34 @@ jobs:
           commit-message: 'chore(deps): update @growi/sdk-typescript to ${{ steps.update.outputs.after }}'
           title: 'chore(deps): Update @growi/sdk-typescript to ${{ steps.update.outputs.after }}'
           body: |
-            `@growi/sdk-typescript` を ${{ steps.update.outputs.before }} から ${{ steps.update.outputs.after }} へ更新します。
+            Updates `@growi/sdk-typescript` from ${{ steps.update.outputs.before }} to ${{ steps.update.outputs.after }}.
 
-            ## 検証済みです
+            ## Already verified
 
-            lint / test / build / manifest の整合チェックは、**この PR を開く前に**
+            lint, test, build and the manifest version check all ran **before this pull
+            request was opened**, in the
             [scheduled run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            で実行済みです。
+            that produced it.
 
-            bot が作る PR の CI は承認待ち (`action_required`) で保留されるため、PR を開いてから
-            検証する形にすると、壊れた SDK リリースが「緑に見える PR」として残ってしまいます。
-            1.13.0 がまさにその形でした（公開 spec から `operationId` が失われ、生成シンボルが
-            全面改名された。growilabs/growi#11634）。そのため検証を PR 作成の前に置いています。
+            The checks on a pull request opened by github-actions[bot] are held as
+            `action_required` until someone approves the run, so verifying afterwards
+            would let a broken SDK release sit in a pull request that merely looks
+            green. 1.13.0 was exactly that case: the published OpenAPI spec had lost its
+            operationIds (growilabs/growi#11634) and every generated symbol was renamed.
+            Verifying first means such a release fails the scheduled run and no pull
+            request appears at all.
 
-            この PR の CI が承認待ちで止まっている場合は、Approve and run を押して通してください。
+            If this pull request's own checks are waiting for approval, press
+            "Approve and run" to let them through.
 
-            ## changeset の区分について
+            ## About the changeset bump
 
-            `patch` を既定にしています。SDK は ncc で公開物に取り込まれるため更新は公開物を
-            変えますが、MCP ツールの入出力は変わらないためです。
+            It is written as `patch`. The SDK is bundled into the published artifact by
+            ncc, so updating it changes what gets released, but no MCP tool changes its
+            inputs or outputs.
 
-            差分を見て挙動が変わっていた場合は、`.changeset/update-sdk-typescript.md` の区分を
-            `minor` / `major` に書き換えてください。
+            If reviewing the diff shows the behaviour did change, edit the bump in
+            `.changeset/update-sdk-typescript.md` to `minor` or `major`.
           branch: chore/update-sdk-typescript
           delete-branch: true
           labels: patch
