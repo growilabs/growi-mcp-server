@@ -1,0 +1,124 @@
+name: Update SDK dependency
+
+on:
+  schedule:
+    # Every 4 hours. @growi/sdk-typescript is published whenever GROWI's OpenAPI
+    # spec changes, so a daily poll would leave this repository on a stale SDK for
+    # most of a day. Polling keeps the lag short without giving the SDK repository
+    # a cross-repository dispatch token.
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: update-sdk
+  cancel-in-progress: false
+
+jobs:
+  update-sdk:
+    name: Update @growi/sdk-typescript and open a pull request
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.11.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Update @growi/sdk-typescript to its latest release
+        id: update
+        run: |
+          read_version() {
+            node -p "require('./node_modules/@growi/sdk-typescript/package.json').version"
+          }
+          before="$(read_version)"
+          # `--latest` ignores the declared range, so one command covers both a bump
+          # inside the caret range (lockfile only) and one outside it (package.json
+          # too). Deciding on the *resolved* version rather than on `git diff` keeps
+          # incidental lockfile churn from opening a pull request that changes nothing.
+          pnpm update @growi/sdk-typescript --latest
+          after="$(read_version)"
+          {
+            echo "before=${before}"
+            echo "after=${after}"
+          } >> "$GITHUB_OUTPUT"
+          if [ "${before}" = "${after}" ]; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            echo "Already on ${after}; nothing to do."
+          else
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+            echo "Updating ${before} -> ${after}."
+          fi
+
+      # `release:version` formats package.json with biome after changesets edits it.
+      # Do the same here so the lint below does not fail over how pnpm happened to
+      # write the file.
+      - name: Format package.json
+        if: steps.update.outputs.updated == 'true'
+        run: pnpm exec biome format --write package.json
+
+      # Verify before opening the pull request rather than after it. A pull request
+      # opened by github-actions[bot] has its CI run held as `action_required` until
+      # someone approves it, so verifying afterwards would let a broken SDK release
+      # sit in a pull request that merely looks green. 1.13.0 was exactly that case:
+      # it renamed every generated symbol because the published OpenAPI spec had lost
+      # its operationIds (growilabs/growi#11634), and the build here failed with 23
+      # type errors. Failing at this point leaves the scheduled run red and opens
+      # nothing, which is the signal we want.
+      - name: Verify against the new SDK
+        if: steps.update.outputs.updated == 'true'
+        run: |
+          pnpm lint
+          pnpm test
+          pnpm build
+          pnpm sync:versions:check
+
+      - name: Write changeset
+        if: steps.update.outputs.updated == 'true'
+        run: |
+          cat > .changeset/update-sdk-typescript.md <<'EOF'
+          ---
+          '@growi/mcp-server': patch
+          ---
+
+          Update `@growi/sdk-typescript` to ${{ steps.update.outputs.after }}.
+
+          The SDK is bundled into the published artifact by ncc, so this changes what
+          gets released even though no MCP tool changes its inputs or outputs. Raise
+          this to minor or major if reviewing the diff shows otherwise.
+          EOF
+
+      - name: Create pull request
+        if: steps.update.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: 'chore(deps): update @growi/sdk-typescript to ${{ steps.update.outputs.after }}'
+          title: 'chore(deps): Update @growi/sdk-typescript to ${{ steps.update.outputs.after }}'
+          body: |
+            Updates `@growi/sdk-typescript` from ${{ steps.update.outputs.before }} to ${{ steps.update.outputs.after }}.
+
+            lint, test, build and the manifest version check already ran on this change,
+            in the [scheduled run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            that opened this pull request. If the checks here are waiting for approval,
+            press "Approve and run".
+
+            The changeset is written as `patch`: the SDK is bundled into the published
+            artifact by ncc, so this changes what gets released, but no MCP tool changes
+            its inputs or outputs. Edit the bump in
+            `.changeset/update-sdk-typescript.md` if reviewing the diff shows otherwise.
+          branch: chore/update-sdk-typescript
+          delete-branch: true
+          labels: patch
