@@ -110,32 +110,15 @@ jobs:
           body: |
             Updates `@growi/sdk-typescript` from ${{ steps.update.outputs.before }} to ${{ steps.update.outputs.after }}.
 
-            ## Already verified
+            lint, test, build and the manifest version check already ran on this change,
+            in the [scheduled run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            that opened this pull request. If the checks here are waiting for approval,
+            press "Approve and run".
 
-            lint, test, build and the manifest version check all ran **before this pull
-            request was opened**, in the
-            [scheduled run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            that produced it.
-
-            The checks on a pull request opened by github-actions[bot] are held as
-            `action_required` until someone approves the run, so verifying afterwards
-            would let a broken SDK release sit in a pull request that merely looks
-            green. 1.13.0 was exactly that case: the published OpenAPI spec had lost its
-            operationIds (growilabs/growi#11634) and every generated symbol was renamed.
-            Verifying first means such a release fails the scheduled run and no pull
-            request appears at all.
-
-            If this pull request's own checks are waiting for approval, press
-            "Approve and run" to let them through.
-
-            ## About the changeset bump
-
-            It is written as `patch`. The SDK is bundled into the published artifact by
-            ncc, so updating it changes what gets released, but no MCP tool changes its
-            inputs or outputs.
-
-            If reviewing the diff shows the behaviour did change, edit the bump in
-            `.changeset/update-sdk-typescript.md` to `minor` or `major`.
+            The changeset is written as `patch`: the SDK is bundled into the published
+            artifact by ncc, so this changes what gets released, but no MCP tool changes
+            its inputs or outputs. Edit the bump in
+            `.changeset/update-sdk-typescript.md` if reviewing the diff shows otherwise.
           branch: chore/update-sdk-typescript
           delete-branch: true
           labels: patch
