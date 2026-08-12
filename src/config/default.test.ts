@@ -265,6 +265,123 @@ describe('config/default.ts', () => {
     });
   });
 
+  describe('Custom headers configuration', () => {
+    it('should parse custom headers when provided as valid JSON', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_CUSTOM_HEADERS_1: '{"CF-Access-Client-Id":"client-id","CF-Access-Client-Secret":"client-secret"}',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('test-app')?.customHeaders).toEqual({
+        'CF-Access-Client-Id': 'client-id',
+        'CF-Access-Client-Secret': 'client-secret',
+      });
+    });
+
+    it('should omit customHeaders when not provided', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('test-app')?.customHeaders).toBeUndefined();
+    });
+
+    it('should omit customHeaders when whitespace-only', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_CUSTOM_HEADERS_1: '   ',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('test-app')?.customHeaders).toBeUndefined();
+    });
+
+    it('should configure custom headers per app independently', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'app1',
+        GROWI_BASE_URL_1: 'https://app1.com',
+        GROWI_API_TOKEN_1: 'token1',
+        GROWI_CUSTOM_HEADERS_1: '{"X-Custom":"value1"}',
+        GROWI_APP_NAME_2: 'app2',
+        GROWI_BASE_URL_2: 'https://app2.com',
+        GROWI_API_TOKEN_2: 'token2',
+      };
+
+      // Act
+      const config = await import('./default');
+
+      // Assert
+      expect(config.default.growi.apps.get('app1')?.customHeaders).toEqual({ 'X-Custom': 'value1' });
+      expect(config.default.growi.apps.get('app2')?.customHeaders).toBeUndefined();
+    });
+
+    it('should throw error when custom headers is invalid JSON', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_CUSTOM_HEADERS_1: 'not-valid-json',
+      };
+
+      // Act & Assert
+      await expect(async () => {
+        await import('./default');
+      }).rejects.toThrow('Invalid GROWI custom headers configuration for app 1');
+    });
+
+    it('should throw error when custom headers is a JSON array', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_CUSTOM_HEADERS_1: '["not", "an", "object"]',
+      };
+
+      // Act & Assert
+      await expect(async () => {
+        await import('./default');
+      }).rejects.toThrow('Invalid GROWI custom headers configuration for app 1');
+    });
+
+    it('should throw error when custom headers contains non-string values', async () => {
+      // Arrange
+      process.env = {
+        GROWI_APP_NAME_1: 'test-app',
+        GROWI_BASE_URL_1: 'https://example.com',
+        GROWI_API_TOKEN_1: 'token123',
+        GROWI_CUSTOM_HEADERS_1: '{"X-Number": 123}',
+      };
+
+      // Act & Assert
+      await expect(async () => {
+        await import('./default');
+      }).rejects.toThrow('Invalid GROWI custom headers configuration for app 1');
+    });
+  });
+
   describe('Invalid configurations', () => {
     it('should throw error when no app configuration is provided', async () => {
       // Arrange

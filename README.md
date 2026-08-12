@@ -249,6 +249,7 @@ failure or an unusable clone.
 | `GROWI_API_TOKEN_{N}` | ✅ | GROWI API access token (N is an integer) | - |
 | `GROWI_HTTP_AUTH_USERNAME_{N}` | | Username for HTTP auth (Basic) in front of GROWI, e.g. a reverse proxy. Required together with the password. | - |
 | `GROWI_HTTP_AUTH_PASSWORD_{N}` | | Password for HTTP auth (Basic) in front of GROWI. Required together with the username. | - |
+| `GROWI_CUSTOM_HEADERS_{N}` | | Custom HTTP headers as a JSON object (e.g. for Cloudflare Access). | - |
 | `GROWI_DEFAULT_APP_NAME` | | Default app name to use | First configured app |
 
 ### Multiple Apps Configuration Notes
@@ -264,6 +265,18 @@ When a GROWI instance sits behind HTTP authentication (e.g. a reverse proxy enfo
 - Set both or neither — providing only one fails fast with a clear error.
 - When configured, the proxy credentials go in the `Authorization` header and the GROWI API token (`GROWI_API_TOKEN_{N}`) is sent via the `X-GROWI-ACCESS-TOKEN` header instead. Without it, the default `Bearer` token scheme is unchanged.
 - Only Basic auth is supported for now; Digest support is planned. The variable names are scheme-agnostic so they can be reused when Digest lands.
+
+### Custom HTTP Headers
+When a GROWI instance requires custom HTTP headers for authentication (e.g. Cloudflare Access), set `GROWI_CUSTOM_HEADERS_{N}` to a JSON object containing the header key-value pairs.
+
+```bash
+# Example for Cloudflare Access
+GROWI_CUSTOM_HEADERS_1={"CF-Access-Client-Id":"your-client-id","CF-Access-Client-Secret":"your-client-secret"}
+```
+
+- The value must be a valid JSON object with string keys and string values.
+- Headers are sent on every request to the GROWI instance, including API calls and Vault git operations.
+- Custom headers can be combined with HTTP auth (`GROWI_HTTP_AUTH_*`) if both are needed.
 
 
 ## Developer Information

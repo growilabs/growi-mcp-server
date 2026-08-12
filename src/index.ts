@@ -31,6 +31,15 @@ const setupAxiosInstance = async (apps: Map<string, GrowiAppConfig>): Promise<vo
       token: app.apiToken,
       ...(authorizationHeader != null ? { authorizationHeader } : {}),
     });
+
+    // Apply custom headers (e.g. Cloudflare Access credentials) after the instance is created.
+    // These are sent on every request to the GROWI instance.
+    if (app.customHeaders != null) {
+      const instance = axiosInstanceManager.getAxiosInstance(app.name);
+      for (const [key, value] of Object.entries(app.customHeaders)) {
+        instance.defaults.headers.common[key] = value;
+      }
+    }
   });
 };
 

@@ -38,15 +38,18 @@ export const resolveVaultAccess = (appName?: string): VaultAccess => {
   }
 
   const baseUrl = app.baseUrl.replace(/\/+$/, '');
-  const extraHeaders =
+  const authHeaders =
     app.httpAuth != null
       ? [`Authorization: ${buildBasicAuthHeader(app.httpAuth.username, app.httpAuth.password)}`, `X-GROWI-ACCESS-TOKEN: ${app.apiToken}`]
       : [`Authorization: Bearer ${app.apiToken}`];
+
+  // Append custom headers (e.g. Cloudflare Access credentials) to the git extra headers.
+  const customHeaderEntries = app.customHeaders != null ? Object.entries(app.customHeaders).map(([key, value]) => `${key}: ${value}`) : [];
 
   return {
     appName: resolvedAppName,
     baseUrl,
     remoteUrl: `${baseUrl}/vault.git`,
-    extraHeaders,
+    extraHeaders: [...authHeaders, ...customHeaderEntries],
   };
 };

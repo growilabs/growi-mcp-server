@@ -9,6 +9,8 @@ const GROWI_API_TOKEN_PREFIX = 'GROWI_API_TOKEN_';
 // Scheme-agnostic names so Digest can reuse them later.
 const GROWI_HTTP_AUTH_USERNAME_PREFIX = 'GROWI_HTTP_AUTH_USERNAME_';
 const GROWI_HTTP_AUTH_PASSWORD_PREFIX = 'GROWI_HTTP_AUTH_PASSWORD_';
+// Optional custom HTTP headers for GROWI instances (e.g. Cloudflare Access credentials).
+const GROWI_CUSTOM_HEADERS_PREFIX = 'GROWI_CUSTOM_HEADERS_';
 
 // Define schema for environment variables
 const envSchema = z
@@ -76,11 +78,34 @@ const envSchema = z
         };
       }
 
+      // Custom headers are optional. When provided, they must be valid JSON object.
+      const customHeadersKey = `${GROWI_CUSTOM_HEADERS_PREFIX}${num}`;
+      const customHeadersValue = env[customHeadersKey];
+      let customHeaders: Record<string, string> | undefined;
+      if (customHeadersValue != null && String(customHeadersValue).trim().length > 0) {
+        try {
+          const parsed = JSON.parse(String(customHeadersValue));
+          if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            throw new Error('must be a JSON object');
+          }
+          for (const [key, value] of Object.entries(parsed)) {
+            if (typeof value !== 'string') {
+              throw new Error(`header "${key}" must be a string`);
+            }
+          }
+          customHeaders = parsed as Record<string, string>;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          throw new Error(`Invalid GROWI custom headers configuration for app ${num} (${customHeadersKey}): ${message}`);
+        }
+      }
+
       appConfigs.push({
         name: String(name).trim(),
         baseUrl: String(baseUrl).trim(),
         apiToken: String(apiToken).trim(),
         ...(httpAuth != null ? { httpAuth } : {}),
+        ...(customHeaders != null ? { customHeaders } : {}),
       });
     }
 
@@ -104,6 +129,7 @@ const envSchema = z
                   password: z.string().min(1),
                 })
                 .optional(),
+              customHeaders: z.record(z.string(), z.string()).optional(),
             }),
           )
           .min(1, 'At least one GROWI app configuration is required'),

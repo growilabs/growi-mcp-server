@@ -243,6 +243,7 @@ npx @growi/mcp-server vault-decode '旧%3A old page.md'
 | `GROWI_API_TOKEN_{N}` | ✅ | GROWI APIアクセストークン（N は整数値） | - |
 | `GROWI_HTTP_AUTH_USERNAME_{N}` | | GROWI 前段の HTTP 認証（Basic）のユーザー名（例: リバースプロキシ）。パスワードとセットで指定する。 | - |
 | `GROWI_HTTP_AUTH_PASSWORD_{N}` | | GROWI 前段の HTTP 認証（Basic）のパスワード。ユーザー名とセットで指定する。 | - |
+| `GROWI_CUSTOM_HEADERS_{N}` | | カスタム HTTP ヘッダー（JSON オブジェクト）。Cloudflare Access などの認証に使用。 | - |
 | `GROWI_DEFAULT_APP_NAME` | | デフォルトで使用するアプリ名 | 最初に設定されたアプリ |
 
 ### 複数アプリ設定の注意点
@@ -258,6 +259,18 @@ GROWI が HTTP 認証（例: リバースプロキシによる Basic 認証）�
 - 両方を設定するか、どちらも設定しないかのいずれかです。片方だけの設定は、分かりやすいエラーで即座に停止します。
 - 設定すると、プロキシの資格情報が `Authorization` ヘッダーに入り、GROWI の API トークン（`GROWI_API_TOKEN_{N}`）は代わりに `X-GROWI-ACCESS-TOKEN` ヘッダーで送られます。未設定の場合は従来どおり `Bearer` トークン方式のままです。
 - 現時点では Basic 認証のみ対応です（Digest 認証は将来対応予定）。変数名はスキームに依存しない形にしてあるため、Digest 対応時にもそのまま流用できます。
+
+### カスタム HTTP ヘッダー
+GROWI インスタンスへの認証にカスタム HTTP ヘッダーが必要な場合（例: Cloudflare Access）、`GROWI_CUSTOM_HEADERS_{N}` にヘッダーのキーと値のペアを含む JSON オブジェクトを設定します。
+
+```bash
+# Cloudflare Access の例
+GROWI_CUSTOM_HEADERS_1={"CF-Access-Client-Id":"your-client-id","CF-Access-Client-Secret":"your-client-secret"}
+```
+
+- 値は文字列キーと文字列値を持つ有効な JSON オブジェクトである必要があります。
+- ヘッダーは API 呼び出しや Vault git 操作を含む、GROWI インスタンスへのすべてのリクエストで送信されます。
+- カスタムヘッダーは、必要に応じて HTTP 認証（`GROWI_HTTP_AUTH_*`）と組み合わせて使用できます。
 
 
 ## 開発者向け情報

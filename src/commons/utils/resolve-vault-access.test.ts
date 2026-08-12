@@ -102,4 +102,29 @@ describe('resolveVaultAccess', () => {
   it('rejects an app name that is not configured', async () => {
     await expect(resolveWithEnv({ ...singleApp }, 'nope')).rejects.toThrow('"nope" is not configured');
   });
+
+  it('appends custom headers to the extra headers when configured', async () => {
+    const access = await resolveWithEnv({
+      ...singleApp,
+      GROWI_CUSTOM_HEADERS_1: '{"CF-Access-Client-Id":"client-id","CF-Access-Client-Secret":"client-secret"}',
+    });
+
+    expect(access.extraHeaders).toContain('Authorization: Bearer token-main');
+    expect(access.extraHeaders).toContain('CF-Access-Client-Id: client-id');
+    expect(access.extraHeaders).toContain('CF-Access-Client-Secret: client-secret');
+  });
+
+  it('appends custom headers after auth headers when both HTTP auth and custom headers are configured', async () => {
+    const access = await resolveWithEnv({
+      ...singleApp,
+      GROWI_HTTP_AUTH_USERNAME_1: 'proxy-user',
+      GROWI_HTTP_AUTH_PASSWORD_1: 'proxy-pass',
+      GROWI_CUSTOM_HEADERS_1: '{"X-Custom":"value"}',
+    });
+
+    // Auth headers come first, then custom headers
+    expect(access.extraHeaders[0]).toMatch(/^Authorization: Basic /);
+    expect(access.extraHeaders[1]).toBe('X-GROWI-ACCESS-TOKEN: token-main');
+    expect(access.extraHeaders[2]).toBe('X-Custom: value');
+  });
 });

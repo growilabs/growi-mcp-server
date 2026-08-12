@@ -19,6 +19,7 @@ export interface GrowiAppConfig {
   baseUrl: string;
   apiToken: string;
   httpAuth?: GrowiHttpAuthConfig;
+  customHeaders?: Record<string, string>;
 }
 
 export interface GrowiConfig {
