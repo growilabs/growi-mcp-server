@@ -31,8 +31,8 @@ importers:
         specifier: ^2.3.2
         version: 2.3.2
       '@growi/sdk-typescript':
-        specifier: ^1.14.0
-        version: 1.14.0
+        specifier: ^1.15.0
+        version: 1.15.0
       '@tsconfig/node22':
         specifier: ^22.0.2
         version: 22.0.2
@@ -389,8 +389,8 @@ packages:
   '@growi/core@2.3.2':
     resolution: {integrity: sha512-6XkUu3i1qDuf/HEajSo/XBbPO4ZliGE87x+T3HATiBq9qvaXrMN9cl4V+MoSJ8xsF+cC8qTeHk/Hp/yGOUvgUg==}
 
-  '@growi/sdk-typescript@1.14.0':
-    resolution: {integrity: sha512-3aRyNINmMX7ph+PrtiXVhAiMztVyVJeNzW05HB4uiRcGZNndV3gwkBlqw0IdzcPIiZdl+711g44B32CBpNMuxA==}
+  '@growi/sdk-typescript@1.15.0':
+    resolution: {integrity: sha512-ih1OBmvdtY/C0x3rHghrl9P7/IAWgrJ9Z/GX3YtFWowKIxTimOZUMVgoLIVa7NBX54LrCU8GzBwV44eIRWptZg==}
     engines: {node: '>=18.0.0'}
 
   '@inquirer/external-editor@1.0.3':
@@ -2360,7 +2360,7 @@ snapshots:
     dependencies:
       bson-objectid: 2.0.4
 
-  '@growi/sdk-typescript@1.14.0':
+  '@growi/sdk-typescript@1.15.0':
     dependencies:
       axios: 1.18.1
     transitivePeerDependencies:
@@ -3265,7 +3265,7 @@ snapshots:
   istanbul-lib-source-maps@5.0.6:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      debug: 4.4.1(supports-color@5.5.0)
+      debug: 4.4.3
       istanbul-lib-coverage: 3.2.2
     transitivePeerDependencies:
       - supports-color
