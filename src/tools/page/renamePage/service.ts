@@ -1,7 +1,15 @@
 import apiv3 from '@growi/sdk-typescript/v3';
 import type { PutRenameForPages200 } from '@growi/sdk-typescript/v3';
 import { GrowiApiError } from '../../../commons/api/growi-api-error.js';
+import { extractNewRevisionId } from '../../../commons/utils/growi-page.js';
 import type { RenamePageParam } from './schema.js';
+
+// The server requires revisionId only for non-empty pages and ignores it for empty ones, which
+// have no revision; the SDK type still demands a string, so an empty page gets ''.
+const fetchLatestRevisionId = async (pageId: string, appName: string): Promise<string> => {
+  const { page } = await apiv3.getPage({ pageId }, { appName });
+  return extractNewRevisionId({ page }) ?? '';
+};
 
 export async function renamePage(params: RenamePageParam, appName: string): Promise<PutRenameForPages200> {
   try {
@@ -22,10 +30,13 @@ export async function renamePage(params: RenamePageParam, appName: string): Prom
       }
     }
 
+    const revisionId = params.revisionId ?? (await fetchLatestRevisionId(params.pageId, appName));
+
     // Proceed with renaming using SDK
     const renameResult = await apiv3.putRenameForPages(
       {
         pageId: params.pageId,
+        revisionId,
         ...(params.newPagePath && { newPagePath: params.newPagePath }),
         ...(params.isRenameRedirect !== undefined && { isRenameRedirect: params.isRenameRedirect }),
         ...(params.isRecursively !== undefined && { isRecursively: params.isRecursively }),
