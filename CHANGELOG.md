@@ -1,5 +1,15 @@
 # @growi/mcp-server
 
+## 1.8.0
+
+### Minor Changes
+
+- [#41](https://github.com/growilabs/growi-mcp-server/pull/41) [`15b137b`](https://github.com/growilabs/growi-mcp-server/commit/15b137b4f0b06f39d1468c683b27ee1e2876ac9d) Thanks [@yuki-takei](https://github.com/yuki-takei)! - `getComments` now returns inline comments as well as regular comments. It calls the apiv3 `GET /comments` endpoint (SDK `apiv3.getComments`) instead of the deprecated `/comments.get`, which returned regular comments only. Each item has an `isInline` field to tell the two kinds apart.
+
+### Patch Changes
+
+- [#41](https://github.com/growilabs/growi-mcp-server/pull/41) [`a314326`](https://github.com/growilabs/growi-mcp-server/commit/a314326fc1569d3e990ceb06a60d4c6ba41a1d7e) Thanks [@yuki-takei](https://github.com/yuki-takei)! - `renamePage` now sends `revisionId` to `PUT /pages/rename`, which the server requires for non-empty pages. It uses the `revisionId` argument when given and otherwise fetches the latest revision of the page. Previously the field was never sent, so renaming a non-empty page was rejected with `invalid_body`.
+
 ## 1.7.1
 
 ### Patch Changes
