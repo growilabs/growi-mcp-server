@@ -1,4 +1,4 @@
-import apiv1 from '@growi/sdk-typescript/v1';
+import apiv3 from '@growi/sdk-typescript/v3';
 import type { FastMCP } from 'fastmcp';
 import { UserError } from 'fastmcp';
 import { z } from 'zod';
@@ -8,7 +8,8 @@ import { getCommentsParamSchema } from './schema.js';
 export function registerGetCommentsTool(server: FastMCP): void {
   server.addTool({
     name: 'getComments',
-    description: 'Get comments for a page revision in GROWI',
+    description:
+      'Get the comments of a page in GROWI. Returns both regular comments and inline comments (comments anchored to a quoted passage of the page body), including replies, newest first. Use the `isInline` field of each item to tell them apart; replies are separate items linked by `replyToId`.',
     parameters: getCommentsParamSchema,
     annotations: {
       readOnlyHint: true,
@@ -25,12 +26,12 @@ export function registerGetCommentsTool(server: FastMCP): void {
 
         // Prepare API parameters
         const apiParams = {
-          page_id: getCommentsParams.pageId,
-          ...(getCommentsParams.revisionId && { revision_id: getCommentsParams.revisionId }),
+          pageId: getCommentsParams.pageId,
+          ...(getCommentsParams.revisionId && { revisionId: getCommentsParams.revisionId }),
         };
 
         // Execute operation using SDK
-        const result = await apiv1.getComments(apiParams, { appName: resolvedAppName });
+        const result = await apiv3.getComments(apiParams, { appName: resolvedAppName });
 
         return JSON.stringify(result);
       } catch (error) {
